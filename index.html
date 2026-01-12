@@ -6,8 +6,8 @@
   <title>SCI Cupping Form (Interactive)</title>
   <style>
     :root{
-      --ink:#1a1a1a;
-      --line:#2a2a2a;
+      --ink:#1a2a2a;
+      --line:#1f2a2a;
       --bg:#fff;
       --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
     }
@@ -49,6 +49,7 @@
       text-align:center;
       white-space:nowrap;
       line-height:1.1;
+      font-weight:900;
     }
     .toolbar button:hover{border-color:#888}
     @media (max-width: 900px){
@@ -81,7 +82,7 @@
     }
     .header-left{display:flex;flex-direction:column;gap:8px;font-size:14px}
     .linefield{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .linefield label{min-width:54px;font-weight:700}
+    .linefield label{min-width:54px;font-weight:900}
     .linefield input{
       border:0;border-bottom:1px solid var(--ink);
       padding:6px 6px;min-width:220px;outline:none;font-size:14px;
@@ -111,7 +112,7 @@
       border-bottom:2px solid var(--line);
     }
     .sample .toprow .sampleNo{
-      font-weight:800;font-size:13px;
+      font-weight:900;font-size:13px;
       display:flex;flex-direction:column;gap:6px;
     }
     .sample .toprow input{
@@ -119,32 +120,32 @@
       outline:none;font-size:13px;padding:6px 6px;width:100%;
     }
     .scorebox{
-      width:190px;border:2px solid var(--line);
+      width:200px;border:2px solid var(--line);
       padding:8px;border-radius:10px;
       display:flex;flex-direction:column;gap:6px;align-items:stretch;background:#fff;
     }
-    .scorebox .lbl{font-size:11px;color:#333;font-weight:900;text-align:center}
+    .scorebox .lbl{font-size:11px;color:#333;font-weight:1000;text-align:center}
     .scorebox .total{
-      font-size:22px;font-weight:1000;text-align:center;
+      font-size:22px;font-weight:1100;text-align:center;
       border-top:1px solid #999;padding-top:6px;
     }
     .scorebox .subtot{
-      font-size:11px;color:#222;font-weight:900;line-height:1.3;
+      font-size:11px;color:#222;font-weight:1000;line-height:1.3;
       border-top:1px dashed #aaa;padding-top:6px;margin-top:2px;
     }
     .scorebox .checkroast{
       display:flex;align-items:center;justify-content:center;gap:8px;
-      font-size:11px;font-weight:900;color:#333;margin-top:4px;
+      font-size:11px;font-weight:1000;color:#333;margin-top:4px;
     }
     .scorebox input[type="checkbox"]{width:18px;height:18px}
 
     .section{border-bottom:1px solid #bbb;padding:10px 10px}
     .rowhead{
       display:flex;justify-content:space-between;align-items:flex-end;gap:10px;
-      font-weight:1000;font-size:12px;letter-spacing:.2px;margin-bottom:6px;
+      font-weight:1100;font-size:12px;letter-spacing:.2px;margin-bottom:6px;
     }
     .rowhead .rightlabel{
-      font-weight:1000;font-size:11px;color:#333;
+      font-weight:1100;font-size:11px;color:#333;
       display:flex;gap:8px;align-items:center;
     }
 
@@ -178,13 +179,13 @@
       position:absolute;
       top:-2px;
       transform:translateX(-50%);
-      width:30px;height:30px;
+      width:32px;height:32px;
       border-radius:999px;
       border:2px solid var(--ink);
       background:var(--ink);
       color:#fff;
       display:flex;align-items:center;justify-content:center;
-      font-size:10px;font-weight:1000;
+      font-size:10px;font-weight:1100;
       pointer-events:none;
       z-index:3;
     }
@@ -192,7 +193,7 @@
     .ticks{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#222}
     .ticks span{min-width:16px;text-align:center}
     .microhint{
-      font-size:9px;color:#444;font-weight:900;
+      font-size:9px;color:#444;font-weight:1000;
       display:flex;justify-content:space-between;margin-top:2px;letter-spacing:.1px;
     }
 
@@ -203,7 +204,7 @@
       gap:8px;
       align-items:start;
     }
-    .notes label{font-size:11px;font-weight:1000;color:#333}
+    .notes label{font-size:11px;font-weight:1100;color:#333}
     .notes textarea{
       width:100%;min-height:44px;resize:vertical;
       border:0;border-top:1px solid #888;
@@ -215,6 +216,8 @@
       display:flex;flex-wrap:wrap;gap:8px;
       padding-left:52px;
     }
+
+    /* Base chip */
     .chip{
       border:1px solid #bbb;
       border-radius:999px;
@@ -225,8 +228,17 @@
       user-select:none;
       min-height:34px;
       display:flex;align-items:center;
+      font-weight:1000;
     }
-    .chip:hover{border-color:#666}
+
+    /* Colored chips (family-based) */
+    .chip.color{
+      border-color: currentColor;
+      background: color-mix(in srgb, currentColor 14%, white);
+    }
+    .chip.color:hover{
+      background: color-mix(in srgb, currentColor 22%, white);
+    }
 
     .circles{display:flex;gap:10px;align-items:center}
     .circle{
@@ -247,7 +259,7 @@
     .bottomItem{border:1px solid #bbb;border-radius:10px;padding:10px}
     .bottomTitle{
       display:flex;justify-content:space-between;align-items:center;
-      font-size:12px;font-weight:1000;margin-bottom:8px;
+      font-size:12px;font-weight:1100;margin-bottom:8px;
     }
     .bigcircles .circle{width:20px;height:20px}
 
@@ -315,7 +327,7 @@
       print: "Print / Save as PDF",
       add: "+ Add",
       remove: "− Remove",
-      export: "Export Star Graph",
+      export: "Export Star Graph (Printable)",
       lang: "العربية",
       reset: "Reset",
       name: "NAME:",
@@ -346,7 +358,7 @@
       print: "طباعة / حفظ PDF",
       add: "+ إضافة",
       remove: "− حذف",
-      export: "تصدير الرسم النجمي",
+      export: "تصدير الرسم النجمي (قابل للطباعة)",
       lang: "English",
       reset: "إعادة ضبط",
       name: "الاسم:",
@@ -380,9 +392,8 @@
     document.documentElement.lang = (lang === "ar") ? "ar" : "en";
     document.documentElement.dir  = (lang === "ar") ? "rtl" : "ltr";
     document.body.dir             = (lang === "ar") ? "rtl" : "ltr";
-
     applyUIText();
-    renderAll(); // rebuild with translated labels + RTL layout
+    renderAll();
   }
 
   function applyUIText(){
@@ -425,7 +436,7 @@
     { type:'metric', key:'defect',     label:{en:UI.en.defect,     ar:UI.ar.defect} }
   ];
 
-  /* ========== Note helpers (fast SCA-ish families) ========== */
+  /* ========== Note helpers ========== */
   const NOTE_HELPERS = {
     fragrance: [
       {en:"Floral", ar:"زهري"}, {en:"Fruity", ar:"فاكهي"}, {en:"Citrus", ar:"حمضيات"},
@@ -538,14 +549,58 @@
     textarea.focus();
   }
 
+  /* ===== colored chip logic ===== */
+  function chipColorForText(txt){
+    const s = String(txt || "").toLowerCase();
+    const has = (k)=> s.includes(k);
+
+    // Floral (purple)
+    if (has("floral") || has("jasmine") || has("rose") || has("زهري") || has("ياسمين") || has("ورد")) return "#7c3aed";
+    // Fruity (pink/red)
+    if (has("fruity") || has("berry") || has("stone fruit") || has("tropical") ||
+        has("فاكهي") || has("توت") || has("نواة") || has("استوائي")) return "#e11d48";
+    // Citrus (orange)
+    if (has("citrus") || has("lemon") || has("حمض") || has("حمضيات") || has("ليمون")) return "#f97316";
+    // Sweet (gold)
+    if (has("sweet") || has("honey") || has("vanilla") || has("caramel") || has("brown sugar") || has("molasses") || has("candy") ||
+        has("حلو") || has("عسل") || has("فانيلا") || has("كراميل") || has("سكر") || has("دبس") || has("حلوى")) return "#b45309";
+    // Nutty / Cocoa (brown)
+    if (has("nutty") || has("cocoa") || has("chocolate") || has("مكسرات") || has("كاكاو") || has("شوكولاتة")) return "#7c2d12";
+    // Spices (deep red)
+    if (has("spices") || has("spice") || has("بهارات")) return "#b91c1c";
+    // Green/Herbal/Vegetative
+    if (has("green") || has("herbal") || has("vegetative") || has("أخضر") || has("أعشاب") || has("نباتي")) return "#15803d";
+    // Roasted/Smoky/Ashy/Bitter
+    if (has("roasted") || has("smoky") || has("ashy") || has("bitter") ||
+        has("محمص") || has("دخاني") || has("رمادي") || has("مر")) return "#374151";
+    // Sour/Fermented
+    if (has("sour") || has("ferment") || has("fermented") || has("حامض") || has("مخمّر") || has("تخمّر")) return "#0f766e";
+    // Earthy/Musty/Moldy/Dirty
+    if (has("earthy") || has("musty") || has("moldy") || has("dirty") ||
+        has("ترابي") || has("عفن") || has("وسخ")) return "#4d7c0f";
+    // Woody/Baggy/Papery/Stale
+    if (has("woody") || has("baggy") || has("papery") || has("stale") ||
+        has("خشبي") || has("خيش") || has("ورقي") || has("قديم")) return "#334155";
+    // Mouthfeel/texture descriptors
+    if (has("silky") || has("creamy") || has("velvety") || has("syrupy") || has("round") ||
+        has("watery") || has("drying") || has("astringent") ||
+        has("حريري") || has("كريمي") || has("مخملي") || has("شرابي") || has("مستدير") ||
+        has("مائي") || has("يجفف") || has("قابض")) return "#1d4ed8";
+
+    return "#111827";
+  }
+
   function helperRow(helperKey, textarea){
     const items = NOTE_HELPERS[helperKey] || [];
     if(!items.length) return null;
+
     const wrap = el('div',{class:'helper'});
     items.forEach(it=>{
       const txt = it[lang] || it.en;
-      const chip = el('div',{class:'chip', role:'button', tabindex:'0'});
+      const chip = el('div',{class:'chip color', role:'button', tabindex:'0'});
       chip.textContent = txt;
+      chip.style.color = chipColorForText(txt);
+
       chip.addEventListener('click', ()=> insertChipText(textarea, txt));
       chip.addEventListener('keydown',(e)=>{
         if(e.key==='Enter'||e.key===' '){ e.preventDefault(); insertChipText(textarea, txt); }
@@ -594,8 +649,8 @@
 
   function sliderRow(sampleIdx, attr){
     const t = UI[lang];
-
     const row = el('div',{class:'section'});
+
     const head = el('div',{class:'rowhead'},[
       el('div',{html: attr.label[lang]}),
       el('div',{class:'rightlabel'},[
@@ -616,7 +671,6 @@
     const bubble = el('div',{class:'value-bubble', 'data-bubble':`${sampleIdx}.${attr.key}`});
 
     const markScored = ()=> { state.samples[sampleIdx][attr.key].scored = true; };
-
     range.addEventListener('pointerdown', markScored, {passive:true});
     range.addEventListener('touchstart', markScored, {passive:true});
     range.addEventListener('mousedown', markScored);
@@ -647,10 +701,7 @@
       el('textarea',{'data-notes':`${sampleIdx}.${attr.key}.notes`})
     ]);
     const textarea = notesWrap.querySelector('textarea');
-
-    textarea.addEventListener('input', (e)=>{
-      state.samples[sampleIdx][attr.key].notes = e.target.value;
-    });
+    textarea.addEventListener('input', (e)=> state.samples[sampleIdx][attr.key].notes = e.target.value);
 
     row.appendChild(head);
     row.appendChild(el('div',{class:'sliderwrap'},[
@@ -686,7 +737,6 @@
   }
 
   function toggleUniformity(sampleIdx, idx){
-    // allow editing uniformity independently (your rule only forces link when defect changes)
     const s = state.samples[sampleIdx];
     s.uniformity[idx] = !s.uniformity[idx];
     renderBottomRow(sampleIdx, 'uniformity');
@@ -734,7 +784,7 @@
   function countTrue(arr){ return arr.reduce((n,v)=> n + (v?1:0), 0); }
 
   function computeSampleTotals(sample){
-    // Attribute sum: count only if scored=true, otherwise 0
+    // Attribute sum: only if scored=true; otherwise 0
     const attributesSum = ATTRS.reduce((sum,a)=>{
       const obj = sample[a.key];
       const v = (obj && obj.scored) ? Number(obj.score || 0) : 0;
@@ -754,7 +804,6 @@
   function updateTotals(){
     for(let i=0;i<state.samples.length;i++){
       const t = computeSampleTotals(state.samples[i]);
-
       const totalEl = document.querySelector(`[data-total="${i}"]`);
       const subEl   = document.querySelector(`[data-subtot="${i}"]`);
       if(!totalEl || !subEl) continue;
@@ -769,7 +818,6 @@
 
   function buildSample(sampleIdx){
     const t = UI[lang];
-
     const sample = el('div',{class:'sample', 'data-sample':String(sampleIdx)});
 
     const sampleNo = el('div',{class:'sampleNo'},[
@@ -788,7 +836,6 @@
     ]);
 
     sample.appendChild(el('div',{class:'toprow'},[sampleNo, scorebox]));
-
     ATTRS.forEach(a => sample.appendChild(sliderRow(sampleIdx, a)));
 
     const bottom = el('div',{class:'bottomRow'});
@@ -843,7 +890,6 @@
           const bubble = document.querySelector(`[data-bubble="${s}.${a.key}"]`);
           if(bubble) updateBubblePosition(r, bubble);
         }
-
         const intensityVal = state.samples[s][a.key].intensity ?? 0;
         const cs = document.querySelectorAll(`[data-group="${s}.${a.key}.intensity"] .circle`);
         cs.forEach((c, idx)=> c.classList.toggle('on', idx < intensityVal));
@@ -852,17 +898,14 @@
         if(n) n.value = state.samples[s][a.key].notes || '';
       });
 
-      // bottom circles
       renderBottomRow(s,'uniformity');
       renderBottomRow(s,'defect');
 
-      // bottom notes
       const un = document.querySelector(`[data-bottom-notes="${s}.uniformityNotes"]`);
       const dn = document.querySelector(`[data-bottom-notes="${s}.defectNotes"]`);
       if(un) un.value = state.samples[s].uniformityNotes || '';
       if(dn) dn.value = state.samples[s].defectNotes || '';
     }
-
     updateTotals();
   }
 
@@ -875,28 +918,15 @@
     for(let i=0;i<state.samples.length;i++){
       grid.appendChild(buildSample(i));
     }
-
     bindTopFields();
     applyStateToUI();
   }
 
-  function addSample(){
-    state.samples.push(newSampleState());
-    renderAll();
-  }
+  function addSample(){ state.samples.push(newSampleState()); renderAll(); }
+  function removeLastSample(){ if(state.samples.length <= 1) return; state.samples.pop(); renderAll(); }
+  function resetAll(){ state = { name:'', table:'', samples:[newSampleState(), newSampleState(), newSampleState()] }; renderAll(); }
 
-  function removeLastSample(){
-    if(state.samples.length <= 1) return;
-    state.samples.pop();
-    renderAll();
-  }
-
-  function resetAll(){
-    state = { name:'', table:'', samples:[newSampleState(), newSampleState(), newSampleState()] };
-    renderAll();
-  }
-
-  /* ===== Export Star Graph Report (Radar) ===== */
+  /* ===================== Export Star Graph (Printable PDF) ===================== */
   function escHtml(s){
     return String(s ?? "")
       .replaceAll("&","&amp;")
@@ -919,7 +949,7 @@
     });
   }
 
-  function makeRadarSVG({labels, values, size=320, max=10}){
+  function makeRadarSVG({labels, values, size=340, max=10}){
     const cx = size/2, cy = size/2;
     const r = size*0.38;
     const n = labels.length;
@@ -953,8 +983,8 @@
     const ptsStr = ptsVal.map(p=>p.join(",")).join(" ");
     const labelEls = labels.map((lab,i)=>{
       const ang = angle0 + i*(2*Math.PI/n);
-      const lx = cx + (r*1.16)*Math.cos(ang);
-      const ly = cy + (r*1.16)*Math.sin(ang);
+      const lx = cx + (r*1.18)*Math.cos(ang);
+      const ly = cy + (r*1.18)*Math.sin(ang);
       const anchor = (Math.abs(Math.cos(ang)) < 0.2) ? "middle" : (Math.cos(ang) > 0 ? "start" : "end");
       return `<text x="${lx}" y="${ly}" font-size="10" text-anchor="${anchor}" dominant-baseline="middle" fill="#111">${escHtml(lab)}</text>`;
     }).join("");
@@ -976,21 +1006,18 @@
     return (arr || []).map(v => v ? "●" : "○").join(" ");
   }
 
-  function exportStarGraph(){
+  function exportStarGraphPrintable(){
     const tUI = UI[lang];
-
     const nameVal  = document.getElementById('name')?.value || "";
     const tableVal = document.getElementById('table')?.value || "";
-
     const now = new Date();
-    const stamp = now.toISOString().slice(0,19).replaceAll(":","-");
 
     const labels = RADAR_AXES.map(a=> a.label[lang]);
 
     const blocks = state.samples.map((sample, idx)=>{
       const totals = computeSampleTotals(sample);
       const radarVals = radarValuesForSample(sample);
-      const svg = makeRadarSVG({labels, values: radarVals, size: 320, max: 10});
+      const svg = makeRadarSVG({labels, values: radarVals, size: 340, max: 10});
 
       const attrRows = ATTRS.map(a=>{
         const scored = !!sample[a.key]?.scored;
@@ -998,57 +1025,56 @@
         const notes = sample[a.key]?.notes || "";
         return `
           <tr>
-            <td style="padding:6px 8px;border:1px solid #ddd;font-weight:800;">${escHtml(a.label[lang])}</td>
-            <td style="padding:6px 8px;border:1px solid #ddd;text-align:right;width:90px;">${escHtml(score)}</td>
-            <td style="padding:6px 8px;border:1px solid #ddd;white-space:pre-wrap;">${escHtml(notes)}</td>
+            <td class="tdL">${escHtml(a.label[lang])}</td>
+            <td class="tdR">${escHtml(score)}</td>
+            <td class="tdN">${escHtml(notes)}</td>
           </tr>`;
       }).join("");
 
       return `
-        <section style="border:2px solid #111;border-radius:12px;padding:12px;margin:14px 0;background:#fff;page-break-inside:avoid;">
-          <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;">
-            <div style="min-width:280px;flex:1;">
-              <div style="font-size:14px;font-weight:1000;">
-                ${escHtml(tUI.sample)} ${idx+1} — ${escHtml(sample.sampleNo || "")}
-              </div>
-              <div style="margin-top:6px;font-size:12px;line-height:1.55;">
+        <section class="sampleCard">
+          <div class="topRow">
+            <div class="left">
+              <div class="h2">${escHtml(tUI.sample)} ${idx+1} — ${escHtml(sample.sampleNo || "")}</div>
+
+              <div class="meta">
                 <div><b>${escHtml(tUI.total)}:</b> ${totals.total.toFixed(2)}</div>
                 <div><b>Attr Sum:</b> ${totals.attributesSum.toFixed(2)}</div>
 
-                <div style="margin-top:6px;">
+                <div class="mTop">
                   <div><b>${escHtml(tUI.uniformity)}:</b> ${totals.uniformityScore.toFixed(2)} (10 - ${totals.uniChecks}×2)
-                    <span style="font-family:monospace;margin-inline-start:8px;">${escHtml(circlesString(sample.uniformity))}</span>
+                    <span class="mono">${escHtml(circlesString(sample.uniformity))}</span>
                   </div>
                   <div><b>${escHtml(tUI.defect)}:</b> ${totals.defectScore.toFixed(2)} (10 - ${totals.defChecks}×2)
-                    <span style="font-family:monospace;margin-inline-start:8px;">${escHtml(circlesString(sample.defect))}</span>
+                    <span class="mono">${escHtml(circlesString(sample.defect))}</span>
                   </div>
                 </div>
 
-                <div style="margin-top:10px;">
+                <div class="mTop">
                   <div><b>${escHtml(tUI.uniformity)} ${escHtml(tUI.notes)}</b></div>
-                  <div style="white-space:pre-wrap;">${escHtml(sample.uniformityNotes||"")}</div>
+                  <div class="pre">${escHtml(sample.uniformityNotes||"")}</div>
                 </div>
-                <div style="margin-top:10px;">
+                <div class="mTop">
                   <div><b>${escHtml(tUI.defect)} ${escHtml(tUI.notes)}</b></div>
-                  <div style="white-space:pre-wrap;">${escHtml(sample.defectNotes||"")}</div>
+                  <div class="pre">${escHtml(sample.defectNotes||"")}</div>
                 </div>
               </div>
             </div>
 
-            <div style="min-width:320px;">
+            <div class="right">
               ${svg}
-              <div style="font-size:11px;color:#333;margin-top:6px;">${escHtml(tUI.axesTip)}</div>
+              <div class="tip">${escHtml(tUI.axesTip)}</div>
             </div>
           </div>
 
-          <div style="margin-top:12px;">
-            <div style="font-weight:1000;margin:8px 0 6px;">Attributes</div>
-            <table style="width:100%;border-collapse:collapse;font-size:12px;">
+          <div class="attrs">
+            <div class="h3">Attributes</div>
+            <table class="tbl">
               <thead>
                 <tr>
-                  <th style="text-align:left;padding:6px 8px;border:1px solid #ddd;background:#f5f5f5;">Attribute</th>
-                  <th style="text-align:right;padding:6px 8px;border:1px solid #ddd;background:#f5f5f5;">Score</th>
-                  <th style="text-align:left;padding:6px 8px;border:1px solid #ddd;background:#f5f5f5;">Notes</th>
+                  <th class="thL">Attribute</th>
+                  <th class="thR">Score</th>
+                  <th class="thN">Notes</th>
                 </tr>
               </thead>
               <tbody>${attrRows}</tbody>
@@ -1057,81 +1083,98 @@
         </section>`;
     }).join("");
 
-    const html = `<!doctype html>
+    const reportHTML = `<!doctype html>
 <html lang="${lang}">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>SCI Star Graph Report</title>
 <style>
-  body{margin:0;background:#f2f2f2;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#111;}
+  :root{ --ink:#111; --bg:#fff; --line:#111; }
+  body{margin:0;background:#f2f2f2;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);}
   body[dir="rtl"]{direction:rtl;}
   .wrap{max-width:1100px;margin:18px auto;padding:14px;}
   .card{background:#fff;border:1px solid #ddd;border-radius:14px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.06);}
-  .top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start;}
+  .topHead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start;}
   .h1{font-weight:1000;font-size:18px;}
-  .meta{font-size:12px;line-height:1.5;color:#222;}
+  .meta0{font-size:12px;line-height:1.5;color:#222;}
+  .sampleCard{border:2px solid var(--line);border-radius:12px;padding:12px;margin:14px 0;background:#fff;page-break-inside:avoid;}
+  .topRow{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;}
+  .left{min-width:280px;flex:1;}
+  .right{min-width:340px;}
+  .h2{font-weight:1000;font-size:14px;}
+  .h3{font-weight:1000;margin:8px 0 6px;}
+  .meta{margin-top:6px;font-size:12px;line-height:1.55;}
+  .mTop{margin-top:10px;}
+  .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;margin-inline-start:8px;}
+  .pre{white-space:pre-wrap;}
+  .tip{font-size:11px;color:#333;margin-top:6px;}
+  .tbl{width:100%;border-collapse:collapse;font-size:12px;}
+  .thL,.thR,.thN{padding:6px 8px;border:1px solid #ddd;background:#f5f5f5;}
+  .thL,.tdL{text-align:left;}
+  .thR,.tdR{text-align:right;width:90px;}
+  .thN,.tdN{text-align:left;}
+  .tdL,.tdR,.tdN{padding:6px 8px;border:1px solid #ddd;vertical-align:top;}
+  .tdN{white-space:pre-wrap;}
+
+  /* Print tuning */
+  @page { size: A4; margin: 12mm; }
   @media print{
     body{background:#fff;}
     .wrap{max-width:none;margin:0;padding:0;}
-    .card{border:0;box-shadow:none;border-radius:0;}
+    .card{border:0;box-shadow:none;border-radius:0;padding:0;}
+    .sampleCard{break-inside: avoid; page-break-inside: avoid;}
+    .noPrint{display:none !important;}
   }
 </style>
 </head>
 <body dir="${lang==="ar" ? "rtl":"ltr"}">
   <div class="wrap">
     <div class="card">
-      <div class="top">
+      <div class="topHead">
         <div>
           <div class="h1">SCI — ${escHtml(tUI.export)}</div>
-          <div class="meta">
+          <div class="meta0">
             <div><b>${escHtml(tUI.name)}</b> ${escHtml(nameVal)}</div>
             <div><b>${escHtml(tUI.table)}</b> ${escHtml(tableVal)}</div>
             <div><b>Exported:</b> ${escHtml(now.toLocaleString())}</div>
           </div>
         </div>
-        <div class="meta" style="text-align:${lang==="ar" ? "left":"right"};">
+        <div class="meta0" style="text-align:${lang==="ar" ? "left":"right"};">
           <div><b>Samples:</b> ${state.samples.length}</div>
+          <button class="noPrint" onclick="window.print()" style="margin-top:8px;padding:10px 12px;border:1px solid #ccc;border-radius:10px;background:#fff;cursor:pointer;font-weight:900;">
+            Print / Save as PDF
+          </button>
         </div>
       </div>
+
       ${blocks}
     </div>
   </div>
+
+<script>
+  // Auto-open print dialog (user can save as PDF)
+  setTimeout(()=>{ window.print(); }, 300);
+<\/script>
 </body>
 </html>`;
 
-    const blob = new Blob([html], {type:"text/html;charset=utf-8"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `SCI-StarGraph-Report-${stamp}.html`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(()=> URL.revokeObjectURL(url), 1000);
-  }
-
-  /* ========== Render / rebuild ========== */
-  function renderAll(){
-    state.name = document.getElementById("name")?.value ?? state.name;
-    state.table = document.getElementById("table")?.value ?? state.table;
-
-    const grid = document.getElementById('grid');
-    grid.innerHTML = '';
-    for(let i=0;i<state.samples.length;i++){
-      grid.appendChild(buildSample(i));
+    const w = window.open("", "_blank");
+    if(!w){
+      alert("Popup blocked. Please allow popups for this page to print/save PDF.");
+      return;
     }
-
-    bindTopFields();
-    applyStateToUI();
+    w.document.open();
+    w.document.write(reportHTML);
+    w.document.close();
   }
 
-  /* ========== Toolbar bindings ========== */
+  /* ========== Toolbar ========== */
   document.getElementById('btnPrint').addEventListener('click', ()=> window.print());
   document.getElementById('btnReset').addEventListener('click', resetAll);
   document.getElementById('btnAddSample').addEventListener('click', addSample);
   document.getElementById('btnRemoveSample').addEventListener('click', removeLastSample);
-  document.getElementById('btnExportReport').addEventListener('click', exportStarGraph);
+  document.getElementById('btnExportReport').addEventListener('click', exportStarGraphPrintable);
   document.getElementById('btnLang').addEventListener('click', ()=> setLanguage(lang === "en" ? "ar" : "en"));
 
   /* ========== Init ========== */
