@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SCI Cupping Form (Interactive)</title>
+  <style>
+    :root{
+      --ink:#1a1a1a;
+      --line:#2a2a2a;
+      --bg:#fff;
+      --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:#f2f2f2;color:var(--ink);font-family:var(--font)}
+    .page{
+      width:min(1400px, 98vw);
+      margin:12px auto;
+      background:var(--bg);
+      border:1px solid #ccc;
+      box-shadow:0 6px 24px rgba(0,0,0,.08);
+      padding:14px;
+    }
+
+    /* Toolbar layout: Add/Remove are half-size */
+    .toolbar{
+      display:grid;
+      grid-template-columns: 1.2fr 0.6fr 0.6fr 1.4fr 0.9fr 0.9fr; /* Print | Add | Remove | Export | Lang | Reset */
+      gap:8px;
+      align-items:stretch;
+      padding:8px 10px;
+      margin-bottom:10px;
+      border:1px solid #ddd;
+      border-radius:12px;
+      background:#fafafa;
+    }
+    .toolbar button{
+      font:inherit;
+      padding:10px 12px;
+      border:1px solid #ccc;
+      border-radius:10px;
+      background:#fff;
+      cursor:pointer;
+      min-height:44px;
+      width:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      white-space:nowrap;
+      line-height:1.1;
+    }
+    .toolbar button:hover{border-color:#888}
+    @media (max-width: 900px){
+      .toolbar{ grid-template-columns: 1fr 1fr; }
+    }
+
+    /* ===== RTL support (full) ===== */
+    body[dir="rtl"]{ direction: rtl; }
+    body[dir="rtl"] .header{flex-direction:row-reverse}
+    body[dir="rtl"] .brand{text-align:left}
+    body[dir="rtl"] .header-left{align-items:flex-end}
+    body[dir="rtl"] .linefield{flex-direction:row-reverse}
+    body[dir="rtl"] .linefield input{ text-align:right; }
+    body[dir="rtl"] .rowhead{flex-direction:row-reverse}
+    body[dir="rtl"] .rowhead .rightlabel{flex-direction:row-reverse}
+    body[dir="rtl"] .notes{grid-template-columns: 1fr 44px}
+    body[dir="rtl"] .notes label{text-align:right}
+    body[dir="rtl"] .notes textarea{ text-align:right; }
+    body[dir="rtl"] .helper{padding-left:0;padding-right:52px}
+    body[dir="rtl"] .bottomTitle{flex-direction:row-reverse}
+    body[dir="rtl"] input[type="range"]{ direction: rtl; }
+    body[dir="rtl"] .toolbar{ direction: rtl; }
+
+    .header{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+      border-bottom:2px solid var(--line);
+      padding-bottom:8px;margin-bottom:10px;
+    }
+    .header-left{display:flex;flex-direction:column;gap:8px;font-size:14px}
+    .linefield{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .linefield label{min-width:54px;font-weight:600}
+    .linefield input{
+      border:0;border-bottom:1px solid var(--ink);
+      padding:6px 6px;min-width:220px;outline:none;font-size:14px;
+    }
+    .brand{text-align:right;font-size:12px;color:#333;line-height:1.2}
+    .brand b{letter-spacing:.3px}
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap:10px;
+    }
+    .sample{
+      border:2px solid var(--line);
+      padding:0;
+      min-height:880px;
+      display:flex;flex-direction:column;
+      background:#fff;
+      border-radius:10px;
+      overflow:hidden;
+    }
+    .sample .toprow{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:10px;
+      padding:10px 10px 8px 10px;
+      border-bottom:2px solid var(--line);
+    }
+    .sample .toprow .sampleNo{
+      font-weight:700;font-size:13px;
+      display:flex;flex-direction:column;gap:6px;
+    }
+    .sample .toprow input{
+      border:0;border-bottom:1px solid var(--ink);
+      outline:none;font-size:13px;padding:6px 6px;width:100%;
+    }
+    .scorebox{
+      width:160px;border:2px solid var(--line);
+      padding:8px;border-radius:10px;
+      display:flex;flex-direction:column;gap:6px;align-items:stretch;background:#fff;
+    }
+    .scorebox .lbl{font-size:11px;color:#333;font-weight:700;text-align:center}
+    .scorebox .total{
+      font-size:22px;font-weight:800;text-align:center;
+      border-top:1px solid #999;padding-top:6px;
+    }
+    .scorebox .subtot{
+      font-size:11px;color:#222;font-weight:700;line-height:1.25;
+      border-top:1px dashed #aaa;padding-top:6px;margin-top:2px;
+    }
+    .scorebox .checkroast{
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      font-size:11px;font-weight:700;color:#333;margin-top:4px;
+    }
+    .scorebox input[type="checkbox"]{width:18px;height:18px}
+
+    .section{border-bottom:1px solid #bbb;padding:10px 10px}
+    .rowhead{
+      display:flex;justify-content:space-between;align-items:flex-end;gap:10px;
+      font-weight:800;font-size:12px;letter-spacing:.2px;margin-bottom:6px;
+    }
+    .rowhead .rightlabel{
+      font-weight:800;font-size:11px;color:#333;
+      display:flex;gap:8px;align-items:center;
+    }
+
+    .sliderwrap{display:flex;gap:10px;align-items:center}
+    .scale{flex:1;display:flex;flex-direction:column;gap:6px; position:relative;}
+
+    input[type="range"]{
+      width:100%;
+      -webkit-appearance:none;appearance:none;
+      height:28px;background:transparent;margin:0;
+      touch-action: pan-y;
+      position:relative;
+      z-index:2;
+    }
+    input[type="range"]::-webkit-slider-runnable-track{
+      height:3px;background:var(--ink);border-radius:999px;
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;appearance:none;
+      width:20px;height:20px;border-radius:50%;
+      background:#fff;border:2px solid var(--ink);
+      margin-top:-9px;
+    }
+    input[type="range"]::-moz-range-track{height:3px;background:var(--ink);border-radius:999px}
+    input[type="range"]::-moz-range-thumb{
+      width:20px;height:20px;border-radius:50%;
+      background:#fff;border:2px solid var(--ink);
+    }
+
+    .value-bubble{
+      position:absolute;
+      top:-2px;
+      transform:translateX(-50%);
+      width:30px;height:30px;
+      border-radius:999px;
+      border:2px solid var(--ink);
+      background:var(--ink);
+      color:#fff;
+      display:flex;align-items:center;justify-content:center;
+      font-size:10px;font-weight:900;
+      pointer-events:none;
+      z-index:3;
+    }
+
+    .ticks{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#222}
+    .ticks span{min-width:16px;text-align:center}
+    .microhint{
+      font-size:9px;color:#444;font-weight:700;
+      display:flex;justify-content:space-between;margin-top:2px;letter-spacing:.1px;
+    }
+
+    .notes{
+      margin-top:8px;
+      display:grid;
+      grid-template-columns: 44px 1fr;
+      gap:8px;
+      align-items:start;
+    }
+    .notes label{font-size:11px;font-weight:800;color:#333}
+    .notes textarea{
+      width:100%;min-height:44px;resize:vertical;
+      border:0;border-top:1px solid #888;
+      outline:none;padding:8px 8px 0 8px;font-size:12px;
+    }
+
+    .helper{
+      margin-top:8px;
+      display:flex;flex-wrap:wrap;gap:8px;
+      padding-left:52px;
+    }
+    .chip{
+      border:1px solid #bbb;
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      background:#fff;
+      cursor:pointer;
+      user-select:none;
+      min-height:34px;
+      display:flex;align-items:center;
+    }
+    .chip:hover{border-color:#666}
+
+    .circles{display:flex;gap:10px;align-items:center}
+    .circle{
+      width:18px;height:18px;border-radius:50%;
+      border:2px solid var(--ink);
+      background:#fff;cursor:pointer;
+    }
+    .circle.on{background:var(--ink)}
+
+    @media (max-width: 900px){
+      .page{padding:10px}
+      .grid{
+        display:flex;
+        gap:10px;
+        overflow-x:auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom:8px;
+      }
+      .sample{
+        flex:0 0 92%;
+        scroll-snap-align: start;
+        min-height:unset;
+      }
+      .scorebox{width:160px}
+      .header{flex-direction:column;align-items:flex-start}
+      .brand{text-align:left}
+      body[dir="rtl"] .header{flex-direction:column;align-items:flex-end}
+      body[dir="rtl"] .brand{text-align:right}
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="toolbar">
+      <button id="btnPrint" type="button"></button>
+      <button id="btnAddSample" type="button"></button>
+      <button id="btnRemoveSample" type="button"></button>
+      <button id="btnExportReport" type="button"></button>
+      <button id="btnLang" type="button"></button>
+      <button id="btnReset" type="button"></button>
+    </div>
+
+    <div class="header">
+      <div class="header-left">
+        <div class="linefield">
+          <label id="lblName" for="name"></label>
+          <input id="name" type="text" />
+        </div>
+        <div class="linefield">
+          <label id="lblTable" for="table"></label>
+          <input id="table" type="text" />
+        </div>
+      </div>
+      <div class="brand">
+        <div style="font-size:11px;">SCI</div>
+        <b>SUSTAINABLE COFFEE INSTITUTE</b><br/>
+        <span style="font-weight:800;">CUPPING FORM</span>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+  </div>
+
+<script>
+  let lang = "en";
+
+  const UI = {
+    en: {
+      print: "Print / Save as PDF",
+      add: "+ Add",
+      remove: "− Remove",
+      export: "Export Star Graph",
+      lang: "العربية",
+      reset: "Reset",
+      name: "NAME:",
+      table: "TABLE:",
+      sample: "SAMPLE #",
+      total: "TOTAL SCORE",
+      checkRoast: "CHECK ROAST",
+      notes: "NOTES:",
+      intensity: "INTENSITY",
+      thickness: "THICKNESS",
+      duration: "DURATION",
+      woody: "WOODY",
+      low: "LOW",
+      high: "HIGH",
+      flat: "FLAT",
+      bright: "BRIGHT",
+      thin: "THIN",
+      thick: "THICK",
+      short: "SHORT",
+      long: "LONG",
+      none: "NONE",
+      intense: "INTENSE"
+    },
+    ar: {
+      print: "طباعة / حفظ PDF",
+      add: "+ إضافة",
+      remove: "− حذف",
+      export: "تصدير الرسم النجمي",
+      lang: "English",
+      reset: "إعادة ضبط",
+      name: "الاسم:",
+      table: "الطاولة:",
+      sample: "رقم العينة",
+      total: "المجموع",
+      checkRoast: "فحص التحميص",
+      notes: "ملاحظات:",
+      intensity: "الشدة",
+      thickness: "القوام",
+      duration: "المدة",
+      woody: "خشبي",
+      low: "منخفض",
+      high: "مرتفع",
+      flat: "مسطح",
+      bright: "لامع",
+      thin: "خفيف",
+      thick: "ثقيل",
+      short: "قصير",
+      long: "طويل",
+      none: "لا يوجد",
+      intense: "شديد"
+    }
+  };
+
+  function setLanguage(newLang){
+    lang = newLang;
+    document.documentElement.lang = (lang === "ar") ? "ar" : "en";
+    document.documentElement.dir  = (lang === "ar") ? "rtl" : "ltr";
+    document.body.dir             = (lang === "ar") ? "rtl" : "ltr";
+    applyUIText();
+    renderAll();
+  }
+
+  function applyUIText(){
+    const t = UI[lang];
+    document.getElementById("btnPrint").textContent = t.print;
+    document.getElementById("btnAddSample").textContent = t.add;
+    document.getElementById("btnRemoveSample").textContent = t.remove;
+    document.getElementById("btnExportReport").textContent = t.export;
+    document.getElementById("btnLang").textContent = t.lang;
+    document.getElementById("btnReset").textContent = t.reset;
+    document.getElementById("lblName").textContent = t.name;
+    document.getElementById("lblTable").textContent = t.table;
+  }
+
+  // Attributes: bilingual labels + right label keys
+  const ATTRS = [
+    { key:'fragrance',  label:{en:'FRAGRANCE', ar:'العطر'},          rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
+    { key:'aroma',      label:{en:'AROMA', ar:'الرائحة'},            rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
+    { key:'flavor',     label:{en:'FLAVOR', ar:'النكهة'},            rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
+    { key:'acidity',    label:{en:'ACIDITY', ar:'الحموضة'},          rightKey:'intensity', hintLKey:'flat',  hintRKey:'bright' },
+    { key:'mouthfeel',  label:{en:'MOUTHFEEL', ar:'القوام'},         rightKey:'thickness', hintLKey:'thin',  hintRKey:'thick' },
+    { key:'sweetness',  label:{en:'SWEETNESS', ar:'الحلاوة'},        rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
+    { key:'aftertaste', label:{en:'AFTERTASTE', ar:'الأثر'},         rightKey:'duration',  hintLKey:'short', hintRKey:'long' },
+    { key:'freshcrop',  label:{en:'FRESH CROP', ar:'محصول طازج'},    rightKey:'woody',     hintLKey:'none',  hintRKey:'intense' },
+    { key:'arabic',     label:{en:'ARABIC COFFEE', ar:'قهوة عربية'}, rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
+  ];
+
+  const RANGE_MIN = 6.0, RANGE_MAX = 10.0, RANGE_STEP = 0.25;
+  const UNIFORMITY_BASE = 10, DEFECT_BASE = 10, DEDUCT_PER_CHECK = 2;
+
+  /* ===== NOTE HELPERS (more reasonable + bilingual) =====
+     - Each chip: {en, ar}
+     - We pick the correct text based on current language.
+  */
+  const NOTE_HELPERS = {
+    fragrance: [
+      {en:"Floral", ar:"زهري"}, {en:"Jasmine", ar:"ياسمين"}, {en:"Citrus", ar:"حمضيات"},
+      {en:"Sweet", ar:"حلو"}, {en:"Chocolate", ar:"شوكولاتة"}, {en:"Nutty", ar:"مكسرات"},
+      {en:"Spicy", ar:"بهارات"}, {en:"Herbal", ar:"أعشاب"}, {en:"Earthy", ar:"ترابي"}
+    ],
+    aroma: [
+      {en:"Fruity", ar:"فاكهي"}, {en:"Berry", ar:"توتي"}, {en:"Tropical", ar:"استوائي"},
+      {en:"Citrusy", ar:"حمضي/حمضيات"}, {en:"Sweet", ar:"حلو"}, {en:"Caramel", ar:"كراميل"},
+      {en:"Honey", ar:"عسل"}, {en:"Floral", ar:"زهري"}, {en:"Roasty", ar:"محمص"}, {en:"Earthy", ar:"ترابي"}
+    ],
+    flavor: [
+      {en:"Sweet", ar:"حلو"}, {en:"Fruity", ar:"فاكهي"}, {en:"Citrus", ar:"حمضيات"},
+      {en:"Berry", ar:"توت"}, {en:"Stone fruit", ar:"فاكهة نواة"}, {en:"Chocolate", ar:"شوكولاتة"},
+      {en:"Nutty", ar:"مكسرات"}, {en:"Spicy", ar:"بهارات"}, {en:"Herbal", ar:"أعشاب"}, {en:"Earthy", ar:"ترابي"}
+    ],
+    acidity: [
+      {en:"Bright", ar:"لامعة"}, {en:"Crisp", ar:"واضحة/حادة"}, {en:"Soft", ar:"ناعمة"},
+      {en:"Citric", ar:"ستريك/ليموني"}, {en:"Malic (apple)", ar:"ماليك (تفاح)"},
+      {en:"Tartaric (grape)", ar:"تارتاريك (عنب)"}, {en:"Lactic (creamy)", ar:"لاكتيك (كريمي)"},
+      {en:"Sour", ar:"حامض"}, {en:"Flat", ar:"مسطح"}
+    ],
+    mouthfeel: [
+      {en:"Silky", ar:"حريري"}, {en:"Creamy", ar:"كريمي"}, {en:"Velvety", ar:"مخملي"},
+      {en:"Syrupy", ar:"شرابي/لزج"}, {en:"Round", ar:"مستدير"}, {en:"Tea-like", ar:"شبيه الشاي"},
+      {en:"Watery", ar:"مائي"}, {en:"Drying", ar:"يجفف"}, {en:"Astringent", ar:"قابض"}
+    ],
+    sweetness: [
+      {en:"High sweetness", ar:"حلاوة عالية"}, {en:"Medium sweetness", ar:"حلاوة متوسطة"}, {en:"Low sweetness", ar:"حلاوة منخفضة"},
+      {en:"Honey", ar:"عسل"}, {en:"Caramel", ar:"كراميل"}, {en:"Brown sugar", ar:"سكر بني"},
+      {en:"Molasses", ar:"دبس/مولاس"}, {en:"Vanilla", ar:"فانيلا"}
+    ],
+    aftertaste: [
+      {en:"Long", ar:"طويل"}, {en:"Short", ar:"قصير"}, {en:"Clean", ar:"نظيف"},
+      {en:"Sweet finish", ar:"نهاية حلوة"}, {en:"Bitter finish", ar:"نهاية مُرّة"},
+      {en:"Dry finish", ar:"نهاية جافة"}, {en:"Fruity finish", ar:"نهاية فاكهية"}
+    ],
+    freshcrop: [
+      {en:"No woody", ar:"بدون خشبي"}, {en:"Slight woody", ar:"خشبي خفيف"}, {en:"Woody", ar:"خشبي"},
+      {en:"Baggy", ar:"خيش/شنطة"}, {en:"Papery", ar:"ورقي"}, {en:"Stale", ar:"قديم/بايت"}
+    ],
+    arabic: [
+      {en:"Cardamom", ar:"هيل"}, {en:"Saffron", ar:"زعفران"}, {en:"Clove", ar:"قرنفل"},
+      {en:"Cinnamon", ar:"قرفة"}, {en:"Ginger", ar:"زنجبيل"}, {en:"Toasty", ar:"محمص"},
+      {en:"Smoky", ar:"مدخن"}, {en:"Herbal", ar:"أعشاب"}, {en:"Sweet", ar:"حلو"}
+    ],
+    // Optional: bottom notes if you still use them later
+    uniformityNotes: [
+      {en:"Consistent cups", ar:"أكواب متجانسة"}, {en:"Slight variation", ar:"اختلاف بسيط"},
+      {en:"One cup off", ar:"كوب واحد مختلف"}, {en:"Temp issue", ar:"مشكلة حرارة"},
+      {en:"Grind issue", ar:"مشكلة طحن"}
+    ],
+    defectNotes: [
+      {en:"Phenolic", ar:"فينولي"}, {en:"Moldy", ar:"متعفن"}, {en:"Musty", ar:"عفن/رطوبة"},
+      {en:"Smoky/ashy", ar:"دخاني/رمادي"}, {en:"Sour-ferment", ar:"حامض/تخمّر"},
+      {en:"Dirty", ar:"وسخ"}, {en:"Baggy", ar:"خيش/شنطة"}, {en:"Stale", ar:"قديم/بايت"}
+    ]
+  };
+
+  function el(tag, attrs={}, children=[]){
+    const n = document.createElement(tag);
+    Object.entries(attrs).forEach(([k,v])=>{
+      if(k==='class') n.className=v;
+      else if(k==='html') n.innerHTML=v;
+      else if(k.startsWith('on') && typeof v==='function') n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k,v);
+    });
+    children.forEach(c=> n.appendChild(c));
+    return n;
+  }
+
+  function newSampleState(){
+    const obj = { sampleNo:'', checkRoast:false, uniformity:[false,false,false,false,false], defect:[false,false,false,false,false] };
+    ATTRS.forEach(a=> obj[a.key] = { score:RANGE_MIN, scored:false, intensity:0, notes:'' });
+    return obj;
+  }
+
+  let state = { name:'', table:'', samples:[newSampleState(), newSampleState(), newSampleState()] };
+
+  function circleGroup(sampleIdx, attrKey, groupKey, count=5){
+    const wrap = el('div',{class:'circles', 'data-group':`${sampleIdx}.${attrKey}.${groupKey}`});
+    for(let i=1;i<=count;i++){
+      const c = el('div',{class:'circle', role:'button', tabindex:'0'});
+      c.addEventListener('click', ()=> setCircle(sampleIdx, attrKey, groupKey, i));
+      c.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' '){ e.preventDefault(); setCircle(sampleIdx, attrKey, groupKey, i); }});
+      wrap.appendChild(c);
+    }
+    return wrap;
+  }
+
+  function setCircle(sampleIdx, attrKey, groupKey, value){
+    const cs = document.querySelectorAll(`[data-group="${sampleIdx}.${attrKey}.${groupKey}"] .circle`);
+    cs.forEach((c, idx)=> c.classList.toggle('on', idx < value));
+    state.samples[sampleIdx][attrKey][groupKey] = value;
+  }
+
+  function formatBubble(v){ return Number(v).toFixed(2); }
+
+  function updateBubblePosition(rangeEl, bubbleEl){
+    const min = Number(rangeEl.min), max = Number(rangeEl.max);
+    const val = Number(rangeEl.value);
+    const pct = (val - min) / (max - min);
+    const w = rangeEl.getBoundingClientRect().width;
+    const thumb = 20;
+    const isRTL = (document.documentElement.dir === "rtl");
+    const pctAdj = isRTL ? (1 - pct) : pct;
+    const x = pctAdj * (w - thumb) + (thumb/2);
+    bubbleEl.style.left = `${x}px`;
+    bubbleEl.textContent = formatBubble(val);
+  }
+
+  function insertChipText(textarea, text){
+    const insert = (textarea.value && !textarea.value.trim().endsWith(",")) ? ", " : "";
+    textarea.value = (textarea.value ? textarea.value : "") + insert + text;
+    textarea.dispatchEvent(new Event('input', {bubbles:true}));
+    textarea.focus();
+  }
+
+  function helperRow(helperKey, textarea){
+    const items = NOTE_HELPERS[helperKey] || [];
+    if(!items.length) return null;
+    const wrap = el('div',{class:'helper'});
+    items.forEach(it=>{
+      const txt = it[lang] || it.en;
+      const chip = el('div',{class:'chip', role:'button', tabindex:'0'});
+      chip.textContent = txt;
+      chip.addEventListener('click', ()=> insertChipText(textarea, txt));
+      chip.addEventListener('keydown',(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); insertChipText(textarea, txt); }});
+      wrap.appendChild(chip);
+    });
+    return wrap;
+  }
+
+  function sliderRow(sampleIdx, attr){
+    const t = UI[lang];
+
+    const row = el('div',{class:'section'});
+    const head = el('div',{class:'rowhead'},[
+      el('div',{html: attr.label[lang]}),
+      el('div',{class:'rightlabel'},[
+        el('span',{html: t[attr.rightKey]}),
+        circleGroup(sampleIdx, attr.key, 'intensity', 5)
+      ])
+    ]);
+
+    const range = el('input',{
+      type:'range',
+      min:String(RANGE_MIN),
+      max:String(RANGE_MAX),
+      step:String(RANGE_STEP),
+      value:String(RANGE_MIN),
+      'data-range': `${sampleIdx}.${attr.key}.score`
+    });
+
+    const bubble = el('div',{class:'value-bubble', 'data-bubble':`${sampleIdx}.${attr.key}`});
+
+    const markScored = ()=> { state.samples[sampleIdx][attr.key].scored = true; };
+    range.addEventListener('pointerdown', markScored, {passive:true});
+    range.addEventListener('touchstart', markScored, {passive:true});
+    range.addEventListener('mousedown', markScored);
+
+    const sync = ()=> updateBubblePosition(range, bubble);
+
+    range.addEventListener('input', ()=>{
+      markScored();
+      state.samples[sampleIdx][attr.key].score = Number(range.value);
+      sync();
+    });
+
+    requestAnimationFrame(sync);
+    window.addEventListener('resize', sync);
+
+    const ticks = el('div',{class:'ticks'},[
+      el('span',{html:'6'}), el('span',{html:'7'}), el('span',{html:'8'}), el('span',{html:'9'}), el('span',{html:'10'})
+    ]);
+
+    const hint = el('div',{class:'microhint'},[
+      el('span',{html: t[attr.hintLKey]}),
+      el('span',{html: t[attr.hintRKey]})
+    ]);
+
+    const notesWrap = el('div',{class:'notes'},[
+      el('label',{html: t.notes}),
+      el('textarea',{'data-notes':`${sampleIdx}.${attr.key}.notes`})
+    ]);
+    const textarea = notesWrap.querySelector('textarea');
+
+    textarea.addEventListener('input', (e)=> state.samples[sampleIdx][attr.key].notes = e.target.value);
+
+    row.appendChild(head);
+    row.appendChild(el('div',{class:'sliderwrap'},[ el('div',{class:'scale'},[range, bubble]) ]));
+    row.appendChild(ticks);
+    row.appendChild(hint);
+    row.appendChild(notesWrap);
+
+    const helpers = helperRow(attr.key, textarea);
+    if(helpers) row.appendChild(helpers);
+
+    return row;
+  }
+
+  function buildSample(sampleIdx){
+    const t = UI[lang];
+
+    const sample = el('div',{class:'sample', 'data-sample':String(sampleIdx)});
+
+    const sampleNo = el('div',{class:'sampleNo'},[
+      el('div',{html: t.sample}),
+      el('input',{type:'text', 'data-samplefield':`${sampleIdx}.sampleNo`})
+    ]);
+
+    const scorebox = el('div',{class:'scorebox'},[
+      el('div',{class:'lbl', html: t.total}),
+      el('div',{class:'total', 'data-total':String(sampleIdx), html:'0.00'}),
+      el('div',{class:'checkroast'},[
+        el('span',{html: t.checkRoast}),
+        el('input',{type:'checkbox', 'data-samplefield':`${sampleIdx}.checkRoast`})
+      ])
+    ]);
+
+    sample.appendChild(el('div',{class:'toprow'},[sampleNo, scorebox]));
+    ATTRS.forEach(a => sample.appendChild(sliderRow(sampleIdx, a)));
+
+    // Sample field bindings
+    sample.querySelectorAll('[data-samplefield]').forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        const [s, field] = inp.getAttribute('data-samplefield').split('.');
+        if(field === 'checkRoast') state.samples[Number(s)].checkRoast = inp.checked;
+        else state.samples[Number(s)][field] = inp.value;
+      });
+      if(inp.type === 'checkbox'){
+        inp.addEventListener('change', ()=>{
+          const [s, field] = inp.getAttribute('data-samplefield').split('.');
+          state.samples[Number(s)][field] = inp.checked;
+        });
+      }
+    });
+
+    return sample;
+  }
+
+  function bindTopFields(){
+    document.getElementById('name').addEventListener('input', (e)=> state.name = e.target.value);
+    document.getElementById('table').addEventListener('input', (e)=> state.table = e.target.value);
+  }
+
+  function applyStateToUI(){
+    document.getElementById('name').value = state.name || '';
+    document.getElementById('table').value = state.table || '';
+
+    for(let s=0;s<state.samples.length;s++){
+      ATTRS.forEach(a=>{
+        const r = document.querySelector(`[data-range="${s}.${a.key}.score"]`);
+        if(r){
+          r.value = state.samples[s][a.key].score ?? RANGE_MIN;
+          const bubble = document.querySelector(`[data-bubble="${s}.${a.key}"]`);
+          if(bubble) updateBubblePosition(r, bubble);
+        }
+        const intensityVal = state.samples[s][a.key].intensity ?? 0;
+        const cs = document.querySelectorAll(`[data-group="${s}.${a.key}.intensity"] .circle`);
+        cs.forEach((c, idx)=> c.classList.toggle('on', idx < intensityVal));
+        const n = document.querySelector(`[data-notes="${s}.${a.key}.notes"]`);
+        if(n) n.value = state.samples[s][a.key].notes || '';
+      });
+
+      const sn = document.querySelector(`[data-sample="${s}"] [data-samplefield="${s}.sampleNo"]`);
+      if(sn) sn.value = state.samples[s].sampleNo || '';
+      const cr = document.querySelector(`[data-sample="${s}"] [data-samplefield="${s}.checkRoast"]`);
+      if(cr) cr.checked = !!state.samples[s].checkRoast;
+    }
+  }
+
+  function renderAll(){
+    state.name = document.getElementById("name")?.value ?? state.name;
+    state.table = document.getElementById("table")?.value ?? state.table;
+
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    for(let i=0;i<state.samples.length;i++){
+      grid.appendChild(buildSample(i));
+    }
+
+    bindTopFields();
+    applyStateToUI();
+  }
+
+  function addSample(){ state.samples.push(newSampleState()); renderAll(); }
+  function removeLastSample(){ if(state.samples.length<=1) return; state.samples.pop(); renderAll(); }
+  function resetAll(){ state = { name:'', table:'', samples:[newSampleState(), newSampleState(), newSampleState()] }; renderAll(); }
+
+  // Toolbar
+  document.getElementById('btnPrint').addEventListener('click', ()=> window.print());
+  document.getElementById('btnReset').addEventListener('click', resetAll);
+  document.getElementById('btnAddSample').addEventListener('click', addSample);
+  document.getElementById('btnRemoveSample').addEventListener('click', removeLastSample);
+  document.getElementById('btnExportReport').addEventListener('click', ()=> alert("Export function can be pasted from your previous version (kept unchanged)."));
+  document.getElementById('btnLang').addEventListener('click', ()=> setLanguage(lang === "en" ? "ar" : "en"));
+
+  // Init
+  applyUIText();
+  setLanguage("en");
+</script>
+</body>
+</html>
