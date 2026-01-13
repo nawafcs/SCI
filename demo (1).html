@@ -1,0 +1,1484 @@
+ <!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SCI Cupping Form (Interactive)</title>
+  <style>
+    :root{
+      --ink:#1a2a2a;
+      --line:#1f2a2a;
+      --bg:#fff;
+      --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      --muted:#6b7280;
+      --ok:#0f766e;
+      --warn:#b45309;
+      --bad:#b91c1c;
+      --cardShadow:0 6px 24px rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:#f2f2f2;color:var(--ink);font-family:var(--font)}
+    .page{
+      width:min(1400px, 98vw);
+      margin:12px auto;
+      background:var(--bg);
+      border:1px solid #ccc;
+      box-shadow:var(--cardShadow);
+      padding:14px;
+      border-radius:14px;
+    }
+
+    /* Error banner (never blank screen) */
+    .errorBox{
+      display:none;
+      border:2px solid #b91c1c;
+      background:rgba(185,28,28,.06);
+      color:#7f1d1d;
+      padding:12px;
+      border-radius:12px;
+      font-weight:900;
+      margin-bottom:10px;
+      white-space:pre-wrap;
+    }
+    .errorBox.open{display:block}
+
+    /* Toolbar */
+    .toolbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:8px 10px;
+      margin-bottom:10px;
+      border:1px solid #ddd;
+      border-radius:12px;
+      background:#fafafa;
+      position:sticky;
+      top:8px;
+      z-index:50;
+      backdrop-filter: blur(6px);
+    }
+    .toolbar-left{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+    .primaryBtn, .ghostBtn{
+      font:inherit;
+      padding:10px 12px;
+      border:1px solid #ccc;
+      border-radius:10px;
+      background:#fff;
+      cursor:pointer;
+      min-height:44px;
+      font-weight:900;
+      display:flex;align-items:center;justify-content:center;
+      text-align:center;
+      white-space:nowrap;
+      gap:8px;
+    }
+    .primaryBtn:hover,.ghostBtn:hover{border-color:#888}
+    .ghostBtn{background:#f7f7f7}
+
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;border:1px solid #ddd;border-radius:999px;background:#fff;
+      font-size:12px;font-weight:900;color:#111;
+      min-height:38px;
+    }
+    .pill select{
+      border:0;outline:none;font:inherit;background:transparent;
+      padding:0;margin:0;min-width:110px;
+    }
+
+    .menuWrap{position:relative}
+    .menuBtn{
+      width:44px;height:44px;
+      border:1px solid #ccc;
+      border-radius:10px;
+      background:#fff;
+      cursor:pointer;
+      font-weight:1100;
+      font-size:20px;
+      line-height:1;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .menuBtn:hover{border-color:#888}
+
+    .menuPanel{
+      position:absolute;
+      top:50px;
+      right:0;
+      min-width:260px;
+      background:#fff;
+      border:1px solid #ddd;
+      border-radius:12px;
+      box-shadow:0 10px 30px rgba(0,0,0,.12);
+      padding:6px;
+      display:none;
+      z-index:9999;
+    }
+    body[dir="rtl"] .menuPanel{ right:auto; left:0; }
+    .menuPanel.open{display:block}
+    .menuPanel button{
+      width:100%;
+      text-align:left;
+      font:inherit;
+      padding:10px 10px;
+      border:0;
+      border-radius:10px;
+      background:#fff;
+      cursor:pointer;
+      min-height:40px;
+      font-weight:900;
+    }
+    body[dir="rtl"] .menuPanel button{text-align:right}
+    .menuPanel button:hover{background:#f2f2f2}
+    .menuSep{height:1px;background:#e5e5e5;margin:6px 4px;border-radius:999px}
+    .menuNote{padding:8px 10px;color:var(--muted);font-size:11px;line-height:1.3}
+
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+
+    /* Header */
+    .header{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+      border-bottom:2px solid var(--line);
+      padding-bottom:8px;margin-bottom:10px;
+    }
+    .header-left{display:flex;flex-direction:column;gap:8px;font-size:14px}
+    .linefield{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .linefield label{min-width:54px;font-weight:900}
+    .linefield input{
+      border:0;border-bottom:1px solid var(--ink);
+      padding:6px 6px;min-width:220px;outline:none;font-size:14px;
+    }
+    .brand{text-align:right;font-size:12px;color:#333;line-height:1.2}
+    .brand b{letter-spacing:.3px}
+
+    /* Sample grid */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap:10px;
+    }
+    .sample{
+      border:2px solid var(--line);
+      padding:0;
+      min-height:920px;
+      display:flex;flex-direction:column;
+      background:#fff;
+      border-radius:10px;
+      overflow:hidden;
+      position:relative;
+    }
+
+    .sample .toprow{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:10px;
+      padding:10px 10px 8px 10px;
+      border-bottom:2px solid var(--line);
+      background:#fff;
+    }
+    .sample .toprow .sampleNo{
+      font-weight:900;font-size:13px;
+      display:flex;flex-direction:column;gap:6px;
+    }
+    .sample .toprow input{
+      border:0;border-bottom:1px solid var(--ink);
+      outline:none;font-size:13px;padding:6px 6px;width:100%;
+    }
+
+    .scorebox{
+      width:220px;border:2px solid var(--line);
+      padding:8px;border-radius:10px;
+      display:flex;flex-direction:column;gap:6px;align-items:stretch;background:#fff;
+    }
+    .scorebox .lbl{font-size:11px;color:#333;font-weight:1000;text-align:center}
+    .scorebox .total{
+      font-size:22px;font-weight:1100;text-align:center;
+      border-top:1px solid #999;padding-top:6px;
+    }
+    .scorebox .subtot{
+      font-size:11px;color:#222;font-weight:1000;line-height:1.35;
+      border-top:1px dashed #aaa;padding-top:6px;margin-top:2px;
+    }
+    .scorebox .flags{
+      display:flex;gap:8px;justify-content:space-between;align-items:center;
+      border-top:1px dashed #aaa;padding-top:6px;margin-top:2px;
+      font-size:11px;font-weight:1000;color:#333;
+    }
+    .scorebox .badge{
+      padding:4px 8px;border-radius:999px;border:1px solid #ddd;background:#fafafa;
+      font-size:11px;font-weight:1100;
+    }
+    .badge.ok{border-color:rgba(15,118,110,.35); background:rgba(15,118,110,.08); color:var(--ok)}
+    .badge.warn{border-color:rgba(180,83,9,.35); background:rgba(180,83,9,.08); color:var(--warn)}
+    .badge.bad{border-color:rgba(185,28,28,.35); background:rgba(185,28,28,.08); color:var(--bad)}
+    .scorebox .checkroast{
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      font-size:11px;font-weight:1000;color:#333;margin-top:4px;
+    }
+    .scorebox input[type="checkbox"]{width:18px;height:18px}
+
+    .section{border-bottom:1px solid #bbb;padding:10px 10px}
+    .rowhead{
+      display:flex;justify-content:space-between;align-items:flex-end;gap:10px;
+      font-weight:1100;font-size:12px;letter-spacing:.2px;margin-bottom:6px;
+    }
+    .rowhead .rightlabel{
+      font-weight:1100;font-size:11px;color:#333;
+      display:flex;gap:8px;align-items:center;
+    }
+    .rowhead .leftLabel{
+      display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    }
+    .miniTag{
+      font-size:10px;font-weight:1100;color:var(--muted);
+      border:1px solid #e5e7eb;background:#f9fafb;border-radius:999px;
+      padding:3px 8px;
+    }
+    .miniTag.scored{color:var(--ok); border-color:rgba(15,118,110,.28); background:rgba(15,118,110,.08)}
+    .miniTag.notScored{color:var(--muted)}
+    .miniBtn{
+      width:28px;height:28px;border-radius:10px;border:1px solid #ccc;background:#fff;
+      cursor:pointer;font-weight:1100;display:flex;align-items:center;justify-content:center;
+    }
+    .miniBtn:hover{border-color:#888}
+
+    .historyMark{
+      color:#b91c1c;
+      font-size:11px;
+      font-weight:1100;
+      margin-inline-start:8px;
+      white-space:nowrap;
+    }
+
+    .sliderwrap{display:flex;gap:10px;align-items:center}
+    .scale{flex:1;display:flex;flex-direction:column;gap:6px; position:relative;}
+    input[type="range"]{
+      width:100%;
+      -webkit-appearance:none;appearance:none;
+      height:28px;background:transparent;margin:0;
+      touch-action: pan-y;
+      position:relative;
+      z-index:2;
+    }
+    input[type="range"]::-webkit-slider-runnable-track{
+      height:3px;background:var(--ink);border-radius:999px;
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;appearance:none;
+      width:20px;height:20px;border-radius:50%;
+      background:#fff;border:2px solid var(--ink);
+      margin-top:-9px;
+    }
+    input[type="range"]::-moz-range-track{height:3px;background:var(--ink);border-radius:999px}
+    input[type="range"]::-moz-range-thumb{
+      width:20px;height:20px;border-radius:50%;
+      background:#fff;border:2px solid var(--ink);
+    }
+    .value-bubble{
+      position:absolute;
+      top:-2px;
+      transform:translateX(-50%);
+      width:34px;height:34px;
+      border-radius:999px;
+      border:2px solid var(--ink);
+      background:var(--ink);
+      color:#fff;
+      display:flex;align-items:center;justify-content:center;
+      font-size:10px;font-weight:1100;
+      pointer-events:none;
+      z-index:3;
+    }
+    .value-bubble.zero{background:#fff;color:var(--ink)}
+    .ticks{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#222}
+    .ticks span{min-width:16px;text-align:center}
+    .microhint{
+      font-size:9px;color:#444;font-weight:1000;
+      display:flex;justify-content:space-between;margin-top:2px;letter-spacing:.1px;
+    }
+
+    .notes{
+      margin-top:8px;
+      display:grid;
+      grid-template-columns: 44px 1fr;
+      gap:8px;
+      align-items:start;
+    }
+    .notes label{font-size:11px;font-weight:1100;color:#333}
+    .notes textarea{
+      width:100%;min-height:44px;resize:vertical;
+      border:0;border-top:1px solid #888;
+      outline:none;padding:8px 8px 0 8px;font-size:12px;
+    }
+
+    .helper{
+      margin-top:8px;
+      display:flex;flex-wrap:wrap;gap:8px;
+      padding-left:52px;
+    }
+    .chip{
+      border:1px solid currentColor;
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      background:#fff;
+      cursor:pointer;
+      user-select:none;
+      min-height:34px;
+      display:flex;align-items:center;
+      font-weight:1000;
+      background: rgba(0,0,0,.02);
+    }
+    .chip:hover{ background: rgba(0,0,0,.06); }
+
+    .circles{display:flex;gap:10px;align-items:center}
+    .circle{
+      width:18px;height:18px;border-radius:50%;
+      border:2px solid var(--ink);
+      background:#fff;cursor:pointer;
+    }
+    .circle.on{background:var(--ink)}
+
+    .bottomRow{
+      padding:10px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-top:auto;
+      border-top:2px solid var(--line);
+    }
+    .bottomItem{border:1px solid #bbb;border-radius:10px;padding:10px}
+    .bottomTitle{
+      display:flex;justify-content:space-between;align-items:center;
+      font-size:12px;font-weight:1100;margin-bottom:8px;
+    }
+    .bigcircles .circle{width:20px;height:20px}
+
+    /* Mobile swipe cards */
+    @media (max-width: 900px){
+      .page{padding:10px}
+      .grid{
+        display:flex;
+        gap:10px;
+        overflow-x:auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom:8px;
+      }
+      .sample{
+        flex:0 0 92%;
+        scroll-snap-align: start;
+        min-height:unset;
+      }
+      .header{flex-direction:column;align-items:flex-start}
+      .brand{text-align:left}
+    }
+
+    /* RTL */
+    body[dir="rtl"]{ direction: rtl; }
+    body[dir="rtl"] .header{flex-direction:row-reverse}
+    body[dir="rtl"] .brand{text-align:left}
+    body[dir="rtl"] .header-left{align-items:flex-end}
+    body[dir="rtl"] .linefield{flex-direction:row-reverse}
+    body[dir="rtl"] .linefield input{ text-align:right; }
+    body[dir="rtl"] .rowhead{flex-direction:row-reverse}
+    body[dir="rtl"] .rowhead .rightlabel{flex-direction:row-reverse}
+    body[dir="rtl"] .notes{grid-template-columns: 1fr 44px}
+    body[dir="rtl"] .notes label{text-align:right}
+    body[dir="rtl"] .notes textarea{ text-align:right; }
+    body[dir="rtl"] .helper{padding-left:0;padding-right:52px}
+    body[dir="rtl"] .bottomTitle{flex-direction:row-reverse}
+    body[dir="rtl"] input[type="range"]{ direction: rtl; }
+    body[dir="rtl"] .toprow{direction:rtl}
+    body[dir="rtl"] .sample .toprow input{ text-align:right; }
+    body[dir="rtl"] .toolbar{direction:rtl}
+    body[dir="rtl"] .menuPanel{ right:auto; left:0; }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div id="err" class="errorBox"></div>
+
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <button id="btnLang" type="button" class="primaryBtn"></button>
+
+        <!-- TIMER -->
+        <div class="pill" id="timerPill" style="gap:10px;">
+          <span id="timerLabel" style="font-weight:1100;">Timer</span>
+          <span id="timerDisplay" class="mono" style="min-width:72px;text-align:center;">00:00</span>
+          <button id="btnTimerStart" type="button" class="ghostBtn" style="padding:8px 10px;min-height:38px;">Start</button>
+          <button id="btnTimerPause" type="button" class="ghostBtn" style="padding:8px 10px;min-height:38px;">Pause</button>
+          <button id="btnTimerReset" type="button" class="ghostBtn" style="padding:8px 10px;min-height:38px;">Reset</button>
+        </div>
+
+        <span class="pill">
+          <span id="lblTableSel"></span>
+          <select id="selTable"></select>
+        </span>
+
+        <span class="pill">
+          <span id="lblRoundSel"></span>
+          <select id="selRound"></select>
+        </span>
+
+        <button id="btnSession" type="button" class="ghostBtn"></button>
+      </div>
+
+      <div class="menuWrap">
+        <button id="btnMenu" type="button" class="menuBtn" aria-haspopup="true" aria-expanded="false" title="Menu">⋮</button>
+
+        <div id="menuPanel" class="menuPanel" role="menu" aria-hidden="true">
+          <div class="menuNote" id="menuHint"></div>
+          <button id="btnShareLink" type="button" role="menuitem"></button>
+          <button id="btnShareWhatsApp" type="button" role="menuitem"></button>
+          <div class="menuSep"></div>
+          <button id="btnCompare" type="button" role="menuitem"></button>
+          <button id="btnExportReport" type="button" role="menuitem"></button>
+          <button id="btnPrint" type="button" role="menuitem"></button>
+          <div class="menuSep"></div>
+          <button id="btnAddSample" type="button" role="menuitem"></button>
+          <button id="btnRemoveSample" type="button" role="menuitem"></button>
+          <div class="menuSep"></div>
+          <button id="btnAddTable" type="button" role="menuitem"></button>
+          <button id="btnAddRound" type="button" role="menuitem"></button>
+          <div class="menuSep"></div>
+          <button id="btnReset" type="button" role="menuitem"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="header">
+      <div class="header-left">
+        <div class="linefield">
+          <label id="lblName" for="name"></label>
+          <input id="name" type="text" />
+        </div>
+        <div class="linefield">
+          <label id="lblTable" for="table"></label>
+          <input id="table" type="text" />
+        </div>
+      </div>
+      <div class="brand">
+        <div style="font-size:11px;">SCI</div>
+        <b>SUSTAINABLE COFFEE INSTITUTE</b><br/>
+        <span style="font-weight:900;">CUPPING FORM</span>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+  </div>
+
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function showErr(e){
+    const box = $("err");
+    if(!box) return;
+    box.classList.add("open");
+    box.textContent = "Error:\n" + (e && e.stack ? e.stack : String(e));
+  }
+  function safeSetText(id, txt){
+    const el = $(id);
+    if(el) el.textContent = txt;
+  }
+  function repAll(str, a, b){
+    str = String(str);
+    if(str.replaceAll) return str.replaceAll(a,b);
+    return str.split(a).join(b);
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    try{
+      const params = new URLSearchParams(location.search);
+      const VIEW_ONLY = params.get("view") === "1";
+
+      let lang = "en";
+
+      const UI = {
+        en: {
+          print: "Print page",
+          export: "Export Star Graph (Printable PDF)",
+          shareLink: "Copy share link (view-only)",
+          shareWA: "Share via WhatsApp",
+          compare: "Compare two samples",
+          add: "+ Add sample",
+          remove: "− Remove sample",
+          addTable: "+ Add table",
+          addRound: "+ Add round",
+          reset: "Reset current round",
+          sessionOn: "Session: ON",
+          sessionOff: "Session: OFF",
+          lang: "العربية",
+          name: "NAME:",
+          table: "TABLE:",
+          tableSel: "Table",
+          roundSel: "Round",
+          sample: "SAMPLE #",
+          total: "TOTAL SCORE",
+          checkRoast: "CHECK ROAST",
+          notes: "NOTES:",
+          intensity: "INTENSITY",
+          thickness: "THICKNESS",
+          duration: "DURATION",
+          woody: "WOODY",
+          low: "LOW",
+          high: "HIGH",
+          flat: "FLAT",
+          bright: "BRIGHT",
+          thin: "THIN",
+          thick: "THICK",
+          short: "SHORT",
+          long: "LONG",
+          none: "NONE",
+          intense: "INTENSE",
+          uniformity: "UNIFORMITY",
+          defect: "DEFECT",
+          notScored: "Not scored",
+          scored: "Scored",
+          clear: "Clear",
+          menuHint: VIEW_ONLY ? "View-only mode is ON (editing disabled)." : "Tip: Share view-only link from here.",
+          viewOnlyBlocked: "This is view-only mode.",
+          copied: "Copied.",
+          shareFail: "Couldn’t copy. Your browser may block clipboard without HTTPS."
+        },
+        ar: {
+          print: "طباعة الصفحة",
+          export: "تصدير الرسم النجمي (PDF قابل للطباعة)",
+          shareLink: "نسخ رابط مشاركة (عرض فقط)",
+          shareWA: "مشاركة عبر واتساب",
+          compare: "مقارنة عينتين",
+          add: "+ إضافة عينة",
+          remove: "− حذف عينة",
+          addTable: "+ إضافة طاولة",
+          addRound: "+ إضافة جولة",
+          reset: "إعادة ضبط الجولة الحالية",
+          sessionOn: "وضع الجلسة: تشغيل",
+          sessionOff: "وضع الجلسة: إيقاف",
+          lang: "English",
+          name: "الاسم:",
+          table: "الطاولة:",
+          tableSel: "طاولة",
+          roundSel: "جولة",
+          sample: "رقم العينة",
+          total: "المجموع",
+          checkRoast: "فحص التحميص",
+          notes: "ملاحظات:",
+          intensity: "الشدة",
+          thickness: "القوام",
+          duration: "المدة",
+          woody: "خشبي",
+          low: "منخفض",
+          high: "مرتفع",
+          flat: "مسطح",
+          bright: "لامع",
+          thin: "خفيف",
+          thick: "ثقيل",
+          short: "قصير",
+          long: "طويل",
+          none: "لا يوجد",
+          intense: "شديد",
+          uniformity: "التجانس",
+          defect: "العيوب",
+          notScored: "غير مُسجّل",
+          scored: "مُسجّل",
+          clear: "مسح",
+          menuHint: VIEW_ONLY ? "وضع العرض فقط مفعّل (التعديل مقفل)." : "تلميح: شارك رابط عرض فقط من هنا.",
+          viewOnlyBlocked: "هذا وضع عرض فقط.",
+          copied: "تم النسخ.",
+          shareFail: "تعذر النسخ. بعض المتصفحات تتطلب HTTPS للنسخ."
+        }
+      };
+
+      const ATTRS = [
+        { key:'fragrance',  label:{en:'FRAGRANCE', ar:'العطر'},          rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
+        { key:'aroma',      label:{en:'AROMA', ar:'الرائحة'},            rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
+        { key:'flavor',     label:{en:'FLAVOR', ar:'النكهة'},            rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
+        { key:'acidity',    label:{en:'ACIDITY', ar:'الحموضة'},          rightKey:'intensity', hintLKey:'flat',  hintRKey:'bright' },
+        { key:'mouthfeel',  label:{en:'MOUTHFEEL', ar:'الإحساس بالفم'},  rightKey:'thickness', hintLKey:'thin',  hintRKey:'thick' },
+        { key:'sweetness',  label:{en:'SWEETNESS', ar:'الحلاوة'},        rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
+        { key:'aftertaste', label:{en:'AFTERTASTE', ar:'الأثر'},         rightKey:'duration',  hintLKey:'short', hintRKey:'long' },
+        { key:'freshcrop',  label:{en:'FRESH CROP', ar:'محصول طازج'},    rightKey:'woody',     hintLKey:'none',  hintRKey:'intense' },
+      ];
+
+      const RANGE_MIN = 6.0, RANGE_MAX = 10.0, RANGE_STEP = 0.25;
+      const UNIFORMITY_BASE = 10, DEFECT_BASE = 10, DEDUCT_PER_CHECK = 2;
+
+      const NOTE_HELPERS = {
+        fragrance: [{en:"Floral",ar:"زهري"},{en:"Fruity",ar:"فاكهي"},{en:"Citrus",ar:"حمضيات"},{en:"Sweet",ar:"حلو"},{en:"Honey",ar:"عسل"},{en:"Vanilla",ar:"فانيلا"},{en:"Nutty",ar:"مكسرات"},{en:"Cocoa",ar:"كاكاو"},{en:"Spices",ar:"بهارات"},{en:"Green/Herbal",ar:"أخضر/أعشاب"},{en:"Roasted",ar:"محمص"},{en:"Earthy",ar:"ترابي"}],
+        aroma: [{en:"Fruity",ar:"فاكهي"},{en:"Berry",ar:"توتي"},{en:"Stone fruit",ar:"فاكهة نواة"},{en:"Tropical",ar:"استوائي"},{en:"Floral",ar:"زهري"},{en:"Sweet",ar:"حلو"},{en:"Caramel",ar:"كراميل"},{en:"Brown sugar",ar:"سكر بني"},{en:"Nutty/Cocoa",ar:"مكسرات/كاكاو"},{en:"Spices",ar:"بهارات"},{en:"Roasted",ar:"محمص"},{en:"Green/Vegetative",ar:"أخضر/نباتي"},{en:"Sour/Fermented",ar:"حامض/مخمّر"}],
+        flavor: [{en:"Sweet",ar:"حلو"},{en:"Fruity",ar:"فاكهي"},{en:"Citrus",ar:"حمضيات"},{en:"Berry",ar:"توت"},{en:"Tropical",ar:"استوائي"},{en:"Floral",ar:"زهري"},{en:"Nutty",ar:"مكسرات"},{en:"Cocoa/Chocolate",ar:"كاكاو/شوكولاتة"},{en:"Spices",ar:"بهارات"},{en:"Roasted",ar:"محمص"},{en:"Green/Vegetative",ar:"أخضر/نباتي"},{en:"Sour/Fermented",ar:"حامض/مخمّر"}],
+        acidity: [{en:"Bright",ar:"لامعة"},{en:"Crisp",ar:"واضحة/حادة"},{en:"Soft",ar:"ناعمة"},{en:"Citric (lemon)",ar:"ستريك (ليمون)"},{en:"Malic (apple)",ar:"ماليك (تفاح)"},{en:"Tartaric (grape)",ar:"تارتاريك (عنب)"},{en:"Phosphoric",ar:"فوسفوريك"},{en:"Lactic (creamy)",ar:"لاكتيك (كريمي)"},{en:"Sour",ar:"حامض"},{en:"Flat",ar:"مسطح"}],
+        mouthfeel: [{en:"Silky",ar:"حريري"},{en:"Creamy",ar:"كريمي"},{en:"Velvety",ar:"مخملي"},{en:"Syrupy",ar:"لزج/شرابي"},{en:"Round",ar:"مستدير"},{en:"Watery",ar:"مائي"},{en:"Drying",ar:"يجفف"},{en:"Astringent",ar:"قابض"}],
+        sweetness: [{en:"Honey",ar:"عسل"},{en:"Caramel",ar:"كراميل"},{en:"Brown sugar",ar:"سكر بني"},{en:"Vanilla",ar:"فانيلا"},{en:"Molasses",ar:"دبس/مولاس"},{en:"Candy-like",ar:"حلوى"},{en:"Low sweetness",ar:"حلاوة منخفضة"}],
+        aftertaste: [{en:"Long",ar:"طويل"},{en:"Short",ar:"قصير"},{en:"Clean",ar:"نظيف"},{en:"Sweet finish",ar:"نهاية حلوة"},{en:"Bitter finish",ar:"نهاية مُرّة"},{en:"Dry finish",ar:"نهاية جافة"},{en:"Roasty finish",ar:"نهاية محمصة"}],
+        freshcrop: [{en:"No woody",ar:"بدون خشبي"},{en:"Slight woody",ar:"خشبي خفيف"},{en:"Woody",ar:"خشبي"},{en:"Baggy (jute)",ar:"خيش/شنطة"},{en:"Papery",ar:"ورقي"},{en:"Stale",ar:"قديم/بايت"}],
+        uniformityNotes: [{en:"Cups consistent",ar:"الأكواب متجانسة"},{en:"Slight variation",ar:"اختلاف بسيط"},{en:"Temp inconsistency",ar:"عدم ثبات الحرارة"},{en:"Grind inconsistency",ar:"عدم ثبات الطحن"}],
+        defectNotes: [{en:"Phenolic/Medicinal",ar:"فينولي/طبي"},{en:"Rubbery",ar:"مطاطي"},{en:"Musty/Moldy",ar:"عفن/متعفن"},{en:"Smoky/Ashy",ar:"دخاني/رمادي"},{en:"Sour/Ferment",ar:"حامض/تخمّر"},{en:"Dirty",ar:"وسخ"},{en:"Baggy",ar:"خيش/شنطة"},{en:"Stale",ar:"قديم/بايت"}]
+      };
+
+      function chipColorForText(txt){
+        const s = String(txt||"").toLowerCase();
+        const has = (k)=> s.indexOf(k) !== -1;
+        if (has("floral")||has("زهري")) return "#7c3aed";
+        if (has("fruity")||has("berry")||has("tropical")||has("فاكهي")||has("توت")||has("استوائي")) return "#e11d48";
+        if (has("citrus")||has("lemon")||has("حمض")||has("حمضيات")||has("ليمون")) return "#f97316";
+        if (has("sweet")||has("honey")||has("vanilla")||has("caramel")||has("brown sugar")||has("molasses")||has("candy")||has("حلو")||has("عسل")||has("فانيلا")||has("كراميل")||has("سكر")||has("دبس")||has("حلوى")) return "#b45309";
+        if (has("nutty")||has("cocoa")||has("chocolate")||has("مكسرات")||has("كاكاو")||has("شوكولاتة")) return "#7c2d12";
+        if (has("spices")||has("بهارات")) return "#b91c1c";
+        if (has("green")||has("herbal")||has("vegetative")||has("أخضر")||has("أعشاب")||has("نباتي")) return "#15803d";
+        if (has("roasted")||has("smoky")||has("ashy")||has("bitter")||has("محمص")||has("دخاني")||has("رمادي")||has("مر")) return "#374151";
+        if (has("sour")||has("ferment")||has("حامض")||has("مخمّر")||has("تخمّر")) return "#0f766e";
+        if (has("earthy")||has("musty")||has("moldy")||has("dirty")||has("ترابي")||has("عفن")||has("وسخ")) return "#4d7c0f";
+        if (has("woody")||has("baggy")||has("papery")||has("stale")||has("خشبي")||has("خيش")||has("ورقي")||has("قديم")) return "#334155";
+        if (has("silky")||has("creamy")||has("velvety")||has("syrupy")||has("round")||has("watery")||has("drying")||has("astringent")||has("حريري")||has("كريمي")||has("مخملي")||has("شرابي")||has("مستدير")||has("مائي")||has("يجفف")||has("قابض")) return "#1d4ed8";
+        return "#111827";
+      }
+
+      function escHtml(s){
+        return String(s ?? "")
+          .replace(/&/g,"&amp;")
+          .replace(/</g,"&lt;")
+          .replace(/>/g,"&gt;")
+          .replace(/"/g,"&quot;")
+          .replace(/'/g,"&#039;");
+      }
+
+      // ---------- TIMER (beep at 4:00 and 12:00) ----------
+      const timerDisplay = $("timerDisplay");
+      const timerLabel = $("timerLabel");
+      const btnStart = $("btnTimerStart");
+      const btnPause = $("btnTimerPause");
+      const btnReset = $("btnTimerReset");
+
+      function fmtTime(ms){
+        const totalSec = Math.floor(ms / 1000);
+        const m = Math.floor(totalSec / 60);
+        const s = totalSec % 60;
+        return String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+      }
+
+      let audioCtx = null;
+      function ensureAudio(){
+        if(!audioCtx){
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if(audioCtx.state === "suspended"){
+          return audioCtx.resume();
+        }
+        return Promise.resolve();
+      }
+      function beep(durationMs=180, freq=880){
+        if(!audioCtx) return;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = "sine";
+        o.frequency.value = freq;
+        g.gain.value = 0.0001;
+        o.connect(g);
+        g.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(0.25, now + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + durationMs/1000);
+
+        o.start(now);
+        o.stop(now + durationMs/1000 + 0.02);
+      }
+
+      let timerRunning = false;
+      let timerStartTs = 0;
+      let timerElapsedMs = 0;
+      let timerTick = null;
+      let beep4Done = false;
+      let beep12Done = false;
+
+      function timerUpdate(){
+        const now = Date.now();
+        const ms = timerElapsedMs + (timerRunning ? (now - timerStartTs) : 0);
+        if(timerDisplay) timerDisplay.textContent = fmtTime(ms);
+
+        if(!beep4Done && ms >= 4*60*1000){
+          beep4Done = true;
+          beep(180, 880);
+          setTimeout(()=>beep(160, 660), 220);
+        }
+        if(!beep12Done && ms >= 12*60*1000){
+          beep12Done = true;
+          beep(220, 990);
+          setTimeout(()=>beep(220, 990), 260);
+          setTimeout(()=>beep(220, 990), 520);
+        }
+      }
+
+      function timerStart(){
+        if(timerRunning) return;
+        timerRunning = true;
+        timerStartTs = Date.now();
+        if(timerTick) clearInterval(timerTick);
+        timerTick = setInterval(timerUpdate, 250);
+        timerUpdate();
+      }
+      function timerPause(){
+        if(!timerRunning) return;
+        timerElapsedMs += (Date.now() - timerStartTs);
+        timerRunning = false;
+        timerStartTs = 0;
+        timerUpdate();
+      }
+      function timerReset(){
+        timerRunning = false;
+        timerStartTs = 0;
+        timerElapsedMs = 0;
+        beep4Done = false;
+        beep12Done = false;
+        if(timerTick) clearInterval(timerTick);
+        timerTick = null;
+        timerUpdate();
+      }
+
+      function updateTimerLang(){
+        const isAr = (lang === "ar");
+        if(timerLabel) timerLabel.textContent = isAr ? "المؤقت" : "Timer";
+        if(btnStart) btnStart.textContent = isAr ? "ابدأ" : "Start";
+        if(btnPause) btnPause.textContent = isAr ? "إيقاف" : "Pause";
+        if(btnReset) btnReset.textContent = isAr ? "تصفير" : "Reset";
+      }
+
+      if(btnStart){
+        btnStart.addEventListener("click", async ()=>{
+          await ensureAudio();
+          timerStart();
+        });
+      }
+      if(btnPause) btnPause.addEventListener("click", timerPause);
+      if(btnReset) btnReset.addEventListener("click", timerReset);
+      timerUpdate();
+
+      // ---------- State model ----------
+      function newSampleState(){
+        const obj = {
+          sampleNo:'',
+          checkRoast:false,
+          uniformity:[false,false,false,false,false],
+          defect:[false,false,false,false,false],
+          uniformityNotes:'',
+          defectNotes:''
+        };
+        ATTRS.forEach(a=>{
+          obj[a.key] = { score:RANGE_MIN, scored:false, intensity:0, notes:'', history:[] };
+        });
+        return obj;
+      }
+      function newRound(name="Round 1"){
+        return {
+          name,
+          nameField:'',
+          tableField:'',
+          samples:[newSampleState(), newSampleState(), newSampleState()]
+        };
+      }
+      function newTable(name="Table A"){
+        return { name, rounds:[newRound("Round 1")] };
+      }
+
+      let state = { lang:"en", tables:[newTable("Table A")], currentTable:0, currentRound:0 };
+
+      const LS_KEY = "sci_cupping_form_v10_timer_history";
+
+      function tryLoadFromLocalStorage(){
+        try{
+          const raw = localStorage.getItem(LS_KEY);
+          if(!raw) return false;
+          const obj = JSON.parse(raw);
+          if(!obj || !obj.tables) return false;
+          state = obj;
+          return true;
+        }catch(e){ return false; }
+      }
+
+      function b64urlEncode(str){
+        const b64 = btoa(unescape(encodeURIComponent(str)));
+        return repAll(repAll(repAll(b64, "+","-"), "/","_"), "=","");
+      }
+      function b64urlDecode(b64url){
+        const pad = (b64url.length % 4 === 0) ? "" : "=".repeat(4 - (b64url.length % 4));
+        const b64 = repAll(repAll(b64url + pad, "-","+"), "_","/");
+        return decodeURIComponent(escape(atob(b64)));
+      }
+      function tryLoadFromUrl(){
+        try{
+          const data = params.get("data");
+          if(!data) return false;
+          const raw = b64urlDecode(data);
+          const obj = JSON.parse(raw);
+          if(!obj || !obj.tables) return false;
+          state = obj;
+          return true;
+        }catch(e){ return false; }
+      }
+
+      let saveTimer=null;
+      function scheduleAutoSave(){
+        if(VIEW_ONLY) return;
+        if(saveTimer) clearTimeout(saveTimer);
+        saveTimer = setTimeout(()=>{
+          try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
+        }, 300);
+      }
+
+      function getCurrentTable(){ return state.tables[state.currentTable]; }
+      function getCurrentRound(){ return getCurrentTable().rounds[state.currentRound]; }
+
+      // ---------- UI language ----------
+      function applyLang(){
+        document.documentElement.lang = (lang==="ar")?"ar":"en";
+        document.documentElement.dir  = (lang==="ar")?"rtl":"ltr";
+        document.body.dir             = (lang==="ar")?"rtl":"ltr";
+
+        const t = UI[lang];
+        safeSetText("btnLang", t.lang);
+        safeSetText("btnPrint", t.print);
+        safeSetText("btnExportReport", t.export);
+        safeSetText("btnShareLink", t.shareLink);
+        safeSetText("btnShareWhatsApp", t.shareWA);
+        safeSetText("btnCompare", t.compare);
+        safeSetText("btnAddSample", t.add);
+        safeSetText("btnRemoveSample", t.remove);
+        safeSetText("btnAddTable", t.addTable);
+        safeSetText("btnAddRound", t.addRound);
+        safeSetText("btnReset", t.reset);
+        safeSetText("lblName", t.name);
+        safeSetText("lblTable", t.table);
+        safeSetText("lblTableSel", t.tableSel + ":");
+        safeSetText("lblRoundSel", t.roundSel + ":");
+        safeSetText("menuHint", t.menuHint);
+
+        updateTimerLang();
+      }
+
+      // ---------- Menu ----------
+      function openMenu(){ $("menuPanel").classList.add("open"); $("btnMenu").setAttribute("aria-expanded","true"); }
+      function closeMenu(){ $("menuPanel").classList.remove("open"); $("btnMenu").setAttribute("aria-expanded","false"); }
+      function toggleMenu(){
+        if($("menuPanel").classList.contains("open")) closeMenu(); else openMenu();
+      }
+
+      function countTrue(arr){ return arr.reduce((n,v)=>n+(v?1:0),0); }
+
+      function computeSampleTotals(sample){
+        const attributesSum = ATTRS.reduce((sum,a)=>{
+          const obj = sample[a.key];
+          const v = (obj && obj.scored) ? Number(obj.score || 0) : 0;
+          return sum + v;
+        }, 0);
+
+        const uniChecks = countTrue(sample.uniformity);
+        const defChecks = countTrue(sample.defect);
+
+        const uniformityScore = UNIFORMITY_BASE - (uniChecks * DEDUCT_PER_CHECK);
+        const defectScore     = DEFECT_BASE     - (defChecks * DEDUCT_PER_CHECK);
+
+        const total = attributesSum + uniformityScore + defectScore;
+        return { attributesSum, uniChecks, defChecks, uniformityScore, defectScore, total };
+      }
+
+      function updateBubblePosition(rangeEl, bubbleEl, sampleAttr){
+        const min = Number(rangeEl.min), max = Number(rangeEl.max);
+        const val = Number(rangeEl.value);
+        const pct = (val - min) / (max - min);
+
+        const w = rangeEl.getBoundingClientRect().width || 1;
+        const thumb = 20;
+        const isRTL = (document.documentElement.dir === "rtl");
+        const pctAdj = isRTL ? (1 - pct) : pct;
+
+        const x = pctAdj * (w - thumb) + (thumb/2);
+        bubbleEl.style.left = x + "px";
+
+        if(sampleAttr && !sampleAttr.scored){
+          bubbleEl.textContent = "0.00";
+          bubbleEl.classList.add("zero");
+        }else{
+          bubbleEl.textContent = val.toFixed(2);
+          bubbleEl.classList.remove("zero");
+        }
+      }
+
+      function makeChip(txt, textarea){
+        const chip = document.createElement("div");
+        chip.className = "chip";
+        chip.textContent = txt;
+        chip.style.color = chipColorForText(txt);
+        chip.addEventListener("click", ()=>{
+          if(VIEW_ONLY){ alert(UI[lang].viewOnlyBlocked); return; }
+          const insert = (textarea.value && textarea.value.trim() && textarea.value.trim().slice(-1)!==",") ? ", " : "";
+          textarea.value = (textarea.value || "") + insert + txt;
+          textarea.dispatchEvent(new Event("input", {bubbles:true}));
+          textarea.focus();
+          scheduleAutoSave();
+        });
+        return chip;
+      }
+
+      function buildHelperRow(helperKey, textarea){
+        const items = NOTE_HELPERS[helperKey] || [];
+        const wrap = document.createElement("div");
+        wrap.className = "helper";
+        items.forEach(it=>{
+          const txt = it[lang] || it.en;
+          wrap.appendChild(makeChip(txt, textarea));
+        });
+        return wrap;
+      }
+
+      function rebuildSelectors(){
+        const selTable = $("selTable");
+        const selRound = $("selRound");
+        selTable.innerHTML = "";
+        state.tables.forEach((tb,i)=>{
+          const opt = document.createElement("option");
+          opt.value = String(i);
+          opt.textContent = tb.name;
+          selTable.appendChild(opt);
+        });
+        selTable.value = String(state.currentTable);
+
+        selRound.innerHTML = "";
+        getCurrentTable().rounds.forEach((rd,i)=>{
+          const opt = document.createElement("option");
+          opt.value = String(i);
+          opt.textContent = rd.name;
+          selRound.appendChild(opt);
+        });
+        selRound.value = String(state.currentRound);
+
+        selTable.disabled = VIEW_ONLY;
+        selRound.disabled = VIEW_ONLY;
+
+        const rd = getCurrentRound();
+        $("name").value = rd.nameField || "";
+        $("table").value = rd.tableField || "";
+        $("name").disabled = VIEW_ONLY;
+        $("table").disabled = VIEW_ONLY;
+      }
+
+      function renderBottomRow(sampleIdx, which){
+        const rd = getCurrentRound();
+        const arr = rd.samples[sampleIdx][which];
+        const host = document.querySelector(`[data-bottom="${sampleIdx}.${which}"]`);
+        if(!host) return;
+        host.querySelectorAll(".circle").forEach((c,idx)=>{
+          c.classList.toggle("on", !!arr[idx]);
+        });
+      }
+
+      function updateTotals(){
+        const rd = getCurrentRound();
+        for(let i=0;i<rd.samples.length;i++){
+          const tot = computeSampleTotals(rd.samples[i]);
+          const totalEl = document.querySelector(`[data-total="${i}"]`);
+          const subEl   = document.querySelector(`[data-subtot="${i}"]`);
+          const uBadge  = document.querySelector(`[data-ubadge="${i}"]`);
+          const dBadge  = document.querySelector(`[data-dbadge="${i}"]`);
+          if(totalEl) totalEl.textContent = tot.total.toFixed(2);
+          if(subEl){
+            subEl.innerHTML =
+              `Attr: ${tot.attributesSum.toFixed(2)}<br>` +
+              `Uniformity: ${tot.uniformityScore.toFixed(2)} (10 - ${tot.uniChecks}×2)<br>` +
+              `Defect: ${tot.defectScore.toFixed(2)} (10 - ${tot.defChecks}×2)`;
+          }
+          if(uBadge){
+            uBadge.className = "badge " + (tot.uniformityScore >= 8 ? "ok" : (tot.uniformityScore >= 6 ? "warn" : "bad"));
+            uBadge.textContent = `${UI[lang].uniformity}: ${tot.uniformityScore.toFixed(2)}`;
+          }
+          if(dBadge){
+            dBadge.className = "badge " + (tot.defectScore >= 8 ? "ok" : (tot.defectScore >= 6 ? "warn" : "bad"));
+            dBadge.textContent = `${UI[lang].defect}: ${tot.defectScore.toFixed(2)}`;
+          }
+        }
+      }
+
+      function circleGroup(sampleIdx, attrKey){
+        const wrap = document.createElement("div");
+        wrap.className = "circles";
+        for(let i=1;i<=5;i++){
+          const c = document.createElement("div");
+          c.className = "circle";
+          c.addEventListener("click", ()=>{
+            if(VIEW_ONLY){ alert(UI[lang].viewOnlyBlocked); return; }
+            const rd = getCurrentRound();
+            rd.samples[sampleIdx][attrKey].intensity = i;
+            const cs = wrap.querySelectorAll(".circle");
+            cs.forEach((x,idx)=> x.classList.toggle("on", idx < i));
+            scheduleAutoSave();
+          });
+          wrap.appendChild(c);
+        }
+        return wrap;
+      }
+
+      function sliderRow(sampleIdx, attr){
+        const t = UI[lang];
+        const rd = getCurrentRound();
+        const sObj = rd.samples[sampleIdx][attr.key];
+
+        const row = document.createElement("div");
+        row.className = "section";
+
+        const head = document.createElement("div");
+        head.className = "rowhead";
+
+        const left = document.createElement("div");
+        left.className = "leftLabel";
+        left.innerHTML = escHtml(attr.label[lang]);
+
+        const tag = document.createElement("span");
+        tag.className = "miniTag " + (sObj.scored ? "scored":"notScored");
+        tag.textContent = sObj.scored ? t.scored : t.notScored;
+
+        const hist = document.createElement("span");
+        hist.className = "historyMark";
+        hist.textContent = "";
+
+        const clearBtn = document.createElement("button");
+        clearBtn.type = "button";
+        clearBtn.className = "miniBtn";
+        clearBtn.textContent = "⟲";
+        clearBtn.title = t.clear;
+        clearBtn.disabled = VIEW_ONLY;
+        clearBtn.addEventListener("click", ()=>{
+          if(VIEW_ONLY){ alert(UI[lang].viewOnlyBlocked); return; }
+          sObj.scored = false;
+          sObj.score = RANGE_MIN;
+          sObj.intensity = 0;
+          sObj.notes = "";
+          sObj.history = [];
+          renderAll();
+          scheduleAutoSave();
+        });
+
+        left.appendChild(tag);
+        left.appendChild(hist);
+        left.appendChild(clearBtn);
+
+        const right = document.createElement("div");
+        right.className = "rightlabel";
+        right.innerHTML = `<span>${escHtml(t[attr.rightKey])}</span>`;
+        const circles = circleGroup(sampleIdx, attr.key);
+        right.appendChild(circles);
+
+        head.appendChild(left);
+        head.appendChild(right);
+
+        const range = document.createElement("input");
+        range.type = "range";
+        range.min = String(RANGE_MIN);
+        range.max = String(RANGE_MAX);
+        range.step = String(RANGE_STEP);
+        range.value = String(sObj.score ?? RANGE_MIN);
+        range.disabled = VIEW_ONLY;
+
+        const bubble = document.createElement("div");
+        bubble.className = "value-bubble";
+
+        function syncBubble(){
+          updateBubblePosition(range, bubble, sObj);
+        }
+
+        range.addEventListener("pointerdown", ()=>{
+          if(VIEW_ONLY) return;
+          sObj.scored = true;
+          tag.className = "miniTag scored";
+          tag.textContent = t.scored;
+          syncBubble();
+          updateTotals();
+          scheduleAutoSave();
+        });
+
+        range.addEventListener("input", ()=>{
+          if(VIEW_ONLY) return;
+
+          const prev = Number(sObj.score ?? RANGE_MIN);
+          const next = Number(range.value);
+
+          sObj.scored = true;
+
+          if(next !== prev){
+            sObj.history = sObj.history || [];
+            sObj.history.push({ from: prev, to: next, at: Date.now() });
+            if(sObj.history.length > 6) sObj.history.shift();
+          }
+
+          sObj.score = next;
+
+          tag.className = "miniTag scored";
+          tag.textContent = t.scored;
+
+          if(sObj.history && sObj.history.length){
+            const last = sObj.history[sObj.history.length - 1];
+            hist.textContent = `${last.from.toFixed(2)}→${last.to.toFixed(2)}`;
+          }else{
+            hist.textContent = "";
+          }
+
+          syncBubble();
+          updateTotals();
+          scheduleAutoSave();
+        });
+
+        const sliderWrap = document.createElement("div");
+        sliderWrap.className = "sliderwrap";
+        const scale = document.createElement("div");
+        scale.className = "scale";
+        scale.appendChild(range);
+        scale.appendChild(bubble);
+        sliderWrap.appendChild(scale);
+
+        const ticks = document.createElement("div");
+        ticks.className = "ticks";
+        ticks.innerHTML = `<span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>`;
+
+        const hint = document.createElement("div");
+        hint.className = "microhint";
+        hint.innerHTML = `<span>${escHtml(t[attr.hintLKey])}</span><span>${escHtml(t[attr.hintRKey])}</span>`;
+
+        const notes = document.createElement("div");
+        notes.className = "notes";
+        notes.innerHTML = `<label>${escHtml(t.notes)}</label>`;
+        const ta = document.createElement("textarea");
+        ta.value = sObj.notes || "";
+        ta.disabled = VIEW_ONLY;
+        ta.addEventListener("input", ()=>{
+          if(VIEW_ONLY) return;
+          sObj.notes = ta.value;
+          scheduleAutoSave();
+        });
+        notes.appendChild(ta);
+
+        row.appendChild(head);
+        row.appendChild(sliderWrap);
+        row.appendChild(ticks);
+        row.appendChild(hint);
+        row.appendChild(notes);
+        row.appendChild(buildHelperRow(attr.key, ta));
+
+        const val = sObj.intensity || 0;
+        circles.querySelectorAll(".circle").forEach((c,idx)=> c.classList.toggle("on", idx < val));
+
+        if(sObj.history && sObj.history.length){
+          const last = sObj.history[sObj.history.length - 1];
+          hist.textContent = `${last.from.toFixed(2)}→${last.to.toFixed(2)}`;
+        } else {
+          hist.textContent = "";
+        }
+
+        requestAnimationFrame(syncBubble);
+        window.addEventListener("resize", syncBubble);
+
+        return row;
+      }
+
+      function bottomBlock(sampleIdx, which){
+        const t = UI[lang];
+        const title = which === "uniformity" ? t.uniformity : t.defect;
+
+        const item = document.createElement("div");
+        item.className = "bottomItem";
+
+        const top = document.createElement("div");
+        top.className = "bottomTitle";
+        top.innerHTML = `<div>${escHtml(title)}</div>`;
+
+        const circles = document.createElement("div");
+        circles.className = "circles bigcircles";
+        circles.setAttribute("data-bottom", `${sampleIdx}.${which}`);
+        top.appendChild(circles);
+
+        const notes = document.createElement("div");
+        notes.className = "notes";
+        notes.innerHTML = `<label>${escHtml(t.notes)}</label>`;
+        const ta = document.createElement("textarea");
+        const rd = getCurrentRound();
+        ta.value = rd.samples[sampleIdx][which+"Notes"] || "";
+        ta.disabled = VIEW_ONLY;
+        ta.addEventListener("input", ()=>{
+          if(VIEW_ONLY) return;
+          rd.samples[sampleIdx][which+"Notes"] = ta.value;
+          scheduleAutoSave();
+        });
+        notes.appendChild(ta);
+
+        item.appendChild(top);
+        item.appendChild(notes);
+
+        for(let i=0;i<5;i++){
+          const c = document.createElement("div");
+          c.className = "circle";
+          c.addEventListener("click", ()=>{
+            if(VIEW_ONLY){ alert(UI[lang].viewOnlyBlocked); return; }
+            const rd = getCurrentRound();
+            const s = rd.samples[sampleIdx];
+            if(which === "defect"){
+              s.defect[i] = !s.defect[i];
+              s.uniformity[i] = s.defect[i];
+              renderBottomRow(sampleIdx, "defect");
+              renderBottomRow(sampleIdx, "uniformity");
+            }else{
+              s.uniformity[i] = !s.uniformity[i];
+              renderBottomRow(sampleIdx, "uniformity");
+            }
+            updateTotals();
+            scheduleAutoSave();
+          });
+          circles.appendChild(c);
+        }
+
+        const helperKey = which + "Notes";
+        const helper = buildHelperRow(helperKey, ta);
+        item.appendChild(helper);
+
+        return item;
+      }
+
+      function buildSample(sampleIdx){
+        const t = UI[lang];
+        const rd = getCurrentRound();
+        const s = rd.samples[sampleIdx];
+
+        const sample = document.createElement("div");
+        sample.className = "sample";
+        sample.setAttribute("data-sample", String(sampleIdx));
+
+        const top = document.createElement("div");
+        top.className = "toprow";
+
+        const sampleNo = document.createElement("div");
+        sampleNo.className = "sampleNo";
+        sampleNo.innerHTML = `<div>${escHtml(t.sample)}</div>`;
+        const inp = document.createElement("input");
+        inp.type = "text";
+        inp.value = s.sampleNo || "";
+        inp.disabled = VIEW_ONLY;
+        inp.addEventListener("input", ()=>{
+          if(VIEW_ONLY) return;
+          s.sampleNo = inp.value;
+          scheduleAutoSave();
+        });
+        sampleNo.appendChild(inp);
+
+        const scorebox = document.createElement("div");
+        scorebox.className = "scorebox";
+        scorebox.innerHTML = `
+          <div class="lbl">${escHtml(t.total)}</div>
+          <div class="total" data-total="${sampleIdx}">0.00</div>
+          <div class="subtot" data-subtot="${sampleIdx}"></div>
+          <div class="flags">
+            <span class="badge ok" data-ubadge="${sampleIdx}"></span>
+            <span class="badge ok" data-dbadge="${sampleIdx}"></span>
+          </div>
+          <div class="checkroast"><span>${escHtml(t.checkRoast)}</span></div>
+        `;
+        const roast = document.createElement("input");
+        roast.type = "checkbox";
+        roast.checked = !!s.checkRoast;
+        roast.disabled = VIEW_ONLY;
+        roast.addEventListener("change", ()=>{
+          if(VIEW_ONLY) return;
+          s.checkRoast = roast.checked;
+          scheduleAutoSave();
+        });
+        scorebox.querySelector(".checkroast").appendChild(roast);
+
+        top.appendChild(sampleNo);
+        top.appendChild(scorebox);
+        sample.appendChild(top);
+
+        ATTRS.forEach(a => sample.appendChild(sliderRow(sampleIdx, a)));
+
+        const bottom = document.createElement("div");
+        bottom.className = "bottomRow";
+        bottom.appendChild(bottomBlock(sampleIdx, "uniformity"));
+        bottom.appendChild(bottomBlock(sampleIdx, "defect"));
+        sample.appendChild(bottom);
+
+        return sample;
+      }
+
+      function renderAll(){
+        applyLang();
+        rebuildSelectors();
+
+        const grid = $("grid");
+        grid.innerHTML = "";
+        const rd = getCurrentRound();
+        rd.samples.forEach((_,i)=> grid.appendChild(buildSample(i)));
+
+        for(let i=0;i<rd.samples.length;i++){
+          renderBottomRow(i, "uniformity");
+          renderBottomRow(i, "defect");
+        }
+        updateTotals();
+      }
+
+      // ---------- Share ----------
+      function makeShareUrl(viewOnly=true){
+        const payload = b64urlEncode(JSON.stringify(state));
+        const u = new URL(location.href);
+        u.searchParams.set("data", payload);
+        if(viewOnly) u.searchParams.set("view","1");
+        else u.searchParams.delete("view");
+        return u.toString();
+      }
+      async function copyToClipboard(text){
+        try{
+          await navigator.clipboard.writeText(text);
+          alert(UI[lang].copied);
+        }catch(e){
+          try{
+            const ta = document.createElement("textarea");
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand("copy");
+            ta.remove();
+            alert(UI[lang].copied);
+          }catch(err){
+            alert(UI[lang].shareFail);
+          }
+        }
+      }
+      function shareWhatsApp(url){
+        window.open("https://wa.me/?text=" + encodeURIComponent(url), "_blank");
+      }
+
+      // ---------- Buttons wiring ----------
+      $("btnMenu").addEventListener("click", (e)=>{ e.stopPropagation(); toggleMenu(); });
+      document.addEventListener("click", ()=> closeMenu());
+      $("menuPanel").addEventListener("click", (e)=> e.stopPropagation());
+
+      $("btnLang").addEventListener("click", ()=>{
+        lang = (lang==="en") ? "ar" : "en";
+        state.lang = lang;
+        scheduleAutoSave();
+        renderAll();
+      });
+
+      $("selTable").addEventListener("change", (e)=>{
+        state.currentTable = Number(e.target.value);
+        state.currentRound = 0;
+        scheduleAutoSave();
+        renderAll();
+      });
+      $("selRound").addEventListener("change", (e)=>{
+        state.currentRound = Number(e.target.value);
+        scheduleAutoSave();
+        renderAll();
+      });
+
+      $("name").addEventListener("input", ()=>{
+        if(VIEW_ONLY) return;
+        getCurrentRound().nameField = $("name").value;
+        scheduleAutoSave();
+      });
+      $("table").addEventListener("input", ()=>{
+        if(VIEW_ONLY) return;
+        getCurrentRound().tableField = $("table").value;
+        scheduleAutoSave();
+      });
+
+      let sessionMode=false;
+      function setSession(on){
+        sessionMode = !!on;
+        $("btnSession").textContent = sessionMode ? UI[lang].sessionOn : UI[lang].sessionOff;
+      }
+      $("btnSession").addEventListener("click", ()=> setSession(!sessionMode));
+
+      $("btnPrint").addEventListener("click", ()=> window.print());
+
+      // Keep these stable (no crash). You can re-enable advanced export/compare later.
+      $("btnExportReport").addEventListener("click", ()=>{
+        alert("Export is currently disabled in this stable build. (Timer + history enabled.)");
+      });
+      $("btnCompare").addEventListener("click", ()=>{
+        alert("Compare is currently disabled in this stable build. (Timer + history enabled.)");
+      });
+
+      $("btnShareLink").addEventListener("click", async ()=>{
+        const url = makeShareUrl(true);
+        await copyToClipboard(url);
+      });
+      $("btnShareWhatsApp").addEventListener("click", ()=>{
+        const url = makeShareUrl(true);
+        shareWhatsApp(url);
+      });
+
+      $("btnAddSample").addEventListener("click", ()=>{
+        if(VIEW_ONLY){ alert(UI[lang].viewOnlyBlocked); return; }
+        getCurrentRound().samples.push(newSampleState());
+        scheduleAutoSave();
+        renderAll();
+      });
+      $("btnRemoveSample").addEventListener("click", ()=>{
+        if(VIEW_ONLY){ alert(UI[lang].viewOnlyBlocked); return; }
+        const rd = getCurrentRound();
+        if(rd.samples.length <= 1) return;
+        rd.samples.pop();
+        scheduleAutoSave();
+        renderAll();
+      });
+      $("btnAddTable").addEventListener("click", ()=>{
+        if(VIEW_ONLY){ alert(UI[lang].viewOnlyBlocked); return; }
+        const nextName = "Table " + String.fromCharCode(65 + state.tables.length);
+        state.tables.push(newTable(nextName));
+        state.currentTable = state.tables.length - 1;
+        state.currentRound = 0;
+        scheduleAutoSave();
+        renderAll();
+      });
+      $("btnAddRound").addEventListener("click", ()=>{
+        if(VIEW_ONLY){ alert(UI[lang].viewOnlyBlocked); return; }
+        const tb = getCurrentTable();
+        const nextName = "Round " + (tb.rounds.length + 1);
+        tb.rounds.push(newRound(nextName));
+        state.currentRound = tb.rounds.length - 1;
+        scheduleAutoSave();
+        renderAll();
+      });
+      $("btnReset").addEventListener("click", ()=>{
+        if(VIEW_ONLY){ alert(UI[lang].viewOnlyBlocked); return; }
+        const tb = getCurrentTable();
+        tb.rounds[state.currentRound] = newRound(getCurrentRound().name || ("Round " + (state.currentRound+1)));
+        scheduleAutoSave();
+        renderAll();
+      });
+
+      // ---------- Boot load order ----------
+      const loadedFromUrl = tryLoadFromUrl();
+      if(!loadedFromUrl) tryLoadFromLocalStorage();
+      lang = state.lang || "en";
+
+      renderAll();
+      setSession(false);
+
+      if(VIEW_ONLY){
+        document.querySelectorAll("input,textarea,select").forEach(el=> el.disabled = true);
+        $("btnLang").disabled = false;
+        $("btnMenu").disabled = false;
+        $("btnSession").disabled = false;
+        $("btnTimerStart").disabled = false;
+        $("btnTimerPause").disabled = false;
+        $("btnTimerReset").disabled = false;
+      }
+
+    }catch(e){
+      showErr(e);
+    }
+  });
+
+})();
+</script>
+</body>
+</html>
