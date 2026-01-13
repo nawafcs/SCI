@@ -1,0 +1,1301 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SCI Cupping Form (Interactive)</title>
+  <style>
+    :root{
+      --ink:#1a2a2a;
+      --line:#1f2a2a;
+      --bg:#fff;
+      --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:#f2f2f2;color:var(--ink);font-family:var(--font)}
+    .page{
+      width:min(1400px, 98vw);
+      margin:12px auto;
+      background:var(--bg);
+      border:1px solid #ccc;
+      box-shadow:0 6px 24px rgba(0,0,0,.08);
+      padding:14px;
+    }
+
+    /* ===== Toolbar (Hamburger ⋮ menu) ===== */
+    .toolbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:8px 10px;
+      margin-bottom:10px;
+      border:1px solid #ddd;
+      border-radius:12px;
+      background:#fafafa;
+    }
+
+    .toolbar-left{display:flex;gap:8px;align-items:center}
+
+    .primaryBtn{
+      font:inherit;
+      padding:10px 12px;
+      border:1px solid #ccc;
+      border-radius:10px;
+      background:#fff;
+      cursor:pointer;
+      min-height:44px;
+      font-weight:900;
+      width:140px;
+      display:flex;align-items:center;justify-content:center;
+      text-align:center;
+      white-space:nowrap;
+    }
+    .primaryBtn:hover{border-color:#888}
+
+    .menuWrap{position:relative}
+    .menuBtn{
+      width:44px;height:44px;
+      border:1px solid #ccc;
+      border-radius:10px;
+      background:#fff;
+      cursor:pointer;
+      font-weight:1100;
+      font-size:20px;
+      line-height:1;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .menuBtn:hover{border-color:#888}
+
+    .menuPanel{
+      position:absolute;
+      top:50px;
+      right:0;
+      min-width:240px;
+      background:#fff;
+      border:1px solid #ddd;
+      border-radius:12px;
+      box-shadow:0 10px 30px rgba(0,0,0,.12);
+      padding:6px;
+      display:none;
+      z-index:9999;
+    }
+    body[dir="rtl"] .menuPanel{ right:auto; left:0; }
+
+    .menuPanel.open{display:block}
+
+    .menuPanel button{
+      width:100%;
+      text-align:left;
+      font:inherit;
+      padding:10px 10px;
+      border:0;
+      border-radius:10px;
+      background:#fff;
+      cursor:pointer;
+      min-height:40px;
+      font-weight:900;
+    }
+    body[dir="rtl"] .menuPanel button{text-align:right}
+    .menuPanel button:hover{background:#f2f2f2}
+    .menuSep{height:1px;background:#e5e5e5;margin:6px 4px;border-radius:999px}
+
+    @media (max-width: 520px){
+      .primaryBtn{width:120px}
+    }
+
+    /* RTL */
+    body[dir="rtl"]{ direction: rtl; }
+    body[dir="rtl"] .header{flex-direction:row-reverse}
+    body[dir="rtl"] .brand{text-align:left}
+    body[dir="rtl"] .header-left{align-items:flex-end}
+    body[dir="rtl"] .linefield{flex-direction:row-reverse}
+    body[dir="rtl"] .linefield input{ text-align:right; }
+    body[dir="rtl"] .rowhead{flex-direction:row-reverse}
+    body[dir="rtl"] .rowhead .rightlabel{flex-direction:row-reverse}
+    body[dir="rtl"] .notes{grid-template-columns: 1fr 44px}
+    body[dir="rtl"] .notes label{text-align:right}
+    body[dir="rtl"] .notes textarea{ text-align:right; }
+    body[dir="rtl"] .helper{padding-left:0;padding-right:52px}
+    body[dir="rtl"] .bottomTitle{flex-direction:row-reverse}
+    body[dir="rtl"] input[type="range"]{ direction: rtl; }
+    body[dir="rtl"] .toprow{direction:rtl}
+    body[dir="rtl"] .sample .toprow input{ text-align:right; }
+
+    .header{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+      border-bottom:2px solid var(--line);
+      padding-bottom:8px;margin-bottom:10px;
+    }
+    .header-left{display:flex;flex-direction:column;gap:8px;font-size:14px}
+    .linefield{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .linefield label{min-width:54px;font-weight:900}
+    .linefield input{
+      border:0;border-bottom:1px solid var(--ink);
+      padding:6px 6px;min-width:220px;outline:none;font-size:14px;
+    }
+    .brand{text-align:right;font-size:12px;color:#333;line-height:1.2}
+    .brand b{letter-spacing:.3px}
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap:10px;
+    }
+    .sample{
+      border:2px solid var(--line);
+      padding:0;
+      min-height:920px;
+      display:flex;flex-direction:column;
+      background:#fff;
+      border-radius:10px;
+      overflow:hidden;
+    }
+    .sample .toprow{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:10px;
+      padding:10px 10px 8px 10px;
+      border-bottom:2px solid var(--line);
+    }
+    .sample .toprow .sampleNo{
+      font-weight:900;font-size:13px;
+      display:flex;flex-direction:column;gap:6px;
+    }
+    .sample .toprow input{
+      border:0;border-bottom:1px solid var(--ink);
+      outline:none;font-size:13px;padding:6px 6px;width:100%;
+    }
+    .scorebox{
+      width:200px;border:2px solid var(--line);
+      padding:8px;border-radius:10px;
+      display:flex;flex-direction:column;gap:6px;align-items:stretch;background:#fff;
+    }
+    .scorebox .lbl{font-size:11px;color:#333;font-weight:1000;text-align:center}
+    .scorebox .total{
+      font-size:22px;font-weight:1100;text-align:center;
+      border-top:1px solid #999;padding-top:6px;
+    }
+    .scorebox .subtot{
+      font-size:11px;color:#222;font-weight:1000;line-height:1.3;
+      border-top:1px dashed #aaa;padding-top:6px;margin-top:2px;
+    }
+    .scorebox .checkroast{
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      font-size:11px;font-weight:1000;color:#333;margin-top:4px;
+    }
+    .scorebox input[type="checkbox"]{width:18px;height:18px}
+
+    .section{border-bottom:1px solid #bbb;padding:10px 10px}
+    .rowhead{
+      display:flex;justify-content:space-between;align-items:flex-end;gap:10px;
+      font-weight:1100;font-size:12px;letter-spacing:.2px;margin-bottom:6px;
+    }
+    .rowhead .rightlabel{
+      font-weight:1100;font-size:11px;color:#333;
+      display:flex;gap:8px;align-items:center;
+    }
+
+    .sliderwrap{display:flex;gap:10px;align-items:center}
+    .scale{flex:1;display:flex;flex-direction:column;gap:6px; position:relative;}
+
+    input[type="range"]{
+      width:100%;
+      -webkit-appearance:none;appearance:none;
+      height:28px;background:transparent;margin:0;
+      touch-action: pan-y;
+      position:relative;
+      z-index:2;
+    }
+    input[type="range"]::-webkit-slider-runnable-track{
+      height:3px;background:var(--ink);border-radius:999px;
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;appearance:none;
+      width:20px;height:20px;border-radius:50%;
+      background:#fff;border:2px solid var(--ink);
+      margin-top:-9px;
+    }
+    input[type="range"]::-moz-range-track{height:3px;background:var(--ink);border-radius:999px}
+    input[type="range"]::-moz-range-thumb{
+      width:20px;height:20px;border-radius:50%;
+      background:#fff;border:2px solid var(--ink);
+    }
+
+    .value-bubble{
+      position:absolute;
+      top:-2px;
+      transform:translateX(-50%);
+      width:32px;height:32px;
+      border-radius:999px;
+      border:2px solid var(--ink);
+      background:var(--ink);
+      color:#fff;
+      display:flex;align-items:center;justify-content:center;
+      font-size:10px;font-weight:1100;
+      pointer-events:none;
+      z-index:3;
+    }
+
+    .ticks{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#222}
+    .ticks span{min-width:16px;text-align:center}
+    .microhint{
+      font-size:9px;color:#444;font-weight:1000;
+      display:flex;justify-content:space-between;margin-top:2px;letter-spacing:.1px;
+    }
+
+    .notes{
+      margin-top:8px;
+      display:grid;
+      grid-template-columns: 44px 1fr;
+      gap:8px;
+      align-items:start;
+    }
+    .notes label{font-size:11px;font-weight:1100;color:#333}
+    .notes textarea{
+      width:100%;min-height:44px;resize:vertical;
+      border:0;border-top:1px solid #888;
+      outline:none;padding:8px 8px 0 8px;font-size:12px;
+    }
+
+    .helper{
+      margin-top:8px;
+      display:flex;flex-wrap:wrap;gap:8px;
+      padding-left:52px;
+    }
+
+    /* Base chip */
+    .chip{
+      border:1px solid #bbb;
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      background:#fff;
+      cursor:pointer;
+      user-select:none;
+      min-height:34px;
+      display:flex;align-items:center;
+      font-weight:1000;
+    }
+
+    /* Colored chips */
+    .chip.color{
+      border-color: currentColor;
+      background: color-mix(in srgb, currentColor 14%, white);
+    }
+    .chip.color:hover{
+      background: color-mix(in srgb, currentColor 22%, white);
+    }
+
+    .circles{display:flex;gap:10px;align-items:center}
+    .circle{
+      width:18px;height:18px;border-radius:50%;
+      border:2px solid var(--ink);
+      background:#fff;cursor:pointer;
+    }
+    .circle.on{background:var(--ink)}
+
+    .bottomRow{
+      padding:10px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-top:auto;
+      border-top:2px solid var(--line);
+    }
+    .bottomItem{border:1px solid #bbb;border-radius:10px;padding:10px}
+    .bottomTitle{
+      display:flex;justify-content:space-between;align-items:center;
+      font-size:12px;font-weight:1100;margin-bottom:8px;
+    }
+    .bigcircles .circle{width:20px;height:20px}
+
+    /* Mobile swipe cards */
+    @media (max-width: 900px){
+      .page{padding:10px}
+      .grid{
+        display:flex;
+        gap:10px;
+        overflow-x:auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom:8px;
+      }
+      .sample{
+        flex:0 0 92%;
+        scroll-snap-align: start;
+        min-height:unset;
+      }
+      .header{flex-direction:column;align-items:flex-start}
+      .brand{text-align:left}
+      body[dir="rtl"] .header{flex-direction:column;align-items:flex-end}
+      body[dir="rtl"] .brand{text-align:right}
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <button id="btnLang" type="button" class="primaryBtn"></button>
+      </div>
+
+      <div class="menuWrap">
+        <button id="btnMenu" type="button" class="menuBtn" aria-haspopup="true" aria-expanded="false" title="Menu">⋮</button>
+
+        <div id="menuPanel" class="menuPanel" role="menu" aria-hidden="true">
+          <button id="btnPrint" type="button" role="menuitem"></button>
+          <button id="btnExportReport" type="button" role="menuitem"></button>
+          <div class="menuSep"></div>
+          <button id="btnAddSample" type="button" role="menuitem"></button>
+          <button id="btnRemoveSample" type="button" role="menuitem"></button>
+          <div class="menuSep"></div>
+          <button id="btnReset" type="button" role="menuitem"></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="header">
+      <div class="header-left">
+        <div class="linefield">
+          <label id="lblName" for="name"></label>
+          <input id="name" type="text" />
+        </div>
+        <div class="linefield">
+          <label id="lblTable" for="table"></label>
+          <input id="table" type="text" />
+        </div>
+      </div>
+      <div class="brand">
+        <div style="font-size:11px;">SCI</div>
+        <b>SUSTAINABLE COFFEE INSTITUTE</b><br/>
+        <span style="font-weight:900;">CUPPING FORM</span>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+  </div>
+
+<script>
+  /* ========== Language ========== */
+  let lang = "en";
+
+  const UI = {
+    en: {
+      print: "Print / Save as PDF",
+      add: "+ Add sample",
+      remove: "− Remove sample",
+      export: "Export Star Graph (Printable)",
+      lang: "العربية",
+      reset: "Reset form",
+      name: "NAME:",
+      table: "TABLE:",
+      sample: "SAMPLE #",
+      total: "TOTAL SCORE",
+      checkRoast: "CHECK ROAST",
+      notes: "NOTES:",
+      intensity: "INTENSITY",
+      thickness: "THICKNESS",
+      duration: "DURATION",
+      woody: "WOODY",
+      low: "LOW",
+      high: "HIGH",
+      flat: "FLAT",
+      bright: "BRIGHT",
+      thin: "THIN",
+      thick: "THICK",
+      short: "SHORT",
+      long: "LONG",
+      none: "NONE",
+      intense: "INTENSE",
+      uniformity: "UNIFORMITY",
+      defect: "DEFECT",
+      axesTip: "Axes include Uniformity & Defect. Unscored attributes are 0."
+    },
+    ar: {
+      print: "طباعة / حفظ PDF",
+      add: "+ إضافة عينة",
+      remove: "− حذف عينة",
+      export: "تصدير الرسم النجمي (قابل للطباعة)",
+      lang: "English",
+      reset: "إعادة ضبط",
+      name: "الاسم:",
+      table: "الطاولة:",
+      sample: "رقم العينة",
+      total: "المجموع",
+      checkRoast: "فحص التحميص",
+      notes: "ملاحظات:",
+      intensity: "الشدة",
+      thickness: "القوام",
+      duration: "المدة",
+      woody: "خشبي",
+      low: "منخفض",
+      high: "مرتفع",
+      flat: "مسطح",
+      bright: "لامع",
+      thin: "خفيف",
+      thick: "ثقيل",
+      short: "قصير",
+      long: "طويل",
+      none: "لا يوجد",
+      intense: "شديد",
+      uniformity: "التجانس",
+      defect: "العيوب",
+      axesTip: "المحاور تشمل التجانس والعيوب. أي خاصية غير مُسجّلة = 0."
+    }
+  };
+
+  function setLanguage(newLang){
+    lang = newLang;
+    document.documentElement.lang = (lang === "ar") ? "ar" : "en";
+    document.documentElement.dir  = (lang === "ar") ? "rtl" : "ltr";
+    document.body.dir             = (lang === "ar") ? "rtl" : "ltr";
+    applyUIText();
+    renderAll();
+  }
+
+  function applyUIText(){
+    const t = UI[lang];
+    document.getElementById("btnPrint").textContent = t.print;
+    document.getElementById("btnAddSample").textContent = t.add;
+    document.getElementById("btnRemoveSample").textContent = t.remove;
+    document.getElementById("btnExportReport").textContent = t.export;
+    document.getElementById("btnLang").textContent = t.lang;
+    document.getElementById("btnReset").textContent = t.reset;
+    document.getElementById("lblName").textContent = t.name;
+    document.getElementById("lblTable").textContent = t.table;
+  }
+
+  /* ========== Attributes (Arabic coffee REMOVED) ========== */
+  const ATTRS = [
+    { key:'fragrance',  label:{en:'FRAGRANCE', ar:'العطر'},          rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
+    { key:'aroma',      label:{en:'AROMA', ar:'الرائحة'},            rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
+    { key:'flavor',     label:{en:'FLAVOR', ar:'النكهة'},            rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
+    { key:'acidity',    label:{en:'ACIDITY', ar:'الحموضة'},          rightKey:'intensity', hintLKey:'flat',  hintRKey:'bright' },
+    { key:'mouthfeel',  label:{en:'MOUTHFEEL', ar:'الإحساس بالفم'},  rightKey:'thickness', hintLKey:'thin',  hintRKey:'thick' },
+    { key:'sweetness',  label:{en:'SWEETNESS', ar:'الحلاوة'},        rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
+    { key:'aftertaste', label:{en:'AFTERTASTE', ar:'الأثر'},         rightKey:'duration',  hintLKey:'short', hintRKey:'long' },
+    { key:'freshcrop',  label:{en:'FRESH CROP', ar:'محصول طازج'},    rightKey:'woody',     hintLKey:'none',  hintRKey:'intense' },
+  ];
+
+  /* ========== Scoring rules ========== */
+  const RANGE_MIN = 6.0;
+  const RANGE_MAX = 10.0;
+  const RANGE_STEP = 0.25;
+
+  const UNIFORMITY_BASE = 10;
+  const DEFECT_BASE = 10;
+  const DEDUCT_PER_CHECK = 2;
+
+  /* ========== Radar axes (Attributes + Uniformity + Defect) ========== */
+  const RADAR_AXES = [
+    ...ATTRS.map(a => ({ type:'attr', key:a.key, label: a.label })),
+    { type:'metric', key:'uniformity', label:{en:UI.en.uniformity, ar:UI.ar.uniformity} },
+    { type:'metric', key:'defect',     label:{en:UI.en.defect,     ar:UI.ar.defect} }
+  ];
+
+  /* ========== Note helpers ========== */
+  const NOTE_HELPERS = {
+    fragrance: [
+      {en:"Floral", ar:"زهري"}, {en:"Fruity", ar:"فاكهي"}, {en:"Citrus", ar:"حمضيات"},
+      {en:"Sweet", ar:"حلو"}, {en:"Honey", ar:"عسل"}, {en:"Vanilla", ar:"فانيلا"},
+      {en:"Nutty", ar:"مكسرات"}, {en:"Cocoa", ar:"كاكاو"},
+      {en:"Spices", ar:"بهارات"}, {en:"Green/Herbal", ar:"أخضر/أعشاب"},
+      {en:"Roasted", ar:"محمص"}, {en:"Earthy", ar:"ترابي"}
+    ],
+    aroma: [
+      {en:"Fruity", ar:"فاكهي"}, {en:"Berry", ar:"توتي"}, {en:"Stone fruit", ar:"فاكهة نواة"}, {en:"Tropical", ar:"استوائي"},
+      {en:"Floral", ar:"زهري"},
+      {en:"Sweet", ar:"حلو"}, {en:"Caramel", ar:"كراميل"}, {en:"Brown sugar", ar:"سكر بني"},
+      {en:"Nutty/Cocoa", ar:"مكسرات/كاكاو"},
+      {en:"Spices", ar:"بهارات"},
+      {en:"Roasted", ar:"محمص"},
+      {en:"Green/Vegetative", ar:"أخضر/نباتي"},
+      {en:"Sour/Fermented", ar:"حامض/مخمّر"}
+    ],
+    flavor: [
+      {en:"Sweet", ar:"حلو"},
+      {en:"Fruity", ar:"فاكهي"}, {en:"Citrus", ar:"حمضيات"}, {en:"Berry", ar:"توت"}, {en:"Tropical", ar:"استوائي"},
+      {en:"Floral", ar:"زهري"},
+      {en:"Nutty", ar:"مكسرات"}, {en:"Cocoa/Chocolate", ar:"كاكاو/شوكولاتة"},
+      {en:"Spices", ar:"بهارات"},
+      {en:"Roasted", ar:"محمص"},
+      {en:"Green/Vegetative", ar:"أخضر/نباتي"},
+      {en:"Sour/Fermented", ar:"حامض/مخمّر"}
+    ],
+    acidity: [
+      {en:"Bright", ar:"لامعة"}, {en:"Crisp", ar:"واضحة/حادة"}, {en:"Soft", ar:"ناعمة"},
+      {en:"Citric (lemon)", ar:"ستريك (ليمون)"}, {en:"Malic (apple)", ar:"ماليك (تفاح)"},
+      {en:"Tartaric (grape)", ar:"تارتاريك (عنب)"}, {en:"Phosphoric", ar:"فوسفوريك"},
+      {en:"Lactic (creamy)", ar:"لاكتيك (كريمي)"},
+      {en:"Sour", ar:"حامض"}, {en:"Flat", ar:"مسطح"}
+    ],
+    mouthfeel: [
+      {en:"Silky", ar:"حريري"}, {en:"Creamy", ar:"كريمي"}, {en:"Velvety", ar:"مخملي"},
+      {en:"Syrupy", ar:"لزج/شرابي"}, {en:"Round", ar:"مستدير"},
+      {en:"Watery", ar:"مائي"}, {en:"Drying", ar:"يجفف"}, {en:"Astringent", ar:"قابض"}
+    ],
+    sweetness: [
+      {en:"Honey", ar:"عسل"}, {en:"Caramel", ar:"كراميل"}, {en:"Brown sugar", ar:"سكر بني"},
+      {en:"Vanilla", ar:"فانيلا"}, {en:"Molasses", ar:"دبس/مولاس"},
+      {en:"Candy-like", ar:"حلوى"}, {en:"Low sweetness", ar:"حلاوة منخفضة"}
+    ],
+    aftertaste: [
+      {en:"Long", ar:"طويل"}, {en:"Short", ar:"قصير"}, {en:"Clean", ar:"نظيف"},
+      {en:"Sweet finish", ar:"نهاية حلوة"}, {en:"Bitter finish", ar:"نهاية مُرّة"},
+      {en:"Dry finish", ar:"نهاية جافة"}, {en:"Roasty finish", ar:"نهاية محمصة"}
+    ],
+    freshcrop: [
+      {en:"No woody", ar:"بدون خشبي"},
+      {en:"Slight woody", ar:"خشبي خفيف"},
+      {en:"Woody", ar:"خشبي"},
+      {en:"Baggy (jute)", ar:"خيش/شنطة"},
+      {en:"Papery", ar:"ورقي"},
+      {en:"Stale", ar:"قديم/بايت"}
+    ],
+    uniformityNotes: [
+      {en:"Cups consistent", ar:"الأكواب متجانسة"},
+      {en:"Slight variation", ar:"اختلاف بسيط"},
+      {en:"Temp inconsistency", ar:"عدم ثبات الحرارة"},
+      {en:"Grind inconsistency", ar:"عدم ثبات الطحن"}
+    ],
+    defectNotes: [
+      {en:"Phenolic/Medicinal", ar:"فينولي/طبي"},
+      {en:"Rubbery", ar:"مطاطي"},
+      {en:"Musty/Moldy", ar:"عفن/متعفن"},
+      {en:"Smoky/Ashy", ar:"دخاني/رمادي"},
+      {en:"Sour/Ferment", ar:"حامض/تخمّر"},
+      {en:"Dirty", ar:"وسخ"},
+      {en:"Baggy", ar:"خيش/شنطة"},
+      {en:"Stale", ar:"قديم/بايت"}
+    ]
+  };
+
+  function el(tag, attrs={}, children=[]){
+    const n = document.createElement(tag);
+    Object.entries(attrs).forEach(([k,v])=>{
+      if(k==='class') n.className=v;
+      else if(k==='html') n.innerHTML=v;
+      else if(k.startsWith('on') && typeof v==='function') n.addEventListener(k.slice(2), v);
+      else n.setAttribute(k,v);
+    });
+    children.forEach(c=> n.appendChild(c));
+    return n;
+  }
+
+  function newSampleState(){
+    const obj = {
+      sampleNo:'',
+      checkRoast:false,
+      uniformity:[false,false,false,false,false],
+      defect:[false,false,false,false,false],
+      uniformityNotes:'',
+      defectNotes:''
+    };
+    ATTRS.forEach(a=>{
+      obj[a.key] = { score:RANGE_MIN, scored:false, intensity:0, notes:'' };
+    });
+    return obj;
+  }
+
+  let state = { name:'', table:'', samples:[newSampleState(), newSampleState(), newSampleState()] };
+
+  function insertChipText(textarea, text){
+    const insert = (textarea.value && !textarea.value.trim().endsWith(",")) ? ", " : "";
+    textarea.value = (textarea.value ? textarea.value : "") + insert + text;
+    textarea.dispatchEvent(new Event('input', {bubbles:true}));
+    textarea.focus();
+  }
+
+  /* ===== colored chip logic ===== */
+  function chipColorForText(txt){
+    const s = String(txt || "").toLowerCase();
+    const has = (k)=> s.includes(k);
+
+    if (has("floral") || has("jasmine") || has("rose") || has("زهري") || has("ياسمين") || has("ورد")) return "#7c3aed";   // Floral
+    if (has("fruity") || has("berry") || has("stone fruit") || has("tropical") || has("فاكهي") || has("توت") || has("نواة") || has("استوائي")) return "#e11d48"; // Fruity
+    if (has("citrus") || has("lemon") || has("حمض") || has("حمضيات") || has("ليمون")) return "#f97316"; // Citrus
+    if (has("sweet") || has("honey") || has("vanilla") || has("caramel") || has("brown sugar") || has("molasses") || has("candy") ||
+        has("حلو") || has("عسل") || has("فانيلا") || has("كراميل") || has("سكر") || has("دبس") || has("حلوى")) return "#b45309"; // Sweet
+    if (has("nutty") || has("cocoa") || has("chocolate") || has("مكسرات") || has("كاكاو") || has("شوكولاتة")) return "#7c2d12"; // Nutty/Cocoa
+    if (has("spices") || has("spice") || has("بهارات")) return "#b91c1c"; // Spices
+    if (has("green") || has("herbal") || has("vegetative") || has("أخضر") || has("أعشاب") || has("نباتي")) return "#15803d"; // Green/Herbal
+    if (has("roasted") || has("smoky") || has("ashy") || has("bitter") || has("محمص") || has("دخاني") || has("رمادي") || has("مر")) return "#374151"; // Roasted/Bitter
+    if (has("sour") || has("ferment") || has("fermented") || has("حامض") || has("مخمّر") || has("تخمّر")) return "#0f766e"; // Sour/Fermented
+    if (has("earthy") || has("musty") || has("moldy") || has("dirty") || has("ترابي") || has("عفن") || has("وسخ")) return "#4d7c0f"; // Earthy/Dirty
+    if (has("woody") || has("baggy") || has("papery") || has("stale") || has("خشبي") || has("خيش") || has("ورقي") || has("قديم")) return "#334155"; // Woody/Baggy
+    if (has("silky") || has("creamy") || has("velvety") || has("syrupy") || has("round") ||
+        has("watery") || has("drying") || has("astringent") ||
+        has("حريري") || has("كريمي") || has("مخملي") || has("شرابي") || has("مستدير") ||
+        has("مائي") || has("يجفف") || has("قابض")) return "#1d4ed8"; // Mouthfeel
+
+    return "#111827";
+  }
+
+  function helperRow(helperKey, textarea){
+    const items = NOTE_HELPERS[helperKey] || [];
+    if(!items.length) return null;
+
+    const wrap = el('div',{class:'helper'});
+    items.forEach(it=>{
+      const txt = it[lang] || it.en;
+      const chip = el('div',{class:'chip color', role:'button', tabindex:'0'});
+      chip.textContent = txt;
+      chip.style.color = chipColorForText(txt);
+
+      chip.addEventListener('click', ()=> insertChipText(textarea, txt));
+      chip.addEventListener('keydown',(e)=>{
+        if(e.key==='Enter'||e.key===' '){ e.preventDefault(); insertChipText(textarea, txt); }
+      });
+      wrap.appendChild(chip);
+    });
+    return wrap;
+  }
+
+  function circleGroup(sampleIdx, attrKey, groupKey, count=5){
+    const wrap = el('div',{class:'circles', 'data-group':`${sampleIdx}.${attrKey}.${groupKey}`});
+    for(let i=1;i<=count;i++){
+      const c = el('div',{class:'circle', role:'button', tabindex:'0'});
+      c.addEventListener('click', ()=> setCircle(sampleIdx, attrKey, groupKey, i));
+      c.addEventListener('keydown', (e)=>{
+        if(e.key==='Enter' || e.key===' '){ e.preventDefault(); setCircle(sampleIdx, attrKey, groupKey, i); }
+      });
+      wrap.appendChild(c);
+    }
+    return wrap;
+  }
+
+  function setCircle(sampleIdx, attrKey, groupKey, value){
+    const sel = `[data-group="${sampleIdx}.${attrKey}.${groupKey}"] .circle`;
+    const cs = document.querySelectorAll(sel);
+    cs.forEach((c, idx)=> c.classList.toggle('on', idx < value));
+    state.samples[sampleIdx][attrKey][groupKey] = value;
+  }
+
+  function updateBubblePosition(rangeEl, bubbleEl){
+    const min = Number(rangeEl.min), max = Number(rangeEl.max);
+    const val = Number(rangeEl.value);
+    const pct = (val - min) / (max - min);
+    const w = rangeEl.getBoundingClientRect().width;
+    const thumb = 20;
+
+    const isRTL = (document.documentElement.dir === "rtl");
+    const pctAdj = isRTL ? (1 - pct) : pct;
+
+    const x = pctAdj * (w - thumb) + (thumb/2);
+    bubbleEl.style.left = `${x}px`;
+    bubbleEl.textContent = Number(val).toFixed(2);
+  }
+
+  function sliderRow(sampleIdx, attr){
+    const t = UI[lang];
+    const row = el('div',{class:'section'});
+
+    const head = el('div',{class:'rowhead'},[
+      el('div',{html: attr.label[lang]}),
+      el('div',{class:'rightlabel'},[
+        el('span',{html: t[attr.rightKey]}),
+        circleGroup(sampleIdx, attr.key, 'intensity', 5)
+      ])
+    ]);
+
+    const range = el('input',{
+      type:'range',
+      min:String(RANGE_MIN),
+      max:String(RANGE_MAX),
+      step:String(RANGE_STEP),
+      value:String(RANGE_MIN),
+      'data-range': `${sampleIdx}.${attr.key}.score`
+    });
+
+    const bubble = el('div',{class:'value-bubble', 'data-bubble':`${sampleIdx}.${attr.key}`});
+    const markScored = ()=> { state.samples[sampleIdx][attr.key].scored = true; };
+
+    range.addEventListener('pointerdown', markScored, {passive:true});
+    range.addEventListener('touchstart', markScored, {passive:true});
+    range.addEventListener('mousedown', markScored);
+
+    const sync = ()=> updateBubblePosition(range, bubble);
+    range.addEventListener('input', ()=>{
+      markScored();
+      state.samples[sampleIdx][attr.key].score = Number(range.value);
+      sync();
+      updateTotals();
+    });
+
+    requestAnimationFrame(sync);
+    window.addEventListener('resize', sync);
+
+    const ticks = el('div',{class:'ticks'},[
+      el('span',{html:'6'}), el('span',{html:'7'}), el('span',{html:'8'}), el('span',{html:'9'}), el('span',{html:'10'})
+    ]);
+
+    const hint = el('div',{class:'microhint'},[
+      el('span',{html: t[attr.hintLKey]}),
+      el('span',{html: t[attr.hintRKey]})
+    ]);
+
+    const notesWrap = el('div',{class:'notes'},[
+      el('label',{html: t.notes}),
+      el('textarea',{'data-notes':`${sampleIdx}.${attr.key}.notes`})
+    ]);
+    const textarea = notesWrap.querySelector('textarea');
+    textarea.addEventListener('input', (e)=> state.samples[sampleIdx][attr.key].notes = e.target.value);
+
+    row.appendChild(head);
+    row.appendChild(el('div',{class:'sliderwrap'},[
+      el('div',{class:'scale'},[range, bubble])
+    ]));
+    row.appendChild(ticks);
+    row.appendChild(hint);
+    row.appendChild(notesWrap);
+
+    const helpers = helperRow(attr.key, textarea);
+    if(helpers) row.appendChild(helpers);
+
+    return row;
+  }
+
+  /* ========== Uniformity & Defect (linked) ========== */
+  function renderBottomRow(sampleIdx, which){
+    const host = document.querySelector(`[data-bottom="${sampleIdx}.${which}"]`);
+    if(!host) return;
+    const arr = state.samples[sampleIdx][which];
+    host.querySelectorAll(".circle").forEach((c, idx)=> c.classList.toggle("on", !!arr[idx]));
+  }
+
+  function toggleDefect(sampleIdx, idx){
+    const s = state.samples[sampleIdx];
+    s.defect[idx] = !s.defect[idx];
+    // link: uniformity mirrors defect (check + uncheck)
+    s.uniformity[idx] = s.defect[idx];
+
+    renderBottomRow(sampleIdx, 'defect');
+    renderBottomRow(sampleIdx, 'uniformity');
+    updateTotals();
+  }
+
+  function toggleUniformity(sampleIdx, idx){
+    const s = state.samples[sampleIdx];
+    s.uniformity[idx] = !s.uniformity[idx];
+    renderBottomRow(sampleIdx, 'uniformity');
+    updateTotals();
+  }
+
+  function bottomBlock(sampleIdx, which){
+    const t = UI[lang];
+    const title = (which === 'uniformity') ? t.uniformity : t.defect;
+
+    const item = el('div',{class:'bottomItem'},[
+      el('div',{class:'bottomTitle'},[
+        el('div',{html: title}),
+        el('div',{class:'circles bigcircles', 'data-bottom':`${sampleIdx}.${which}`})
+      ]),
+      el('div',{class:'notes'},[
+        el('label',{html: t.notes}),
+        el('textarea', {'data-bottom-notes':`${sampleIdx}.${which}Notes`})
+      ])
+    ]);
+
+    const host = item.querySelector(`[data-bottom="${sampleIdx}.${which}"]`);
+    for(let i=0;i<5;i++){
+      const c = el('div',{class:'circle', role:'button', tabindex:'0'});
+      const handler = (which === 'defect')
+        ? ()=> toggleDefect(sampleIdx, i)
+        : ()=> toggleUniformity(sampleIdx, i);
+
+      c.addEventListener('click', handler);
+      c.addEventListener('keydown',(e)=>{
+        if(e.key==='Enter'||e.key===' '){ e.preventDefault(); handler(); }
+      });
+      host.appendChild(c);
+    }
+
+    const ta = item.querySelector('textarea');
+    ta.addEventListener('input', (e)=> state.samples[sampleIdx][which+'Notes'] = e.target.value);
+
+    const helpers = helperRow(which+'Notes', ta);
+    if(helpers) item.appendChild(helpers);
+
+    return item;
+  }
+
+  function countTrue(arr){ return arr.reduce((n,v)=> n + (v?1:0), 0); }
+
+  function computeSampleTotals(sample){
+    // Attribute sum: only if scored=true; otherwise 0
+    const attributesSum = ATTRS.reduce((sum,a)=>{
+      const obj = sample[a.key];
+      const v = (obj && obj.scored) ? Number(obj.score || 0) : 0;
+      return sum + v;
+    }, 0);
+
+    const uniChecks = countTrue(sample.uniformity);
+    const defChecks = countTrue(sample.defect);
+
+    const uniformityScore = UNIFORMITY_BASE - (uniChecks * DEDUCT_PER_CHECK);
+    const defectScore     = DEFECT_BASE     - (defChecks * DEDUCT_PER_CHECK);
+
+    const total = attributesSum + uniformityScore + defectScore;
+    return { attributesSum, uniChecks, defChecks, uniformityScore, defectScore, total };
+  }
+
+  function updateTotals(){
+    for(let i=0;i<state.samples.length;i++){
+      const t = computeSampleTotals(state.samples[i]);
+      const totalEl = document.querySelector(`[data-total="${i}"]`);
+      const subEl   = document.querySelector(`[data-subtot="${i}"]`);
+      if(!totalEl || !subEl) continue;
+
+      totalEl.textContent = t.total.toFixed(2);
+      subEl.innerHTML =
+        `Attr: ${t.attributesSum.toFixed(2)}<br>` +
+        `Uniformity: ${t.uniformityScore.toFixed(2)} (10 - ${t.uniChecks}×2)<br>` +
+        `Defect: ${t.defectScore.toFixed(2)} (10 - ${t.defChecks}×2)`;
+    }
+  }
+
+  function buildSample(sampleIdx){
+    const t = UI[lang];
+    const sample = el('div',{class:'sample', 'data-sample':String(sampleIdx)});
+
+    const sampleNo = el('div',{class:'sampleNo'},[
+      el('div',{html: t.sample}),
+      el('input',{type:'text', 'data-samplefield':`${sampleIdx}.sampleNo`})
+    ]);
+
+    const scorebox = el('div',{class:'scorebox'},[
+      el('div',{class:'lbl', html: t.total}),
+      el('div',{class:'total', 'data-total':String(sampleIdx), html:'0.00'}),
+      el('div',{class:'subtot', 'data-subtot':String(sampleIdx), html:''}),
+      el('div',{class:'checkroast'},[
+        el('span',{html: t.checkRoast}),
+        el('input',{type:'checkbox', 'data-samplefield':`${sampleIdx}.checkRoast`})
+      ])
+    ]);
+
+    sample.appendChild(el('div',{class:'toprow'},[sampleNo, scorebox]));
+    ATTRS.forEach(a => sample.appendChild(sliderRow(sampleIdx, a)));
+
+    const bottom = el('div',{class:'bottomRow'});
+    bottom.appendChild(bottomBlock(sampleIdx,'uniformity'));
+    bottom.appendChild(bottomBlock(sampleIdx,'defect'));
+    sample.appendChild(bottom);
+
+    // sample fields
+    sample.querySelectorAll('[data-samplefield]').forEach(inp=>{
+      inp.addEventListener('input', ()=>{
+        const [s, field] = inp.getAttribute('data-samplefield').split('.');
+        if(field === 'checkRoast') state.samples[Number(s)].checkRoast = inp.checked;
+        else state.samples[Number(s)][field] = inp.value;
+      });
+      if(inp.type === 'checkbox'){
+        inp.addEventListener('change', ()=>{
+          const [s, field] = inp.getAttribute('data-samplefield').split('.');
+          state.samples[Number(s)][field] = inp.checked;
+        });
+      }
+    });
+
+    return sample;
+  }
+
+  function bindTopFields(){
+    const nameEl = document.getElementById('name');
+    const tableEl = document.getElementById('table');
+    nameEl.addEventListener('input', (e)=> state.name = e.target.value);
+    tableEl.addEventListener('input', (e)=> state.table = e.target.value);
+  }
+
+  function applyStateToUI(){
+    document.getElementById('name').value = state.name || '';
+    document.getElementById('table').value = state.table || '';
+
+    for(let s=0;s<state.samples.length;s++){
+      const sampleEl = document.querySelector(`[data-sample="${s}"]`);
+      if(!sampleEl) continue;
+
+      sampleEl.querySelectorAll('[data-samplefield]').forEach(inp=>{
+        const [si, field] = inp.getAttribute('data-samplefield').split('.');
+        if(Number(si)!==s) return;
+        if(inp.type==='checkbox') inp.checked = !!state.samples[s][field];
+        else inp.value = state.samples[s][field] || '';
+      });
+
+      ATTRS.forEach(a=>{
+        const r = document.querySelector(`[data-range="${s}.${a.key}.score"]`);
+        if(r){
+          r.value = state.samples[s][a.key].score ?? RANGE_MIN;
+          const bubble = document.querySelector(`[data-bubble="${s}.${a.key}"]`);
+          if(bubble) updateBubblePosition(r, bubble);
+        }
+        const intensityVal = state.samples[s][a.key].intensity ?? 0;
+        const cs = document.querySelectorAll(`[data-group="${s}.${a.key}.intensity"] .circle`);
+        cs.forEach((c, idx)=> c.classList.toggle('on', idx < intensityVal));
+
+        const n = document.querySelector(`[data-notes="${s}.${a.key}.notes"]`);
+        if(n) n.value = state.samples[s][a.key].notes || '';
+      });
+
+      renderBottomRow(s,'uniformity');
+      renderBottomRow(s,'defect');
+
+      const un = document.querySelector(`[data-bottom-notes="${s}.uniformityNotes"]`);
+      const dn = document.querySelector(`[data-bottom-notes="${s}.defectNotes"]`);
+      if(un) un.value = state.samples[s].uniformityNotes || '';
+      if(dn) dn.value = state.samples[s].defectNotes || '';
+    }
+    updateTotals();
+  }
+
+  function renderAll(){
+    state.name = document.getElementById("name")?.value ?? state.name;
+    state.table = document.getElementById("table")?.value ?? state.table;
+
+    const grid = document.getElementById('grid');
+    grid.innerHTML = '';
+    for(let i=0;i<state.samples.length;i++){
+      grid.appendChild(buildSample(i));
+    }
+    bindTopFields();
+    applyStateToUI();
+  }
+
+  function addSample(){ state.samples.push(newSampleState()); renderAll(); }
+  function removeLastSample(){ if(state.samples.length <= 1) return; state.samples.pop(); renderAll(); }
+  function resetAll(){ state = { name:'', table:'', samples:[newSampleState(), newSampleState(), newSampleState()] }; renderAll(); }
+
+  /* ===================== Export Star Graph (Printable PDF) ===================== */
+  function escHtml(s){
+    return String(s ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function radarValuesForSample(sample){
+    const t = computeSampleTotals(sample);
+    return RADAR_AXES.map(ax=>{
+      if(ax.type === 'attr'){
+        const obj = sample[ax.key];
+        return (obj && obj.scored) ? Number(obj.score || 0) : 0;
+      }
+      if(ax.key === 'uniformity') return Number(t.uniformityScore || 0);
+      if(ax.key === 'defect')     return Number(t.defectScore || 0);
+      return 0;
+    });
+  }
+
+  function makeRadarSVG({labels, values, size=320, max=10}){
+    const cx = size/2, cy = size/2;
+    const r = size*0.38;
+    const n = labels.length;
+    const angle0 = -Math.PI/2;
+
+    const rings = 5;
+    const ringPts = (rad)=> Array.from({length:n}, (_,i)=>{
+      const ang = angle0 + i*(2*Math.PI/n);
+      return [cx + rad*Math.cos(ang), cy + rad*Math.sin(ang)];
+    });
+
+    const gridPolys = Array.from({length:rings}, (_,k)=>{
+      const rad = r * ((k+1)/rings);
+      const pts = ringPts(rad).map(p=>p.join(",")).join(" ");
+      return `<polygon points="${pts}" fill="none" stroke="#bbb" stroke-width="1"/>`;
+    }).join("");
+
+    const axes = Array.from({length:n}, (_,i)=>{
+      const ang = angle0 + i*(2*Math.PI/n);
+      const x = cx + r*Math.cos(ang), y = cy + r*Math.sin(ang);
+      return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#999" stroke-width="1"/>`;
+    }).join("");
+
+    const ptsVal = values.map((v,i)=>{
+      const vv = Math.max(0, Math.min(max, Number(v||0)));
+      const rad = r * (vv/max);
+      const ang = angle0 + i*(2*Math.PI/n);
+      return [cx + rad*Math.cos(ang), cy + rad*Math.sin(ang)];
+    });
+
+    const ptsStr = ptsVal.map(p=>p.join(",")).join(" ");
+    const labelEls = labels.map((lab,i)=>{
+      const ang = angle0 + i*(2*Math.PI/n);
+      const lx = cx + (r*1.18)*Math.cos(ang);
+      const ly = cy + (r*1.18)*Math.sin(ang);
+      const anchor = (Math.abs(Math.cos(ang)) < 0.2) ? "middle" : (Math.cos(ang) > 0 ? "start" : "end");
+      return `<text x="${lx}" y="${ly}" font-size="10" text-anchor="${anchor}" dominant-baseline="middle" fill="#111">${escHtml(lab)}</text>`;
+    }).join("");
+
+    const dots = ptsVal.map(([x,y])=> `<circle cx="${x}" cy="${y}" r="3" fill="#111"/>`).join("");
+
+    return `
+      <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="0" width="${size}" height="${size}" fill="#fff"/>
+        ${gridPolys}
+        ${axes}
+        <polygon points="${ptsStr}" fill="rgba(0,0,0,0.08)" stroke="#111" stroke-width="2"/>
+        ${dots}
+        ${labelEls}
+      </svg>`;
+  }
+
+  function circlesString(arr){
+    return (arr || []).map(v => v ? "●" : "○").join(" ");
+  }
+
+  function exportStarGraphPrintable(){
+    const tUI = UI[lang];
+    const nameVal  = document.getElementById('name')?.value || "";
+    const tableVal = document.getElementById('table')?.value || "";
+    const now = new Date();
+    const labels = RADAR_AXES.map(a=> a.label[lang]);
+
+    const blocks = state.samples.map((sample, idx)=>{
+      const totals = computeSampleTotals(sample);
+      const radarVals = radarValuesForSample(sample);
+      const svg = makeRadarSVG({labels, values: radarVals, size: 320, max: 10});
+
+      const attrRows = ATTRS.map(a=>{
+        const scored = !!sample[a.key]?.scored;
+        const score = scored ? Number(sample[a.key].score||0).toFixed(2) : "0.00";
+        const notes = sample[a.key]?.notes || "";
+        return `
+          <tr>
+            <td class="tdL">${escHtml(a.label[lang])}</td>
+            <td class="tdR">${escHtml(score)}</td>
+            <td class="tdN">${escHtml(notes)}</td>
+          </tr>`;
+      }).join("");
+
+      return `
+        <section class="sampleCard">
+          <div class="topRow">
+            <div class="left">
+              <div class="h2">${escHtml(tUI.sample)} ${idx+1} — ${escHtml(sample.sampleNo || "")}</div>
+
+              <div class="meta">
+                <div><b>${escHtml(tUI.total)}:</b> ${totals.total.toFixed(2)}</div>
+                <div><b>Attr Sum:</b> ${totals.attributesSum.toFixed(2)}</div>
+
+                <div class="mTop">
+                  <div><b>${escHtml(tUI.uniformity)}:</b> ${totals.uniformityScore.toFixed(2)} (10 - ${totals.uniChecks}×2)
+                    <span class="mono">${escHtml(circlesString(sample.uniformity))}</span>
+                  </div>
+                  <div><b>${escHtml(tUI.defect)}:</b> ${totals.defectScore.toFixed(2)} (10 - ${totals.defChecks}×2)
+                    <span class="mono">${escHtml(circlesString(sample.defect))}</span>
+                  </div>
+                </div>
+
+                <div class="mTop">
+                  <div><b>${escHtml(tUI.uniformity)} ${escHtml(tUI.notes)}</b></div>
+                  <div class="pre">${escHtml(sample.uniformityNotes||"")}</div>
+                </div>
+                <div class="mTop">
+                  <div><b>${escHtml(tUI.defect)} ${escHtml(tUI.notes)}</b></div>
+                  <div class="pre">${escHtml(sample.defectNotes||"")}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="right">
+              ${svg}
+              <div class="tip">${escHtml(tUI.axesTip)}</div>
+            </div>
+          </div>
+
+          <div class="attrs">
+            <div class="h3">Attributes</div>
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th class="thL">Attribute</th>
+                  <th class="thR">Score</th>
+                  <th class="thN">Notes</th>
+                </tr>
+              </thead>
+              <tbody>${attrRows}</tbody>
+            </table>
+          </div>
+        </section>`;
+    }).join("");
+
+    const reportHTML = `<!doctype html>
+<html lang="${lang}">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>SCI Star Graph Report</title>
+<style>
+  :root{ --ink:#111; --bg:#fff; --line:#111; }
+  body{margin:0;background:#f2f2f2;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);}
+  body[dir="rtl"]{direction:rtl;}
+  .wrap{max-width:1100px;margin:18px auto;padding:14px;}
+  .card{background:#fff;border:1px solid #ddd;border-radius:14px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.06);}
+
+  .topHead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start;}
+  .h1{font-weight:1000;font-size:18px;}
+  .meta0{font-size:12px;line-height:1.5;color:#222;}
+
+  .sampleCard{
+    border:2px solid var(--line);
+    border-radius:12px;
+    padding:10px;
+    margin:12px 0;
+    background:#fff;
+    page-break-inside:avoid;
+    break-inside:avoid;
+  }
+
+  .topRow{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;}
+  .left{min-width:280px;flex:1;}
+  .right{min-width:320px;}
+
+  .h2{font-weight:1000;font-size:14px;}
+  .h3{font-weight:1000;margin:8px 0 6px;}
+  .meta{margin-top:6px;font-size:12px;line-height:1.45;}
+
+  .mTop{margin-top:8px;}
+  .mono{
+    font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    margin-inline-start:8px;
+  }
+  .pre{white-space:pre-wrap;}
+  .tip{font-size:11px;color:#333;margin-top:6px;}
+
+  .tbl{width:100%;border-collapse:collapse;font-size:11px;}
+  .thL,.thR,.thN{padding:5px 7px;border:1px solid #ddd;background:#f5f5f5;}
+  .thL,.tdL{text-align:left;}
+  .thR,.tdR{text-align:right;width:78px;}
+  .thN,.tdN{text-align:left;}
+  .tdL,.tdR,.tdN{padding:5px 7px;border:1px solid #ddd;vertical-align:top;}
+  .tdN{white-space:pre-wrap;max-height:72px;overflow:auto;}
+
+  @page { size: A4; margin: 10mm; }
+
+  @media print{
+    body{background:#fff;}
+    .wrap{max-width:none;margin:0;padding:0;}
+    .card{border:0;box-shadow:none;border-radius:0;padding:0;}
+
+    /* one sample per page */
+    .sampleCard{
+      break-inside: avoid;
+      page-break-inside: avoid;
+      break-after: page;
+      page-break-after: always;
+    }
+    .sampleCard:last-of-type{
+      break-after: auto;
+      page-break-after: auto;
+    }
+
+    /* clean clipping for long notes */
+    .tdN{max-height:70px;overflow:hidden;}
+
+    .noPrint{display:none !important;}
+  }
+</style>
+</head>
+<body dir="${lang==="ar" ? "rtl":"ltr"}">
+  <div class="wrap">
+    <div class="card">
+      <div class="topHead">
+        <div>
+          <div class="h1">SCI — ${escHtml(tUI.export)}</div>
+          <div class="meta0">
+            <div><b>${escHtml(tUI.name)}</b> ${escHtml(nameVal)}</div>
+            <div><b>${escHtml(tUI.table)}</b> ${escHtml(tableVal)}</div>
+            <div><b>Exported:</b> ${escHtml(now.toLocaleString())}</div>
+          </div>
+        </div>
+        <div class="meta0" style="text-align:${lang==="ar" ? "left":"right"};">
+          <div><b>Samples:</b> ${state.samples.length}</div>
+          <button class="noPrint" onclick="window.print()" style="margin-top:8px;padding:10px 12px;border:1px solid #ccc;border-radius:10px;background:#fff;cursor:pointer;font-weight:900;">
+            Print / Save as PDF
+          </button>
+        </div>
+      </div>
+
+      ${blocks}
+    </div>
+  </div>
+
+<script>
+  setTimeout(()=>{ window.print(); }, 300);
+<\/script>
+</body>
+</html>`;
+
+    const w = window.open("", "_blank");
+    if(!w){
+      alert("Popup blocked. Please allow popups for this page to print/save PDF.");
+      return;
+    }
+    w.document.open();
+    w.document.write(reportHTML);
+    w.document.close();
+  }
+
+  /* ========== Menu open/close ========== */
+  function openMenu(){
+    const btn = document.getElementById('btnMenu');
+    const panel = document.getElementById('menuPanel');
+    panel.classList.add('open');
+    panel.setAttribute('aria-hidden','false');
+    btn.setAttribute('aria-expanded','true');
+  }
+
+  function closeMenu(){
+    const btn = document.getElementById('btnMenu');
+    const panel = document.getElementById('menuPanel');
+    panel.classList.remove('open');
+    panel.setAttribute('aria-hidden','true');
+    btn.setAttribute('aria-expanded','false');
+  }
+
+  function toggleMenu(){
+    const panel = document.getElementById('menuPanel');
+    if(panel.classList.contains('open')) closeMenu();
+    else openMenu();
+  }
+
+  /* ========== Toolbar ========== */
+  document.getElementById('btnPrint').addEventListener('click', ()=> window.print());
+  document.getElementById('btnReset').addEventListener('click', resetAll);
+  document.getElementById('btnAddSample').addEventListener('click', addSample);
+  document.getElementById('btnRemoveSample').addEventListener('click', removeLastSample);
+  document.getElementById('btnExportReport').addEventListener('click', exportStarGraphPrintable);
+  document.getElementById('btnLang').addEventListener('click', ()=> setLanguage(lang === "en" ? "ar" : "en"));
+
+  // Menu toggle
+  document.getElementById('btnMenu').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    toggleMenu();
+  });
+
+  // Close menu when clicking outside
+  document.addEventListener('click', ()=> closeMenu());
+
+  // Prevent closing when clicking inside panel
+  document.getElementById('menuPanel').addEventListener('click', (e)=> e.stopPropagation());
+
+  // Close on ESC
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape') closeMenu();
+  });
+
+  // Close menu after selecting an action
+  ['btnPrint','btnExportReport','btnAddSample','btnRemoveSample','btnReset'].forEach(id=>{
+    const b = document.getElementById(id);
+    if(b) b.addEventListener('click', ()=> closeMenu());
+  });
+
+  /* ========== Init ========== */
+  applyUIText();
+  setLanguage("en");
+</script>
+</body>
+</html>
+```0
