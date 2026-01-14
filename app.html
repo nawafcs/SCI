@@ -7,17 +7,7 @@
   <title>SCI Cupping Form (Cloud + Sessions)</title>
 
   <!-- QR library (single load + fallback) -->
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-  <script>
-    window.addEventListener("load", () => {
-      if (!window.QRCode) {
-        const s = document.createElement("script");
-        s.src = "https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js";
-        document.head.appendChild(s);
-      }
-    });
-  </script>
-
+  
   <style>
     :root{
       --ink:#1a2a2a;
@@ -2285,9 +2275,16 @@ async function setInvite(link, metaText){
   openOverlay("overlayInvite");
 
   const img = $("invQrImg");
-  if (img) img.removeAttribute("src");
-  lastInviteQrDataUrl = "";
+  const encoded = encodeURIComponent(link);
 
+  // Reliable QR image service (no JS library)
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encoded}`;
+
+  img.src = qrUrl;
+  img.alt = "Session QR Code";
+
+  lastInviteQrDataUrl = qrUrl;
+}
   // Wait for QR library (slow network / blocked CDN)
   for (let i = 0; i < 12; i++) {
     if (window.QRCode && typeof window.QRCode.toDataURL === "function") break;
@@ -2316,8 +2313,7 @@ async function setInvite(link, metaText){
 
 function downloadInviteQR(){
   const img = $("invQrImg");
-  const src = (img && img.src) ? img.src : lastInviteQrDataUrl;
-  if(!src){
+  if(!img || !img.src){
     alert("QR not ready yet.");
     return;
   }
@@ -2329,7 +2325,7 @@ function downloadInviteQR(){
   }catch(_){}
 
   const a = document.createElement("a");
-  a.href = src;
+  a.href = img.src;
   a.download = `SCI-Invite-QR-${sid}.png`;
   document.body.appendChild(a);
   a.click();
