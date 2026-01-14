@@ -1,4 +1,4 @@
-<!-- app.html (FULL VERSION with Session Mode + Invite Link + QR + HOST Session Results Overlay) -->
+<!-- app.html (FULL VERSION with Session Mode + Invite Link + QR + Download + WhatsApp Share + HOST Session Results Overlay) -->
 <!doctype html>
 <html lang="en" dir="ltr">
 <head>
@@ -6,18 +6,18 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>SCI Cupping Form (Cloud + Sessions)</title>
 
-  <!-- QR library -->
+  <!-- QR library (single load + fallback) -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-<script>
-  // CDN fallback (only if QRCode isn't defined)
-  window.addEventListener("load", () => {
-    if (!window.QRCode) {
-      const s = document.createElement("script");
-      s.src = "https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js";
-      document.head.appendChild(s);
-    }
-  });
-</script>
+  <script>
+    window.addEventListener("load", () => {
+      if (!window.QRCode) {
+        const s = document.createElement("script");
+        s.src = "https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js";
+        document.head.appendChild(s);
+      }
+    });
+  </script>
+
   <style>
     :root{
       --ink:#1a2a2a;
@@ -446,7 +446,6 @@
     .qrBox{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;justify-content:center;margin-top:12px}
     canvas{image-rendering:pixelated}
 
-    /* Results tables */
     table{border-collapse:separate;border-spacing:0;width:100%}
     th,td{border-bottom:1px solid #eee;padding:8px 8px;font-size:12px;vertical-align:top}
     th{background:#fafafa;text-align:left;font-weight:1100;position:sticky;top:0;z-index:2}
@@ -511,19 +510,6 @@
       body.print-results th{position:static !important}
     }
   </style>
-  <!-- QR Code library (PRIMARY) -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-
-<!-- QR Code library (FALLBACK) -->
-<script>
-  window.addEventListener("load", () => {
-    if (!window.QRCode) {
-      const s = document.createElement("script");
-      s.src = "https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js";
-      document.head.appendChild(s);
-    }
-  });
-</script>
 </head>
 
 <body>
@@ -691,12 +677,16 @@
           <div class="row2" style="margin-top:10px;">
             <button id="invCopy" class="ghostBtn" type="button">Copy link</button>
             <button id="invOpen" class="ghostBtn" type="button">Open link</button>
+            <button id="invDownloadQr" class="ghostBtn" type="button">Download QR</button>
+            <button id="invShareWa" class="ghostBtn" type="button">Share QR (WhatsApp)</button>
           </div>
 
           <div class="qrBox">
             <div class="card" style="padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
               <div class="small" style="font-weight:1100;">QR</div>
-              <canvas id="invQr" width="240" height="240" style="display:none;"></canvas> <img id="invQrImg" alt="QR" style="width:240px;height:240px;display:block;border-radius:12px;border:1px solid #eee;background:#fff;" />
+              <!-- canvas kept (unused) for backwards compatibility -->
+              <canvas id="invQr" width="240" height="240" style="display:none;"></canvas>
+              <img id="invQrImg" alt="QR" style="width:240px;height:240px;display:block;border-radius:12px;border:1px solid #eee;background:#fff;" />
               <div class="small mono" id="invMeta"></div>
             </div>
           </div>
@@ -958,6 +948,8 @@ const UI = {
     inviteDesc:"Share this link (or QR). Cuppers will see the same sample numbers and origins you entered.",
     copy:"Copy link",
     open:"Open link",
+    dlQr:"Download QR",
+    waQr:"Share QR (WhatsApp)",
     savedUser:"Saved to cloud ✅",
     savedSession:"Saved to session ✅",
 
@@ -1042,6 +1034,8 @@ const UI = {
     inviteDesc:"شارك هذا الرابط أو QR. المقيمون سيشاهدون نفس أرقام العينات والأصل الذي أدخلته.",
     copy:"نسخ الرابط",
     open:"فتح الرابط",
+    dlQr:"تحميل QR",
+    waQr:"مشاركة QR (واتساب)",
     savedUser:"تم الحفظ سحابيًا ✅",
     savedSession:"تم حفظ تقييمك في الجلسة ✅",
 
@@ -1126,6 +1120,8 @@ const UI = {
     inviteDesc:"分享此链接或二维码。评测者将看到你输入的相同样品编号和产地信息。",
     copy:"复制链接",
     open:"打开链接",
+    dlQr:"下载二维码",
+    waQr:"分享二维码（WhatsApp）",
     savedUser:"已保存到云端 ✅",
     savedSession:"已保存到会话 ✅",
 
@@ -2004,6 +2000,8 @@ function applyLang(){
   $("invDesc").textContent = t.inviteDesc;
   $("invCopy").textContent = t.copy;
   $("invOpen").textContent = t.open;
+  $("invDownloadQr").textContent = t.dlQr;
+  $("invShareWa").textContent = t.waQr;
   $("invDone").textContent = t.done;
 
   if(sessionMode && sessionId){
@@ -2277,22 +2275,109 @@ $("histRefresh").addEventListener("click", async ()=>{
 });
 
 /* =======================
-   Invite overlay (QR + link)
+   Invite overlay (QR + link) ✅ FIXED + Download + WhatsApp
    ======================= */
-function setInvite(link, metaText){
+let lastInviteQrDataUrl = "";
+
+async function setInvite(link, metaText){
   $("invLink").value = link;
   $("invMeta").textContent = metaText || "";
   openOverlay("overlayInvite");
 
-  const canvas = $("invQr");
-  const ctx = canvas.getContext("2d");
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  if(window.QRCode && window.QRCode.toCanvas){
-    window.QRCode.toCanvas(canvas, link, { width: 240, margin: 1 }, (err)=>{ if(err) console.warn(err); });
+  const img = $("invQrImg");
+  if (img) img.removeAttribute("src");
+  lastInviteQrDataUrl = "";
+
+  // Wait for QR library (slow network / blocked CDN)
+  for (let i = 0; i < 12; i++) {
+    if (window.QRCode && typeof window.QRCode.toDataURL === "function") break;
+    await new Promise(r => setTimeout(r, 150));
+  }
+
+  if (!window.QRCode || typeof window.QRCode.toDataURL !== "function") {
+    console.warn("QR library not loaded");
+    alert("QR library failed to load. You can still use Copy link.");
+    return;
+  }
+
+  try{
+    const dataUrl = await window.QRCode.toDataURL(link, {
+      width: 240,
+      margin: 1,
+      color: { dark: "#000000", light: "#ffffff" }
+    });
+    lastInviteQrDataUrl = dataUrl;
+    if (img) img.src = dataUrl;
+  }catch(e){
+    console.error("QR generation failed", e);
+    alert("QR generation failed. Link is still valid.");
   }
 }
+
+function downloadInviteQR(){
+  const img = $("invQrImg");
+  const src = (img && img.src) ? img.src : lastInviteQrDataUrl;
+  if(!src){
+    alert("QR not ready yet.");
+    return;
+  }
+
+  let sid = "session";
+  try{
+    const u = new URL($("invLink").value);
+    sid = new URLSearchParams(u.search).get("session") || "session";
+  }catch(_){}
+
+  const a = document.createElement("a");
+  a.href = src;
+  a.download = `SCI-Invite-QR-${sid}.png`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+async function dataUrlToFile(dataUrl, filename){
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+  return new File([blob], filename, { type: blob.type || "image/png" });
+}
+
+async function shareInviteQRWhatsApp(){
+  const link = $("invLink").value || "";
+  const img = $("invQrImg");
+  const src = (img && img.src) ? img.src : lastInviteQrDataUrl;
+
+  // Best: share the QR image via system share sheet (mobile)
+  if (src && navigator.canShare && navigator.share) {
+    try{
+      let sid = "session";
+      try{
+        const u = new URL(link);
+        sid = new URLSearchParams(u.search).get("session") || "session";
+      }catch(_){}
+
+      const file = await dataUrlToFile(src, `SCI-Invite-QR-${sid}.png`);
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: "SCI Session Invite QR",
+          text: "Scan this QR to join the cupping session.",
+          files: [file]
+        });
+        return;
+      }
+    }catch(e){
+      console.warn("File share not available; fallback to WhatsApp link", e);
+    }
+  }
+
+  // Fallback: WhatsApp text with invite link
+  const msg = encodeURIComponent(`SCI cupping session invite:\n${link}\n\n(Scan QR or open link)`);
+  window.open(`https://wa.me/?text=${msg}`, "_blank");
+}
+
 $("invClose").addEventListener("click", ()=>closeOverlay("overlayInvite"));
 $("invDone").addEventListener("click", ()=>closeOverlay("overlayInvite"));
+
 $("invCopy").addEventListener("click", async ()=>{
   try{
     await navigator.clipboard.writeText($("invLink").value);
@@ -2304,6 +2389,8 @@ $("invCopy").addEventListener("click", async ()=>{
   }
 });
 $("invOpen").addEventListener("click", ()=> window.open($("invLink").value, "_blank"));
+$("invDownloadQr").addEventListener("click", downloadInviteQR);
+$("invShareWa").addEventListener("click", shareInviteQRWhatsApp);
 
 /* =======================
    HOST Session Results
@@ -2328,14 +2415,12 @@ function fmtDate(ts){
   }catch{ return "—"; }
 }
 function varClass(sd){
-  // Heuristic thresholds
   if(sd >= 0.60) return "hiVar";
   if(sd >= 0.30) return "midVar";
   return "loVar";
 }
 
 function scoreSampleToValues(scoreSample){
-  // scoreSample contains arrays + attr objects; treat unscored/missing as 0
   const values = {};
   ATTRS.forEach(a=>{
     const obj = scoreSample?.[a.key];
@@ -2345,7 +2430,6 @@ function scoreSampleToValues(scoreSample){
   const defChecks = countTrue(scoreSample?.defect);
   values.uniformityScore = UNIFORMITY_BASE - (uniChecks * DEDUCT_PER_CHECK);
   values.defectScore = DEFECT_BASE - (defChecks * DEDUCT_PER_CHECK);
-  // total
   const attrSum = ATTRS.reduce((s,a)=> s + values[a.key], 0);
   values.total = attrSum + values.uniformityScore + values.defectScore;
   return values;
@@ -2358,10 +2442,9 @@ async function listSessionScores(){
   return snap.docs.map(d=>({ id:d.id, ...d.data() }));
 }
 
-let resultsCache = null; // {cuppers, perSampleStats[]}
+let resultsCache = null;
 
 function computeResults(scores){
-  // scores: array of {uid,email,displayName,updatedAt,nameField,samples:[...]}
   const sampleCount = (sessionDoc?.samples?.length) || 0;
   const cuppers = scores.map(s=>({
     uid: s.uid || s.id,
@@ -2371,7 +2454,6 @@ function computeResults(scores){
     samples: Array.isArray(s.samples) ? s.samples : []
   }));
 
-  // per sample: collect per cupper values
   const perSampleStats = [];
   for(let si=0; si<sampleCount; si++){
     const valsPerCupper = cuppers.map(c=>{
@@ -2379,7 +2461,6 @@ function computeResults(scores){
       return scoreSampleToValues(ss);
     });
 
-    // axis stats
     const axes = [
       ...ATTRS.map(a=>a.key),
       "uniformityScore",
@@ -2396,11 +2477,9 @@ function computeResults(scores){
       };
     });
 
-    // total stats per cupper
     const totals = valsPerCupper.map(v=> Number(v.total||0));
     const totalStats = { avg: mean(totals), sd: stddev(totals), min: totals.length?Math.min(...totals):0, max: totals.length?Math.max(...totals):0 };
 
-    // cupper totals list for this sample
     const cupperTotals = cuppers.map((c, idx)=>({
       uid: c.uid,
       name: c.name,
@@ -2425,7 +2504,6 @@ function renderResultsSample(sampleIdx){
   $("resSampleMeta").textContent =
     `${t.origin}: ${(meta.origin||"—")} • ${t.process}: ${(meta.process||"—")}`;
 
-  // Build avg values for star
   const values = {};
   ATTRS.forEach(a=> values[a.key] = stats.axisStats[a.key].avg );
   values.uniformityScore = stats.axisStats.uniformityScore.avg;
@@ -2442,7 +2520,6 @@ function renderResultsSample(sampleIdx){
     `StdDev: <b>${stats.totalStats.sd.toFixed(2)}</b> • ` +
     `Range: <b>${stats.totalStats.min.toFixed(2)}–${stats.totalStats.max.toFixed(2)}</b>`;
 
-  // Attributes table
   const rows = $("resAttrRows");
   rows.innerHTML = "";
 
@@ -2464,7 +2541,6 @@ function renderResultsSample(sampleIdx){
   addRow(t.uniformity, "uniformityScore");
   addRow(t.defect, "defectScore");
 
-  // Cuppers totals table (for this sample)
   const crows = $("resCupperRows");
   crows.innerHTML = "";
   stats.cupperTotals.forEach(c=>{
@@ -2511,7 +2587,7 @@ async function openResultsOverlay(){
 $("resClose").addEventListener("click", ()=>closeOverlay("overlayResults"));
 $("resDone").addEventListener("click", ()=>closeOverlay("overlayResults"));
 $("resRefresh").addEventListener("click", async ()=>{
-  await openResultsOverlay(); // re-open refresh logic
+  await openResultsOverlay();
 });
 $("resPrint").addEventListener("click", ()=>{
   document.body.classList.add("print-results");
@@ -2611,7 +2687,7 @@ $("btnHostCreateSession").addEventListener("click", async ()=>{
     const sid = await createSessionOnCloud({ title, table: state.tableField || "", samples });
     const iid = await createInvite(sid);
     const link = `${appBaseUrl()}?session=${encodeURIComponent(sid)}&invite=${encodeURIComponent(iid)}`;
-    setInvite(link, `session=${sid}`);
+    await setInvite(link, `session=${sid}`);
   }catch(e){ alert(e.message || String(e)); }
 });
 
@@ -2678,3 +2754,4 @@ setTimeout(()=>{ if(!authChecked) location.replace("login.html"); }, 2000);
 </script>
 </body>
 </html>
+```0
