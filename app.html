@@ -1,1 +1,1919 @@
+<!-- app.html -->
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SCI Cupping Form (Cloud)</title>
+  <style>
+    :root{
+      --ink:#1a2a2a;
+      --line:#1f2a2a;
+      --bg:#fff;
+      --font: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      --muted:#6b7280;
+      --ok:#0f766e;
+      --warn:#b45309;
+      --bad:#b91c1c;
+      --cardShadow:0 6px 24px rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:#f2f2f2;color:var(--ink);font-family:var(--font)}
+    .page{
+      width:min(1400px, 98vw);
+      margin:12px auto;
+      background:var(--bg);
+      border:1px solid #ccc;
+      box-shadow:var(--cardShadow);
+      padding:14px;
+      border-radius:14px;
+    }
 
+    .errorBox{
+      display:none;
+      border:2px solid #b91c1c;
+      background:rgba(185,28,28,.06);
+      color:#7f1d1d;
+      padding:12px;
+      border-radius:12px;
+      font-weight:900;
+      margin-bottom:10px;
+      white-space:pre-wrap;
+    }
+    .errorBox.open{display:block}
+
+    /* Toolbar (NOT sticky) */
+    .toolbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding:8px 10px;
+      margin-bottom:10px;
+      border:1px solid #ddd;
+      border-radius:12px;
+      background:#fafafa;
+      flex-wrap:wrap;
+    }
+    .toolbar-left{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      flex:1 1 auto;
+      min-width:260px;
+    }
+    .menuWrap{ position:relative; flex:0 0 auto; margin-left:auto; }
+    body[dir="rtl"] .menuWrap{ margin-left:0; margin-right:auto; }
+
+    .primaryBtn, .ghostBtn{
+      font:inherit;
+      padding:10px 12px;
+      border:1px solid #ccc;
+      border-radius:10px;
+      background:#fff;
+      cursor:pointer;
+      min-height:44px;
+      font-weight:900;
+      display:flex;align-items:center;justify-content:center;
+      text-align:center;
+      white-space:nowrap;
+      gap:8px;
+    }
+    .primaryBtn:hover,.ghostBtn:hover{border-color:#888}
+    .ghostBtn{background:#f7f7f7}
+
+    .pill{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:8px 10px;border:1px solid #ddd;border-radius:999px;background:#fff;
+      font-size:12px;font-weight:900;color:#111;
+      min-height:38px;
+    }
+    .pill select{
+      border:0;outline:none;font:inherit;background:transparent;
+      padding:0;margin:0;min-width:110px;
+      font-weight:900;
+    }
+    .langPill select{ min-width:86px; }
+
+    .menuBtn{
+      width:44px;height:44px;
+      border:1px solid #ccc;
+      border-radius:10px;
+      background:#fff;
+      cursor:pointer;
+      font-weight:1100;
+      font-size:20px;
+      line-height:1;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .menuBtn:hover{border-color:#888}
+
+    .menuPanel{
+      position:absolute;
+      top:50px;
+      right:0;
+      min-width:280px;
+      background:#fff;
+      border:1px solid #ddd;
+      border-radius:12px;
+      box-shadow:0 10px 30px rgba(0,0,0,.12);
+      padding:6px;
+      display:none;
+      z-index:9999;
+    }
+    body[dir="rtl"] .menuPanel{ right:auto; left:0; }
+    .menuPanel.open{display:block}
+    .menuPanel button{
+      width:100%;
+      text-align:left;
+      font:inherit;
+      padding:10px 10px;
+      border:0;
+      border-radius:10px;
+      background:#fff;
+      cursor:pointer;
+      min-height:40px;
+      font-weight:900;
+    }
+    body[dir="rtl"] .menuPanel button{text-align:right}
+    .menuPanel button:hover{background:#f2f2f2}
+    .menuSep{height:1px;background:#e5e5e5;margin:6px 4px;border-radius:999px}
+    .menuNote{padding:8px 10px;color:var(--muted);font-size:11px;line-height:1.3}
+
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
+
+    /* Sticky timer only */
+    .timerDock{
+      position:sticky;
+      top:10px;
+      z-index:60;
+      display:flex;
+      justify-content:center;
+      pointer-events:none;
+      margin-bottom:10px;
+    }
+    .timerDock .pill{
+      pointer-events:auto;
+      box-shadow:0 10px 30px rgba(0,0,0,.10);
+      border-color:#d8d8d8;
+      background:#fff;
+    }
+
+    .header{
+      display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+      border-bottom:2px solid var(--line);
+      padding-bottom:8px;margin-bottom:10px;
+    }
+    .header-left{display:flex;flex-direction:column;gap:8px;font-size:14px}
+    .linefield{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .linefield label{min-width:54px;font-weight:900}
+    .linefield input{
+      border:0;border-bottom:1px solid var(--ink);
+      padding:6px 6px;min-width:220px;outline:none;font-size:14px;
+    }
+    .brand{text-align:right;font-size:12px;color:#333;line-height:1.2}
+    .brand b{letter-spacing:.3px}
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap:10px;
+    }
+    .sample{
+      border:2px solid var(--line);
+      padding:0;
+      min-height:920px;
+      display:flex;flex-direction:column;
+      background:#fff;
+      border-radius:10px;
+      overflow:hidden;
+      position:relative;
+    }
+
+    .sample .toprow{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap:10px;
+      padding:10px 10px 8px 10px;
+      border-bottom:2px solid var(--line);
+      background:#fff;
+    }
+    .sample .toprow .sampleNo{
+      font-weight:900;font-size:13px;
+      display:flex;flex-direction:column;gap:6px;
+    }
+    .sample .toprow input{
+      border:0;border-bottom:1px solid var(--ink);
+      outline:none;font-size:13px;padding:6px 6px;width:100%;
+    }
+
+    .scorebox{
+      width:240px;border:2px solid var(--line);
+      padding:8px;border-radius:10px;
+      display:flex;flex-direction:column;gap:6px;align-items:stretch;background:#fff;
+    }
+    .scorebox .lbl{font-size:11px;color:#333;font-weight:1000;text-align:center}
+    .scorebox .total{
+      font-size:22px;font-weight:1100;text-align:center;
+      border-top:1px solid #999;padding-top:6px;
+    }
+    .scorebox .subtot{
+      font-size:11px;color:#222;font-weight:1000;line-height:1.35;
+      border-top:1px dashed #aaa;padding-top:6px;margin-top:2px;
+    }
+    .scorebox .flags{
+      display:flex;gap:8px;justify-content:space-between;align-items:center;
+      border-top:1px dashed #aaa;padding-top:6px;margin-top:2px;
+      font-size:11px;font-weight:1000;color:#333;
+      flex-wrap:wrap;
+    }
+    .scorebox .badge{
+      padding:4px 8px;border-radius:999px;border:1px solid #ddd;background:#fafafa;
+      font-size:11px;font-weight:1100;
+      white-space:nowrap;
+    }
+    .badge.ok{border-color:rgba(15,118,110,.35); background:rgba(15,118,110,.08); color:var(--ok)}
+    .badge.warn{border-color:rgba(180,83,9,.35); background:rgba(180,83,9,.08); color:var(--warn)}
+    .badge.bad{border-color:rgba(185,28,28,.35); background:rgba(185,28,28,.08); color:var(--bad)}
+    .scorebox .checkroast{
+      display:flex;align-items:center;justify-content:center;gap:8px;
+      font-size:11px;font-weight:1000;color:#333;margin-top:4px;
+    }
+    .scorebox input[type="checkbox"]{width:18px;height:18px}
+
+    .section{border-bottom:1px solid #bbb;padding:10px 10px}
+    .rowhead{
+      display:flex;justify-content:space-between;align-items:flex-end;gap:10px;
+      font-weight:1100;font-size:12px;letter-spacing:.2px;margin-bottom:6px;
+    }
+    .rowhead .rightlabel{
+      font-weight:1100;font-size:11px;color:#333;
+      display:flex;flex-direction:column;gap:6px;align-items:flex-end;
+      min-width:170px;
+    }
+    body[dir="rtl"] .rowhead .rightlabel{align-items:flex-start}
+    .rowhead .rightTop{
+      display:flex;gap:8px;align-items:center;
+      justify-content:flex-end;
+      width:100%;
+    }
+    body[dir="rtl"] .rowhead .rightTop{justify-content:flex-start}
+
+    .hintUnderIntensity{
+      width:100%;
+      display:flex;
+      justify-content:space-between;
+      font-size:9px;
+      font-weight:1000;
+      color:#444;
+      letter-spacing:.1px;
+      opacity:.95;
+      padding-inline:2px;
+    }
+    .rowhead .leftLabel{
+      display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+    }
+    .miniTag{
+      font-size:10px;font-weight:1100;color:var(--muted);
+      border:1px solid #e5e7eb;background:#f9fafb;border-radius:999px;
+      padding:3px 8px;
+    }
+    .miniTag.scored{color:var(--ok); border-color:rgba(15,118,110,.28); background:rgba(15,118,110,.08)}
+    .miniTag.notScored{color:var(--muted)}
+    .miniBtn{
+      width:28px;height:28px;border-radius:10px;border:1px solid #ccc;background:#fff;
+      cursor:pointer;font-weight:1100;display:flex;align-items:center;justify-content:center;
+    }
+    .miniBtn:hover{border-color:#888}
+
+    .historyMark{
+      color:#b91c1c;
+      font-size:11px;
+      font-weight:1100;
+      margin-inline-start:8px;
+      white-space:nowrap;
+    }
+
+    .sliderwrap{display:flex;gap:10px;align-items:center}
+    .scale{flex:1;display:flex;flex-direction:column;gap:6px; position:relative;}
+    input[type="range"]{
+      width:100%;
+      -webkit-appearance:none;appearance:none;
+      height:28px;background:transparent;margin:0;
+      touch-action: pan-y;
+      position:relative;
+      z-index:2;
+    }
+    input[type="range"]::-webkit-slider-runnable-track{
+      height:3px;background:var(--ink);border-radius:999px;
+    }
+    input[type="range"]::-webkit-slider-thumb{
+      -webkit-appearance:none;appearance:none;
+      width:20px;height:20px;border-radius:50%;
+      background:#fff;border:2px solid var(--ink);
+      margin-top:-9px;
+    }
+    input[type="range"]::-moz-range-track{height:3px;background:var(--ink);border-radius:999px}
+    input[type="range"]::-moz-range-thumb{
+      width:20px;height:20px;border-radius:50%;
+      background:#fff;border:2px solid var(--ink);
+    }
+    .value-bubble{
+      position:absolute;
+      top:-2px;
+      transform:translateX(-50%);
+      width:34px;height:34px;
+      border-radius:999px;
+      border:2px solid var(--ink);
+      background:var(--ink);
+      color:#fff;
+      display:flex;align-items:center;justify-content:center;
+      font-size:10px;font-weight:1100;
+      pointer-events:none;
+      z-index:3;
+    }
+    .value-bubble.zero{background:#fff;color:var(--ink)}
+    .ticks{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#222}
+    .ticks span{min-width:16px;text-align:center}
+
+    .notes{
+      margin-top:8px;
+      display:grid;
+      grid-template-columns: 44px 1fr;
+      gap:8px;
+      align-items:start;
+    }
+    .notes label{font-size:11px;font-weight:1100;color:#333}
+    .notes textarea{
+      width:100%;min-height:44px;resize:vertical;
+      border:0;border-top:1px solid #888;
+      outline:none;padding:8px 8px 0 8px;font-size:12px;
+    }
+
+    /* Helpers */
+    .helperWrap{
+      margin-top:8px;
+      padding-left:52px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    body[dir="rtl"] .helperWrap{padding-left:0;padding-right:52px}
+
+    .helperLabels{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-top:2px;
+    }
+    .helperLabels .hl{
+      font-size:10px;
+      font-weight:1100;
+      color:var(--muted);
+      letter-spacing:.2px;
+      text-transform:uppercase;
+    }
+
+    .catRow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+    .subRow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+    .chip{
+      border:1px solid currentColor;
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      background:#fff;
+      cursor:pointer;
+      user-select:none;
+      min-height:34px;
+      display:flex;align-items:center;
+      font-weight:1000;
+      background: rgba(0,0,0,.02);
+    }
+    .chip:hover{ background: rgba(0,0,0,.06); }
+
+    .chip.cat{padding:7px 12px;font-size:12px;font-weight:1100}
+    .chip.cat.active{
+      background: rgba(0,0,0,.08);
+      box-shadow: inset 0 0 0 2px rgba(0,0,0,.06);
+    }
+
+    .circles{display:flex;gap:10px;align-items:center}
+    .circle{
+      width:18px;height:18px;border-radius:50%;
+      border:2px solid var(--ink);
+      background:#fff;cursor:pointer;
+    }
+    .circle.on{background:var(--ink)}
+
+    .bottomRow{
+      padding:10px;
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:10px;
+      margin-top:auto;
+      border-top:2px solid var(--line);
+    }
+    .bottomItem{border:1px solid #bbb;border-radius:10px;padding:10px}
+    .bottomTitle{
+      display:flex;justify-content:space-between;align-items:center;
+      font-size:12px;font-weight:1100;margin-bottom:8px;
+    }
+    .bigcircles .circle{width:20px;height:20px}
+
+    .overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,.35);
+      display:none;align-items:center;justify-content:center;
+      z-index:99999;padding:14px;
+    }
+    .overlay.open{display:flex}
+    .modal{
+      width:min(920px, 98vw);
+      background:#fff;border:1px solid #ddd;border-radius:16px;
+      box-shadow:0 18px 60px rgba(0,0,0,.22);
+      overflow:hidden;
+    }
+    .modalHead{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:10px 12px;border-bottom:1px solid #eee;
+      background:#fafafa;
+    }
+    .modalHead .title{font-weight:1100}
+    .modalBody{padding:12px; max-height:78vh; overflow:auto}
+    .modalFoot{
+      padding:10px 12px;border-top:1px solid #eee;background:#fafafa;
+      display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;
+    }
+    .card{
+      border:1px solid #e5e7eb;border-radius:14px;padding:10px;background:#fff;
+    }
+
+    @media (max-width: 900px){
+      .page{padding:10px}
+      .grid{
+        display:flex;
+        gap:10px;
+        overflow-x:auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom:8px;
+      }
+      .sample{
+        flex:0 0 92%;
+        scroll-snap-align: start;
+        min-height:unset;
+      }
+      .header{flex-direction:column;align-items:flex-start}
+      .brand{text-align:left}
+      .timerDock{ top:8px; }
+    }
+
+    body[dir="rtl"]{ direction: rtl; }
+    body[dir="rtl"] .header{flex-direction:row-reverse}
+    body[dir="rtl"] .brand{text-align:left}
+    body[dir="rtl"] .header-left{align-items:flex-end}
+    body[dir="rtl"] .linefield{flex-direction:row-reverse}
+    body[dir="rtl"] .linefield input{ text-align:right; }
+    body[dir="rtl"] .rowhead{flex-direction:row-reverse}
+    body[dir="rtl"] .notes{grid-template-columns: 1fr 44px}
+    body[dir="rtl"] .notes label{text-align:right}
+    body[dir="rtl"] .notes textarea{ text-align:right; }
+    body[dir="rtl"] input[type="range"]{ direction: rtl; }
+    body[dir="rtl"] .toprow{direction:rtl}
+    body[dir="rtl"] .sample .toprow input{ text-align:right; }
+    body[dir="rtl"] .toolbar{direction:rtl}
+    body[dir="rtl"] .menuPanel{ right:auto; left:0; }
+
+    @media print{
+      body.print-star *{ visibility:hidden !important; }
+      body.print-star #overlayExport,
+      body.print-star #overlayExport *{ visibility:visible !important; }
+      body.print-star #overlayExport{ position:fixed; inset:0; background:#fff !important; }
+      body.print-star .modal{ box-shadow:none !important; border:0 !important; width:100% !important; height:100% !important; border-radius:0 !important; }
+      body.print-star .modalHead, body.print-star .modalFoot{ display:none !important; }
+      body.print-star .modalBody{ max-height:none !important; overflow:visible !important; padding:20px !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page">
+    <div id="err" class="errorBox"></div>
+
+    <!-- Toolbar NOT sticky -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <span class="pill langPill" title="Language">
+          <select id="selLang" aria-label="Language">
+            <option value="en">Eng</option>
+            <option value="ar">ar</option>
+            <option value="zh">cn</option>
+          </select>
+        </span>
+
+        <span class="pill" id="userPill" style="display:none;">
+          <span style="font-weight:1100;">User:</span>
+          <span id="userEmail" class="mono"></span>
+        </span>
+      </div>
+
+      <div class="menuWrap">
+        <button id="btnMenu" type="button" class="menuBtn" aria-haspopup="true" aria-expanded="false" title="Menu">⋮</button>
+        <div id="menuPanel" class="menuPanel" role="menu" aria-hidden="true">
+          <div class="menuNote" id="menuHint"></div>
+
+          <button id="btnCloudSave" type="button" role="menuitem">Save to Cloud</button>
+          <button id="btnCloudHistory" type="button" role="menuitem">Cloud History</button>
+
+          <div class="menuSep"></div>
+
+          <button id="btnExportReport" type="button" role="menuitem">Export Star Graph (Printable PDF)</button>
+          <button id="btnPrint" type="button" role="menuitem">Print page</button>
+
+          <div class="menuSep"></div>
+
+          <button id="btnAddSample" type="button" role="menuitem">+ Add sample</button>
+          <button id="btnRemoveSample" type="button" role="menuitem">− Remove sample</button>
+
+          <div class="menuSep"></div>
+
+          <button id="btnReset" type="button" role="menuitem">Reset current round</button>
+          <button id="btnLogout" type="button" role="menuitem">Logout</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sticky timer only -->
+    <div class="timerDock" aria-label="Timer Dock">
+      <div class="pill" id="timerPill" style="gap:10px;">
+        <span id="timerLabel" style="font-weight:1100;">Timer</span>
+        <span id="timerDisplay" class="mono" style="min-width:72px;text-align:center;">00:00</span>
+        <button id="btnTimerStart" type="button" class="ghostBtn" style="padding:8px 10px;min-height:38px;">Start</button>
+        <button id="btnTimerReset" type="button" class="ghostBtn" style="padding:8px 10px;min-height:38px;">Reset</button>
+      </div>
+    </div>
+
+    <div class="header">
+      <div class="header-left">
+        <div class="linefield">
+          <label id="lblName" for="name">NAME:</label>
+          <input id="name" type="text" />
+        </div>
+        <div class="linefield">
+          <label id="lblTable" for="table">TABLE:</label>
+          <input id="table" type="text" />
+        </div>
+      </div>
+      <div class="brand">
+        <div style="font-size:11px;">SCI</div>
+        <b>SUSTAINABLE COFFEE INSTITUTE</b><br/>
+        <span style="font-weight:900;">CUPPING FORM</span>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <!-- Export Star Graph -->
+  <div class="overlay" id="overlayExport" aria-hidden="true">
+    <div class="modal">
+      <div class="modalHead">
+        <div class="title" id="expTitle">Export Star Graph</div>
+        <button class="ghostBtn" id="expClose" type="button" style="min-height:38px;padding:8px 10px;">✕</button>
+      </div>
+      <div class="modalBody">
+        <div class="card" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <div style="font-weight:1100;" id="expPickLbl">Sample</div>
+          <select id="expPick" style="padding:10px;border:1px solid #ddd;border-radius:12px;font:inherit;min-width:220px;"></select>
+          <div class="mono" id="expMeta" style="color:#374151;font-size:12px;"></div>
+        </div>
+
+        <div class="card" style="margin-top:10px;">
+          <div id="starWrap" style="display:flex;justify-content:center;"></div>
+          <div id="starNotes" style="margin-top:10px;font-size:12px;color:#111;line-height:1.45;"></div>
+        </div>
+      </div>
+      <div class="modalFoot">
+        <button class="ghostBtn" id="expPrintPdf" type="button">Print PDF</button>
+        <button class="primaryBtn" id="expDone" type="button">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cloud History -->
+  <div class="overlay" id="overlayHistory" aria-hidden="true">
+    <div class="modal">
+      <div class="modalHead">
+        <div class="title" id="histTitle">Cloud History</div>
+        <button class="ghostBtn" id="histClose" type="button" style="min-height:38px;padding:8px 10px;">✕</button>
+      </div>
+      <div class="modalBody">
+        <div id="histList" style="display:flex;flex-direction:column;gap:10px;"></div>
+      </div>
+      <div class="modalFoot">
+        <button class="ghostBtn" id="histRefresh" type="button">Refresh</button>
+        <button class="primaryBtn" id="histDone" type="button">Done</button>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+/* =======================
+   Firebase (Auth + Cloud)
+   ======================= */
+
+// ✅ Paste your Firebase Web App config here (same config also in login.html)
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  appId: "YOUR_APP_ID",
+};
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  orderBy,
+  serverTimestamp,
+  deleteDoc
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const db = getFirestore(fbApp);
+
+let currentUser = null;
+
+/* =======================
+   App utilities
+   ======================= */
+function $(id){ return document.getElementById(id); }
+function showErr(e){
+  const box = $("err");
+  if(!box) return;
+  box.classList.add("open");
+  box.textContent = "Error:\n" + (e && e.stack ? e.stack : String(e));
+}
+function repAll(str, a, b){
+  str = String(str);
+  if(str.replaceAll) return str.replaceAll(a,b);
+  return str.split(a).join(b);
+}
+function escHtml(s){
+  return String(s ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+function openOverlay(id){
+  const el = $(id);
+  el.classList.add("open");
+  el.setAttribute("aria-hidden","false");
+}
+function closeOverlay(id){
+  const el = $(id);
+  el.classList.remove("open");
+  el.setAttribute("aria-hidden","true");
+}
+
+/* =======================
+   Language strings
+   ======================= */
+let lang = "en";
+const UI = {
+  en: {
+    print: "Print page",
+    export: "Export Star Graph (Printable PDF)",
+    add: "+ Add sample",
+    remove: "− Remove sample",
+    reset: "Reset current round",
+    name: "NAME:",
+    table: "TABLE:",
+    sample: "SAMPLE #",
+    total: "TOTAL SCORE",
+    checkRoast: "CHECK ROAST",
+    notes: "NOTES:",
+    intensity: "INTENSITY",
+    thickness: "THICKNESS",
+    duration: "DURATION",
+    woody: "WOODY",
+    low: "LOW",
+    high: "HIGH",
+    flat: "FLAT",
+    bright: "BRIGHT",
+    thin: "THIN",
+    thick: "THICK",
+    short: "SHORT",
+    long: "LONG",
+    none: "NONE",
+    intense: "INTENSE",
+    uniformity: "UNIFORMITY",
+    defect: "DEFECT",
+    notScored: "Not scored",
+    scored: "Scored",
+    clear: "Clear",
+    menuHint: "Cloud save is manual. Local auto-save stays on this device.",
+    expTitle:"Export Star Graph",
+    expPick:"Sample",
+    expPrint:"Print PDF",
+    done:"Done",
+    timer:"Timer",
+    tStart:"Start",
+    tReset:"Reset",
+    helperCats:"Main categories",
+    helperNotes:"Notes under category",
+    cat_fruity:"Fruity",
+    cat_sweet:"Sweet",
+    cat_cocoa:"Cocoa/Nutty",
+    cat_floral:"Floral",
+    cat_spice:"Spice",
+    cat_roast:"Roasted",
+    cat_green:"Green/Herbal",
+    cat_earthy:"Earthy",
+    cat_ferment:"Fermented"
+  },
+  ar: {
+    print: "طباعة الصفحة",
+    export: "تصدير الرسم النجمي (PDF قابل للطباعة)",
+    add: "+ إضافة عينة",
+    remove: "− حذف عينة",
+    reset: "إعادة ضبط الجولة الحالية",
+    name: "الاسم:",
+    table: "الطاولة:",
+    sample: "رقم العينة",
+    total: "المجموع",
+    checkRoast: "فحص التحميص",
+    notes: "ملاحظات:",
+    intensity: "الشدة",
+    thickness: "القوام",
+    duration: "المدة",
+    woody: "خشبي",
+    low: "منخفض",
+    high: "مرتفع",
+    flat: "مسطح",
+    bright: "لامع",
+    thin: "خفيف",
+    thick: "ثقيل",
+    short: "قصير",
+    long: "طويل",
+    none: "لا يوجد",
+    intense: "شديد",
+    uniformity: "التجانس",
+    defect: "العيوب",
+    notScored: "غير مُسجّل",
+    scored: "مُسجّل",
+    clear: "مسح",
+    menuHint: "الحفظ السحابي يدوي. الحفظ المحلي تلقائي على هذا الجهاز.",
+    expTitle:"تصدير الرسم النجمي",
+    expPick:"العينة",
+    expPrint:"طباعة PDF",
+    done:"تم",
+    timer:"المؤقت",
+    tStart:"ابدأ",
+    tReset:"تصفير",
+    helperCats:"تصنيفات رئيسية",
+    helperNotes:"ملاحظات تحت التصنيف",
+    cat_fruity:"فاكهي",
+    cat_sweet:"حلو",
+    cat_cocoa:"كاكاو/مكسرات",
+    cat_floral:"زهري",
+    cat_spice:"بهارات",
+    cat_roast:"محمّص",
+    cat_green:"أخضر/أعشاب",
+    cat_earthy:"ترابي",
+    cat_ferment:"مخمّر"
+  },
+  zh: {
+    print: "打印页面",
+    export: "导出星形雷达图（可打印PDF）",
+    add: "+ 添加样品",
+    remove: "− 删除样品",
+    reset: "重置当前轮次",
+    name: "姓名：",
+    table: "桌号：",
+    sample: "样品编号",
+    total: "总分",
+    checkRoast: "检查烘焙",
+    notes: "备注：",
+    intensity: "强度",
+    thickness: "厚度",
+    duration: "持续时间",
+    woody: "木质感",
+    low: "低",
+    high: "高",
+    flat: "平淡",
+    bright: "明亮",
+    thin: "薄",
+    thick: "厚",
+    short: "短",
+    long: "长",
+    none: "无",
+    intense: "强",
+    uniformity: "一致性",
+    defect: "缺陷",
+    notScored: "未评分",
+    scored: "已评分",
+    clear: "清除",
+    menuHint: "云端保存为手动。此设备会自动本地保存。",
+    expTitle:"导出星形图",
+    expPick:"样品",
+    expPrint:"打印 PDF",
+    done:"完成",
+    timer:"计时器",
+    tStart:"开始",
+    tReset:"重置",
+    helperCats:"主分类",
+    helperNotes:"分类下的笔记",
+    cat_fruity:"果香/果味",
+    cat_sweet:"甜感",
+    cat_cocoa:"可可/坚果",
+    cat_floral:"花香",
+    cat_spice:"香料",
+    cat_roast:"烘烤",
+    cat_green:"青草/草本",
+    cat_earthy:"泥土",
+    cat_ferment:"发酵"
+  }
+};
+
+/* =======================
+   Cupping model
+   ======================= */
+const ATTRS = [
+  { key:'fragrance',  label:{en:'FRAGRANCE', ar:'العطر', zh:'干香'},          rightKey:'intensity', hintLKey:'low',   hintRKey:'high', helper:true },
+  { key:'aroma',      label:{en:'AROMA', ar:'الرائحة', zh:'湿香'},            rightKey:'intensity', hintLKey:'low',   hintRKey:'high', helper:true },
+  { key:'flavor',     label:{en:'FLAVOR', ar:'النكهة', zh:'风味'},            rightKey:'intensity', hintLKey:'low',   hintRKey:'high', helper:true },
+  { key:'acidity',    label:{en:'ACIDITY', ar:'الحموضة', zh:'酸质'},          rightKey:'intensity', hintLKey:'flat',  hintRKey:'bright', helper:true },
+  { key:'mouthfeel',  label:{en:'MOUTHFEEL', ar:'الإحساس بالفم', zh:'口感'},  rightKey:'thickness', hintLKey:'thin',  hintRKey:'thick', helper:true },
+  { key:'sweetness',  label:{en:'SWEETNESS', ar:'الحلاوة', zh:'甜感'},        rightKey:'intensity', hintLKey:'low',   hintRKey:'high', helper:true },
+  { key:'aftertaste', label:{en:'AFTERTASTE', ar:'الأثر', zh:'余韵'},         rightKey:'duration',  hintLKey:'short', hintRKey:'long', helper:true },
+  { key:'freshcrop',  label:{en:'FRESH CROP', ar:'محصول طازج', zh:'新鲜度'},  rightKey:'woody',     hintLKey:'none',  hintRKey:'intense', helper:false }, // helper removed
+];
+
+const RANGE_MIN = 6.0, RANGE_MAX = 10.0, RANGE_STEP = 0.25;
+const UNIFORMITY_BASE = 10, DEFECT_BASE = 10, DEDUCT_PER_CHECK = 2;
+
+const HELPER_CATEGORIES = [
+  { id:"fruity",  uiKey:"cat_fruity" },
+  { id:"sweet",   uiKey:"cat_sweet" },
+  { id:"cocoa",   uiKey:"cat_cocoa" },
+  { id:"floral",  uiKey:"cat_floral" },
+  { id:"spice",   uiKey:"cat_spice" },
+  { id:"roast",   uiKey:"cat_roast" },
+  { id:"green",   uiKey:"cat_green" },
+  { id:"earthy",  uiKey:"cat_earthy" },
+  { id:"ferment", uiKey:"cat_ferment" }
+];
+
+const HELPER_NOTES = {
+  bank: {
+    fruity: [
+      {en:"Berry",ar:"توت",zh:"莓果"}, {en:"Citrus",ar:"حمضيات",zh:"柑橘"},
+      {en:"Stone fruit",ar:"فاكهة نواة",zh:"核果"}, {en:"Tropical",ar:"استوائي",zh:"热带"},
+      {en:"Apple/Pear",ar:"تفاح/كمثرى",zh:"苹果/梨"}, {en:"Grape",ar:"عنب",zh:"葡萄"}
+    ],
+    sweet: [
+      {en:"Honey",ar:"عسل",zh:"蜂蜜"}, {en:"Caramel",ar:"كراميل",zh:"焦糖"},
+      {en:"Brown sugar",ar:"سكر بني",zh:"红糖"}, {en:"Vanilla",ar:"فانيلا",zh:"香草"},
+      {en:"Candy-like",ar:"حلوى",zh:"糖果感"}
+    ],
+    cocoa: [
+      {en:"Cocoa",ar:"كاكاو",zh:"可可"}, {en:"Dark chocolate",ar:"شوكولاتة داكنة",zh:"黑巧克力"},
+      {en:"Milk chocolate",ar:"شوكولاتة بالحليب",zh:"牛奶巧克力"},
+      {en:"Almond",ar:"لوز",zh:"杏仁"}, {en:"Hazelnut",ar:"بندق",zh:"榛子"},
+      {en:"Peanut",ar:"فول سوداني",zh:"花生"}
+    ],
+    floral: [
+      {en:"Jasmine",ar:"ياسمين",zh:"茉莉"}, {en:"Rose",ar:"ورد",zh:"玫瑰"},
+      {en:"Orange blossom",ar:"زهر البرتقال",zh:"橙花"}
+    ],
+    spice: [
+      {en:"Cinnamon",ar:"قرفة",zh:"肉桂"}, {en:"Clove",ar:"قرنفل",zh:"丁香"},
+      {en:"Cardamom",ar:"هيل",zh:"小豆蔻"}, {en:"Peppery",ar:"فلفلي",zh:"胡椒感"}
+    ],
+    roast: [
+      {en:"Roasty",ar:"محمّص",zh:"烘烤"}, {en:"Smoky",ar:"دخاني",zh:"烟熏"},
+      {en:"Toasty",ar:"توست",zh:"烤面包"}, {en:"Ashy",ar:"رمادي/رماد",zh:"灰烬感"}
+    ],
+    green: [
+      {en:"Herbal",ar:"عشبي",zh:"草本"}, {en:"Green/Vegetative",ar:"أخضر/نباتي",zh:"青味/蔬菜"},
+      {en:"Tea-like",ar:"شاي",zh:"茶感"}
+    ],
+    earthy: [
+      {en:"Earthy",ar:"ترابي",zh:"泥土"}, {en:"Woody",ar:"خشبي",zh:"木质"},
+      {en:"Mossy",ar:"طحلبي",zh:"苔藓"}, {en:"Papery",ar:"ورقي",zh:"纸味"}
+    ],
+    ferment: [
+      {en:"Winey",ar:"نبيذي",zh:"酒香"}, {en:"Fermented",ar:"مخمّر",zh:"发酵"},
+      {en:"Overripe fruit",ar:"فاكهة زائدة النضج",zh:"过熟水果"}
+    ]
+  },
+  byAttr: {
+    fragrance: ["fruity","sweet","cocoa","floral","spice","roast","green","earthy","ferment"],
+    aroma:     ["fruity","sweet","cocoa","floral","spice","roast","green","earthy","ferment"],
+    flavor:    ["fruity","sweet","cocoa","floral","spice","roast","green","earthy","ferment"],
+    acidity:   ["fruity","sweet","ferment"],
+    mouthfeel: ["sweet","cocoa"],
+    sweetness: ["sweet","fruity","cocoa"],
+    aftertaste:["sweet","cocoa","roast","ferment"]
+  }
+};
+
+function chipColorForText(txt){
+  const s = String(txt||"").toLowerCase();
+  const has = (k)=> s.indexOf(k) !== -1;
+  if (has("floral")||has("زهري")||has("花")) return "#7c3aed";
+  if (has("fruity")||has("berry")||has("tropical")||has("فاكهي")||has("توت")||has("استوائي")||has("果")||has("莓")||has("热带")) return "#e11d48";
+  if (has("citrus")||has("lemon")||has("حمض")||has("حمضيات")||has("柑橘")||has("柠檬")) return "#f97316";
+  if (has("sweet")||has("honey")||has("vanilla")||has("caramel")||has("brown sugar")||has("candy")||has("حلو")||has("عسل")||has("فانيلا")||has("كراميل")||has("سكر")||has("甜")||has("焦糖")||has("红糖")||has("蜂蜜")||has("香草")) return "#b45309";
+  if (has("cocoa")||has("chocolate")||has("nut")||has("مكسرات")||has("كاكاو")||has("شوكولاتة")||has("坚果")||has("可可")||has("巧克力")) return "#7c2d12";
+  if (has("spice")||has("cinnamon")||has("clove")||has("cardamom")||has("بهارات")||has("قرفة")||has("قرنفل")||has("هيل")||has("香料")||has("肉桂")) return "#b91c1c";
+  if (has("green")||has("herbal")||has("vegetative")||has("أخضر")||has("عشبي")||has("草")) return "#15803d";
+  if (has("roast")||has("smok")||has("ashy")||has("烘")||has("烟")||has("محم")||has("دخان")||has("رماد")) return "#374151";
+  if (has("ferment")||has("winey")||has("发酵")||has("مخمّر")||has("نبي")) return "#0f766e";
+  if (has("earth")||has("woody")||has("ترابي")||has("خشبي")||has("泥")||has("木")) return "#4d7c0f";
+  return "#111827";
+}
+
+function updateBubblePosition(rangeEl, bubbleEl, sampleAttr){
+  const min = Number(rangeEl.min), max = Number(rangeEl.max);
+  const val = Number(rangeEl.value);
+  const pct = (val - min) / (max - min);
+  const w = rangeEl.getBoundingClientRect().width || 1;
+  const thumb = 20;
+  const isRTL = (document.documentElement.dir === "rtl");
+  const pctAdj = isRTL ? (1 - pct) : pct;
+  const x = pctAdj * (w - thumb) + (thumb/2);
+  bubbleEl.style.left = x + "px";
+  if(sampleAttr && !sampleAttr.scored){
+    bubbleEl.textContent = "0.00";
+    bubbleEl.classList.add("zero");
+  }else{
+    bubbleEl.textContent = val.toFixed(2);
+    bubbleEl.classList.remove("zero");
+  }
+}
+
+/* =======================
+   Timer (beeps 4 & 12 min)
+   ======================= */
+const timerDisplay = $("timerDisplay");
+const btnStart = $("btnTimerStart");
+const btnReset = $("btnTimerReset");
+
+function fmtTime(ms){
+  const totalSec = Math.floor(ms / 1000);
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec % 60;
+  return String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+}
+let audioCtx = null;
+function ensureAudio(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if(audioCtx.state === "suspended") return audioCtx.resume();
+  return Promise.resolve();
+}
+function beep(durationMs=180, freq=880){
+  if(!audioCtx) return;
+  const o = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o.type = "sine";
+  o.frequency.value = freq;
+  g.gain.value = 0.0001;
+  o.connect(g);
+  g.connect(audioCtx.destination);
+
+  const now = audioCtx.currentTime;
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(0.25, now + 0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + durationMs/1000);
+
+  o.start(now);
+  o.stop(now + durationMs/1000 + 0.02);
+}
+let timerRunning = false;
+let timerStartTs = 0;
+let timerElapsedMs = 0;
+let timerTick = null;
+let beep4Done = false;
+let beep12Done = false;
+function timerUpdate(){
+  const now = Date.now();
+  const ms = timerElapsedMs + (timerRunning ? (now - timerStartTs) : 0);
+  timerDisplay.textContent = fmtTime(ms);
+
+  if(!beep4Done && ms >= 4*60*1000){
+    beep4Done = true;
+    beep(180, 880);
+    setTimeout(()=>beep(160, 660), 220);
+  }
+  if(!beep12Done && ms >= 12*60*1000){
+    beep12Done = true;
+    beep(220, 990);
+    setTimeout(()=>beep(220, 990), 260);
+    setTimeout(()=>beep(220, 990), 520);
+  }
+}
+function timerStart(){
+  if(timerRunning) return;
+  timerRunning = true;
+  timerStartTs = Date.now();
+  if(timerTick) clearInterval(timerTick);
+  timerTick = setInterval(timerUpdate, 250);
+  timerUpdate();
+}
+function timerReset(){
+  timerRunning = false;
+  timerStartTs = 0;
+  timerElapsedMs = 0;
+  beep4Done = false;
+  beep12Done = false;
+  if(timerTick) clearInterval(timerTick);
+  timerTick = null;
+  timerUpdate();
+}
+btnStart.addEventListener("click", async ()=>{
+  await ensureAudio();
+  timerStart();
+});
+btnReset.addEventListener("click", timerReset);
+
+/* =======================
+   State + local autosave
+   ======================= */
+function newSampleState(){
+  const obj = {
+    sampleNo:'',
+    checkRoast:false,
+    uniformity:[false,false,false,false,false],
+    defect:[false,false,false,false,false],
+    uniformityNotes:'',
+    defectNotes:''
+  };
+  ATTRS.forEach(a=>{
+    obj[a.key] = { score:RANGE_MIN, scored:false, intensity:0, notes:'', history:[], helperCat:"" };
+  });
+  return obj;
+}
+let state = {
+  lang:"en",
+  nameField:"",
+  tableField:"",
+  samples:[newSampleState(), newSampleState(), newSampleState()]
+};
+
+const LS_KEY = "sci_cupping_cloud_v1";
+let saveTimer=null;
+function scheduleLocalSave(){
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(()=>{
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){}
+  }, 250);
+}
+function tryLoadLocal(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return false;
+    const obj = JSON.parse(raw);
+    if(!obj || !obj.samples) return false;
+    state = obj;
+    return true;
+  }catch(e){ return false; }
+}
+
+/* =======================
+   Scoring
+   ======================= */
+function countTrue(arr){ return arr.reduce((n,v)=>n+(v?1:0),0); }
+function computeSampleTotals(sample){
+  const attributesSum = ATTRS.reduce((sum,a)=>{
+    const obj = sample[a.key];
+    const v = (obj && obj.scored) ? Number(obj.score || 0) : 0;
+    return sum + v;
+  }, 0);
+
+  const uniChecks = countTrue(sample.uniformity);
+  const defChecks = countTrue(sample.defect);
+
+  const uniformityScore = UNIFORMITY_BASE - (uniChecks * DEDUCT_PER_CHECK);
+  const defectScore     = DEFECT_BASE     - (defChecks * DEDUCT_PER_CHECK);
+
+  const total = attributesSum + uniformityScore + defectScore;
+  return { attributesSum, uniChecks, defChecks, uniformityScore, defectScore, total };
+}
+
+/* =======================
+   Menu
+   ======================= */
+function openMenu(){ $("menuPanel").classList.add("open"); $("btnMenu").setAttribute("aria-expanded","true"); }
+function closeMenu(){ $("menuPanel").classList.remove("open"); $("btnMenu").setAttribute("aria-expanded","false"); }
+function toggleMenu(){ $("menuPanel").classList.contains("open") ? closeMenu() : openMenu(); }
+
+$("btnMenu").addEventListener("click", (e)=>{ e.stopPropagation(); toggleMenu(); });
+document.addEventListener("click", ()=> closeMenu());
+$("menuPanel").addEventListener("click", (e)=> e.stopPropagation());
+
+/* =======================
+   Apply Language
+   ======================= */
+function applyLang(){
+  const dir = (lang==="ar") ? "rtl" : "ltr";
+  document.documentElement.lang = (lang==="zh") ? "zh" : lang;
+  document.documentElement.dir  = dir;
+  document.body.dir             = dir;
+
+  const t = UI[lang];
+  $("btnPrint").textContent = t.print;
+  $("btnExportReport").textContent = t.export;
+  $("btnAddSample").textContent = t.add;
+  $("btnRemoveSample").textContent = t.remove;
+  $("btnReset").textContent = t.reset;
+  $("lblName").textContent = t.name;
+  $("lblTable").textContent = t.table;
+  $("menuHint").textContent = t.menuHint;
+
+  $("timerLabel").textContent = t.timer;
+  $("btnTimerStart").textContent = t.tStart;
+  $("btnTimerReset").textContent = t.tReset;
+
+  $("expTitle").textContent = t.expTitle;
+  $("expPickLbl").textContent = t.expPick;
+  $("expPrintPdf").textContent = t.expPrint;
+  $("expDone").textContent = t.done;
+
+  $("selLang").value = lang;
+}
+
+/* =======================
+   Render pieces
+   ======================= */
+function renderBottomRow(sampleIdx, which){
+  const arr = state.samples[sampleIdx][which];
+  const host = document.querySelector(`[data-bottom="${sampleIdx}.${which}"]`);
+  if(!host) return;
+  host.querySelectorAll(".circle").forEach((c,idx)=>{
+    c.classList.toggle("on", !!arr[idx]);
+  });
+}
+
+function updateTotals(){
+  for(let i=0;i<state.samples.length;i++){
+    const tot = computeSampleTotals(state.samples[i]);
+    const totalEl = document.querySelector(`[data-total="${i}"]`);
+    const subEl   = document.querySelector(`[data-subtot="${i}"]`);
+    const uBadge  = document.querySelector(`[data-ubadge="${i}"]`);
+    const dBadge  = document.querySelector(`[data-dbadge="${i}"]`);
+    if(totalEl) totalEl.textContent = tot.total.toFixed(2);
+    if(subEl){
+      subEl.innerHTML =
+        `Attr: ${tot.attributesSum.toFixed(2)}<br>` +
+        `Uniformity: ${tot.uniformityScore.toFixed(2)} (10 - ${tot.uniChecks}×2)<br>` +
+        `Defect: ${tot.defectScore.toFixed(2)} (10 - ${tot.defChecks}×2)`;
+    }
+    if(uBadge){
+      uBadge.className = "badge " + (tot.uniformityScore >= 8 ? "ok" : (tot.uniformityScore >= 6 ? "warn" : "bad"));
+      uBadge.textContent = `${UI[lang].uniformity}: ${tot.uniformityScore.toFixed(2)}`;
+    }
+    if(dBadge){
+      dBadge.className = "badge " + (tot.defectScore >= 8 ? "ok" : (tot.defectScore >= 6 ? "warn" : "bad"));
+      dBadge.textContent = `${UI[lang].defect}: ${tot.defectScore.toFixed(2)}`;
+    }
+  }
+}
+
+function circleGroup(sampleIdx, attrKey){
+  const wrap = document.createElement("div");
+  wrap.className = "circles";
+  for(let i=1;i<=5;i++){
+    const c = document.createElement("div");
+    c.className = "circle";
+    c.addEventListener("click", ()=>{
+      state.samples[sampleIdx][attrKey].intensity = i;
+      const cs = wrap.querySelectorAll(".circle");
+      cs.forEach((x,idx)=> x.classList.toggle("on", idx < i));
+      scheduleLocalSave();
+    });
+    wrap.appendChild(c);
+  }
+  return wrap;
+}
+
+function makeChip(text, isCat=false){
+  const chip = document.createElement("div");
+  chip.className = "chip" + (isCat ? " cat" : "");
+  chip.textContent = text;
+  chip.style.color = chipColorForText(text);
+  return chip;
+}
+
+function buildHelperUI(attrKey, textarea, sampleObj){
+  const wrap = document.createElement("div");
+  wrap.className = "helperWrap";
+
+  const labels = document.createElement("div");
+  labels.className = "helperLabels";
+  labels.innerHTML = `<span class="hl">${escHtml(UI[lang].helperCats)}</span><span class="hl">${escHtml(UI[lang].helperNotes)}</span>`;
+  wrap.appendChild(labels);
+
+  const allowedCats = HELPER_NOTES.byAttr[attrKey] || [];
+  const catRow = document.createElement("div");
+  catRow.className = "catRow";
+  const subRow = document.createElement("div");
+  subRow.className = "subRow";
+
+  function renderSub(catId){
+    subRow.innerHTML = "";
+    const items = (HELPER_NOTES.bank[catId] || []);
+    items.forEach(it=>{
+      const txt = it[lang] || it.en;
+      const chip = makeChip(txt, false);
+      chip.addEventListener("click", ()=>{
+        const insert = (textarea.value && textarea.value.trim() && textarea.value.trim().slice(-1)!==",") ? ", " : "";
+        textarea.value = (textarea.value || "") + insert + txt;
+        textarea.dispatchEvent(new Event("input", {bubbles:true}));
+        textarea.focus();
+        scheduleLocalSave();
+      });
+      subRow.appendChild(chip);
+    });
+  }
+
+  allowedCats.forEach(catId=>{
+    const cat = HELPER_CATEGORIES.find(x=>x.id===catId);
+    const label = cat ? (UI[lang][cat.uiKey] || catId) : catId;
+    const chip = makeChip(label, true);
+    chip.dataset.cat = catId;
+    if(sampleObj.helperCat === catId) chip.classList.add("active");
+    chip.addEventListener("click", ()=>{
+      sampleObj.helperCat = catId;
+      catRow.querySelectorAll(".chip.cat").forEach(x=>x.classList.remove("active"));
+      chip.classList.add("active");
+      renderSub(catId);
+      scheduleLocalSave();
+    });
+    catRow.appendChild(chip);
+  });
+
+  const defaultCat = sampleObj.helperCat && allowedCats.includes(sampleObj.helperCat)
+    ? sampleObj.helperCat
+    : (allowedCats[0] || "");
+
+  if(defaultCat){
+    sampleObj.helperCat = defaultCat;
+    renderSub(defaultCat);
+    const activeChip = catRow.querySelector(`[data-cat="${defaultCat}"]`);
+    if(activeChip) activeChip.classList.add("active");
+  }
+
+  wrap.appendChild(catRow);
+  wrap.appendChild(subRow);
+  return wrap;
+}
+
+function sliderRow(sampleIdx, attr){
+  const t = UI[lang];
+  const sObj = state.samples[sampleIdx][attr.key];
+
+  const row = document.createElement("div");
+  row.className = "section";
+
+  const head = document.createElement("div");
+  head.className = "rowhead";
+
+  const left = document.createElement("div");
+  left.className = "leftLabel";
+  left.innerHTML = escHtml(attr.label[lang]);
+
+  const tag = document.createElement("span");
+  tag.className = "miniTag " + (sObj.scored ? "scored":"notScored");
+  tag.textContent = sObj.scored ? t.scored : t.notScored;
+
+  const hist = document.createElement("span");
+  hist.className = "historyMark";
+  hist.textContent = "";
+
+  const clearBtn = document.createElement("button");
+  clearBtn.type = "button";
+  clearBtn.className = "miniBtn";
+  clearBtn.textContent = "⟲";
+  clearBtn.title = t.clear;
+  clearBtn.addEventListener("click", ()=>{
+    sObj.scored = false;
+    sObj.score = RANGE_MIN;
+    sObj.intensity = 0;
+    sObj.notes = "";
+    sObj.history = [];
+    sObj.helperCat = "";
+    renderAll();
+    scheduleLocalSave();
+  });
+
+  left.appendChild(tag);
+  left.appendChild(hist);
+  left.appendChild(clearBtn);
+
+  const right = document.createElement("div");
+  right.className = "rightlabel";
+
+  const rightTop = document.createElement("div");
+  rightTop.className = "rightTop";
+  rightTop.innerHTML = `<span>${escHtml(t[attr.rightKey])}</span>`;
+  const circles = circleGroup(sampleIdx, attr.key);
+  rightTop.appendChild(circles);
+
+  const hint = document.createElement("div");
+  hint.className = "hintUnderIntensity";
+  hint.innerHTML = `<span>${escHtml(t[attr.hintLKey])}</span><span>${escHtml(t[attr.hintRKey])}</span>`;
+
+  right.appendChild(rightTop);
+  right.appendChild(hint);
+
+  head.appendChild(left);
+  head.appendChild(right);
+
+  const range = document.createElement("input");
+  range.type = "range";
+  range.min = String(RANGE_MIN);
+  range.max = String(RANGE_MAX);
+  range.step = String(RANGE_STEP);
+  range.value = String(sObj.score ?? RANGE_MIN);
+
+  const bubble = document.createElement("div");
+  bubble.className = "value-bubble";
+
+  function syncBubble(){ updateBubblePosition(range, bubble, sObj); }
+
+  range.addEventListener("pointerdown", ()=>{
+    sObj.scored = true;
+    tag.className = "miniTag scored";
+    tag.textContent = t.scored;
+    syncBubble();
+    updateTotals();
+    scheduleLocalSave();
+  });
+
+  range.addEventListener("input", ()=>{
+    const prev = Number(sObj.score ?? RANGE_MIN);
+    const next = Number(range.value);
+    sObj.scored = true;
+
+    if(next !== prev){
+      sObj.history = sObj.history || [];
+      sObj.history.push({ from: prev, to: next, at: Date.now() });
+      if(sObj.history.length > 6) sObj.history.shift();
+    }
+    sObj.score = next;
+
+    tag.className = "miniTag scored";
+    tag.textContent = t.scored;
+
+    if(sObj.history && sObj.history.length){
+      const last = sObj.history[sObj.history.length - 1];
+      hist.textContent = `${Number(last.from).toFixed(2)}→${Number(last.to).toFixed(2)}`;
+    }else hist.textContent = "";
+
+    syncBubble();
+    updateTotals();
+    scheduleLocalSave();
+  });
+
+  const sliderWrap = document.createElement("div");
+  sliderWrap.className = "sliderwrap";
+  const scale = document.createElement("div");
+  scale.className = "scale";
+  scale.appendChild(range);
+  scale.appendChild(bubble);
+  sliderWrap.appendChild(scale);
+
+  const ticks = document.createElement("div");
+  ticks.className = "ticks";
+  ticks.innerHTML = `<span>6</span><span>7</span><span>8</span><span>9</span><span>10</span>`;
+
+  const notes = document.createElement("div");
+  notes.className = "notes";
+  notes.innerHTML = `<label>${escHtml(t.notes)}</label>`;
+  const ta = document.createElement("textarea");
+  ta.value = sObj.notes || "";
+  ta.addEventListener("input", ()=>{
+    sObj.notes = ta.value;
+    scheduleLocalSave();
+  });
+  notes.appendChild(ta);
+
+  row.appendChild(head);
+  row.appendChild(sliderWrap);
+  row.appendChild(ticks);
+  row.appendChild(notes);
+
+  if(attr.helper){
+    row.appendChild(buildHelperUI(attr.key, ta, sObj));
+  }
+
+  const val = sObj.intensity || 0;
+  circles.querySelectorAll(".circle").forEach((c,idx)=> c.classList.toggle("on", idx < val));
+
+  if(sObj.history && sObj.history.length){
+    const last = sObj.history[sObj.history.length - 1];
+    hist.textContent = `${Number(last.from).toFixed(2)}→${Number(last.to).toFixed(2)}`;
+  } else {
+    hist.textContent = "";
+  }
+
+  requestAnimationFrame(syncBubble);
+  window.addEventListener("resize", syncBubble);
+
+  return row;
+}
+
+function bottomBlock(sampleIdx, which){
+  const t = UI[lang];
+  const s = state.samples[sampleIdx];
+  const title = which === "uniformity" ? t.uniformity : t.defect;
+
+  const item = document.createElement("div");
+  item.className = "bottomItem";
+
+  const top = document.createElement("div");
+  top.className = "bottomTitle";
+  top.innerHTML = `<div>${escHtml(title)}</div>`;
+
+  const circles = document.createElement("div");
+  circles.className = "circles bigcircles";
+  circles.setAttribute("data-bottom", `${sampleIdx}.${which}`);
+  top.appendChild(circles);
+
+  const notes = document.createElement("div");
+  notes.className = "notes";
+  notes.innerHTML = `<label>${escHtml(t.notes)}</label>`;
+  const ta = document.createElement("textarea");
+  ta.value = s[which+"Notes"] || "";
+  ta.addEventListener("input", ()=>{
+    s[which+"Notes"] = ta.value;
+    scheduleLocalSave();
+  });
+  notes.appendChild(ta);
+
+  item.appendChild(top);
+  item.appendChild(notes);
+
+  for(let i=0;i<5;i++){
+    const c = document.createElement("div");
+    c.className = "circle";
+    c.addEventListener("click", ()=>{
+      if(which === "defect"){
+        s.defect[i] = !s.defect[i];
+        // when defect toggles, mirror uniformity (and vice versa behavior matches your earlier rule)
+        s.uniformity[i] = s.defect[i];
+        renderBottomRow(sampleIdx, "defect");
+        renderBottomRow(sampleIdx, "uniformity");
+      }else{
+        s.uniformity[i] = !s.uniformity[i];
+        renderBottomRow(sampleIdx, "uniformity");
+      }
+      updateTotals();
+      scheduleLocalSave();
+    });
+    circles.appendChild(c);
+  }
+
+  // Per request: NO helper for uniformity, NO helper for freshcrop (done above)
+  // Defect helper removed earlier by your latest request? You asked only remove from fresh crop and uniformity.
+  // So we keep NONE here to match request strictly.
+  return item;
+}
+
+function buildSample(sampleIdx){
+  const t = UI[lang];
+  const s = state.samples[sampleIdx];
+
+  const sample = document.createElement("div");
+  sample.className = "sample";
+  sample.setAttribute("data-sample", String(sampleIdx));
+
+  const top = document.createElement("div");
+  top.className = "toprow";
+
+  const sampleNo = document.createElement("div");
+  sampleNo.className = "sampleNo";
+  sampleNo.innerHTML = `<div>${escHtml(t.sample)}</div>`;
+  const inp = document.createElement("input");
+  inp.type = "text";
+  inp.value = s.sampleNo || "";
+  inp.addEventListener("input", ()=>{
+    s.sampleNo = inp.value;
+    scheduleLocalSave();
+  });
+  sampleNo.appendChild(inp);
+
+  const scorebox = document.createElement("div");
+  scorebox.className = "scorebox";
+  scorebox.innerHTML = `
+    <div class="lbl">${escHtml(t.total)}</div>
+    <div class="total" data-total="${sampleIdx}">0.00</div>
+    <div class="subtot" data-subtot="${sampleIdx}"></div>
+    <div class="flags">
+      <span class="badge ok" data-ubadge="${sampleIdx}"></span>
+      <span class="badge ok" data-dbadge="${sampleIdx}"></span>
+    </div>
+    <div class="checkroast"><span>${escHtml(t.checkRoast)}</span></div>
+  `;
+  const roast = document.createElement("input");
+  roast.type = "checkbox";
+  roast.checked = !!s.checkRoast;
+  roast.addEventListener("change", ()=>{
+    s.checkRoast = roast.checked;
+    scheduleLocalSave();
+  });
+  scorebox.querySelector(".checkroast").appendChild(roast);
+
+  top.appendChild(sampleNo);
+  top.appendChild(scorebox);
+  sample.appendChild(top);
+
+  ATTRS.forEach(a => sample.appendChild(sliderRow(sampleIdx, a)));
+
+  const bottom = document.createElement("div");
+  bottom.className = "bottomRow";
+  bottom.appendChild(bottomBlock(sampleIdx, "uniformity"));
+  bottom.appendChild(bottomBlock(sampleIdx, "defect"));
+  sample.appendChild(bottom);
+
+  return sample;
+}
+
+function renderAll(){
+  applyLang();
+
+  $("name").value = state.nameField || "";
+  $("table").value = state.tableField || "";
+
+  const grid = $("grid");
+  grid.innerHTML = "";
+  state.samples.forEach((_,i)=> grid.appendChild(buildSample(i)));
+
+  for(let i=0;i<state.samples.length;i++){
+    renderBottomRow(i, "uniformity");
+    renderBottomRow(i, "defect");
+  }
+  updateTotals();
+}
+
+/* =======================
+   Star Graph Export
+   ======================= */
+function buildStarSvg(sampleIdx){
+  const t = UI[lang];
+  const s = state.samples[sampleIdx];
+  const tot = computeSampleTotals(s);
+
+  const axes = [
+    ...ATTRS.map(a=> ({ key:a.key, label: a.label[lang] })),
+    { key:"uniformityScore", label: t.uniformity },
+    { key:"defectScore", label: t.defect },
+  ];
+
+  function getValue(ax){
+    if(ax.key === "uniformityScore") return tot.uniformityScore;
+    if(ax.key === "defectScore") return tot.defectScore;
+    const obj = s[ax.key];
+    return (obj && obj.scored) ? Number(obj.score||0) : 0;
+  }
+
+  const W=520, H=520;
+  const cx=W/2, cy=H/2;
+  const R=200;
+  const n=axes.length;
+  const ringVals = [2,4,6,8,10];
+  function pt(angle, r){ return [cx + Math.cos(angle)*r, cy + Math.sin(angle)*r]; }
+  const startAngle = -Math.PI/2;
+
+  const poly = axes.map((ax,i)=>{
+    const v = Math.max(0, Math.min(10, getValue(ax)));
+    const r = (v/10)*R;
+    const a = startAngle + (i*(2*Math.PI/n));
+    const p = pt(a, r);
+    return p[0].toFixed(1)+","+p[1].toFixed(1);
+  }).join(" ");
+
+  let svg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  svg += `<rect x="0" y="0" width="${W}" height="${H}" fill="#fff"/>`;
+
+  ringVals.forEach(rv=>{
+    const rr = (rv/10)*R;
+    const ringPts = axes.map((ax,i)=>{
+      const a = startAngle + (i*(2*Math.PI/n));
+      const p = pt(a, rr);
+      return p[0].toFixed(1)+","+p[1].toFixed(1);
+    }).join(" ");
+    svg += `<polygon points="${ringPts}" fill="none" stroke="#cfcfcf" stroke-width="1"/>`;
+  });
+
+  axes.forEach((ax,i)=>{
+    const a = startAngle + (i*(2*Math.PI/n));
+    const p0 = pt(a, 0);
+    const p1 = pt(a, R);
+    svg += `<line x1="${p0[0]}" y1="${p0[1]}" x2="${p1[0]}" y2="${p1[1]}" stroke="#d7d7d7" stroke-width="1"/>`;
+
+    const labelPos = pt(a, R+44);
+    const anchor = (Math.cos(a) > 0.25) ? "start" : (Math.cos(a) < -0.25 ? "end" : "middle");
+    const dy = (Math.sin(a) > 0.25) ? 14 : (Math.sin(a) < -0.25 ? -6 : 4);
+    svg += `<text x="${labelPos[0].toFixed(1)}" y="${(labelPos[1]+dy).toFixed(1)}" font-size="12" font-weight="700" fill="#111" text-anchor="${anchor}">${escHtml(ax.label)}</text>`;
+  });
+
+  svg += `<polygon points="${poly}" fill="rgba(15,118,110,.18)" stroke="#0f766e" stroke-width="2"/>`;
+
+  axes.forEach((ax,i)=>{
+    const v = Math.max(0, Math.min(10, getValue(ax)));
+    const r = (v/10)*R;
+    const a = startAngle + (i*(2*Math.PI/n));
+    const p = pt(a, r);
+    svg += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.2" fill="#0f766e"/>`;
+  });
+
+  const title = (s.sampleNo && s.sampleNo.trim()) ? s.sampleNo.trim() : `${t.sample} ${sampleIdx+1}`;
+  const meta1 = `${t.table}: ${state.tableField || "—"}`;
+  const meta2 = `${t.total}: ${tot.total.toFixed(2)}`;
+
+  svg += `<text x="18" y="28" font-size="16" font-weight="900" fill="#111">${escHtml(title)}</text>`;
+  svg += `<text x="18" y="48" font-size="12" font-weight="700" fill="#374151">${escHtml(meta1)}</text>`;
+  svg += `<text x="18" y="68" font-size="12" font-weight="900" fill="#111">${escHtml(meta2)}</text>`;
+  svg += `</svg>`;
+  return { svg, tot, title };
+}
+
+function renderExportFor(sampleIdx){
+  const { svg, tot, title } = buildStarSvg(sampleIdx);
+  $("starWrap").innerHTML = svg;
+
+  const s = state.samples[sampleIdx];
+  const lines = [];
+  lines.push(`<b>${escHtml(title)}</b>`);
+  lines.push(`${escHtml(UI[lang].total)}: <b>${tot.total.toFixed(2)}</b>`);
+  lines.push(`${escHtml(UI[lang].uniformity)}: ${tot.uniformityScore.toFixed(2)} • ${escHtml(UI[lang].defect)}: ${tot.defectScore.toFixed(2)}`);
+
+  ATTRS.forEach(a=>{
+    const obj = s[a.key];
+    const val = (obj && obj.scored) ? Number(obj.score).toFixed(2) : "0.00";
+    const note = (obj && obj.notes && obj.notes.trim()) ? obj.notes.trim() : "";
+    if(note){
+      lines.push(`<div style="margin-top:6px;"><b>${escHtml(a.label[lang])}</b> (${val}): ${escHtml(note)}</div>`);
+    }
+  });
+
+  if(s.uniformityNotes && s.uniformityNotes.trim()){
+    lines.push(`<div style="margin-top:6px;"><b>${escHtml(UI[lang].uniformity)}</b>: ${escHtml(s.uniformityNotes.trim())}</div>`);
+  }
+  if(s.defectNotes && s.defectNotes.trim()){
+    lines.push(`<div style="margin-top:6px;"><b>${escHtml(UI[lang].defect)}</b>: ${escHtml(s.defectNotes.trim())}</div>`);
+  }
+
+  $("starNotes").innerHTML = lines.join("<br>");
+  $("expMeta").textContent = `${UI[lang].total}: ${tot.total.toFixed(2)}`;
+}
+
+function openExportModal(){
+  openOverlay("overlayExport");
+  const pick = $("expPick");
+  pick.innerHTML = "";
+  state.samples.forEach((s,i)=>{
+    const opt = document.createElement("option");
+    const label = (s.sampleNo && s.sampleNo.trim()) ? s.sampleNo.trim() : `${UI[lang].sample} ${i+1}`;
+    opt.value = String(i);
+    opt.textContent = label;
+    pick.appendChild(opt);
+  });
+  pick.value = "0";
+  renderExportFor(0);
+  pick.onchange = ()=> renderExportFor(Number(pick.value));
+}
+
+$("expClose").addEventListener("click", ()=>closeOverlay("overlayExport"));
+$("expDone").addEventListener("click", ()=>closeOverlay("overlayExport"));
+$("expPrintPdf").addEventListener("click", ()=>{
+  document.body.classList.add("print-star");
+  window.print();
+  setTimeout(()=> document.body.classList.remove("print-star"), 250);
+});
+
+/* =======================
+   Cloud: Save / History
+   ======================= */
+async function saveCurrentToCloud(){
+  if(!currentUser) throw new Error("Not logged in");
+  const cuppingsCol = collection(db, "users", currentUser.uid, "cuppings");
+
+  const title =
+    (state.tableField ? `Table ${state.tableField}` : "Cupping") +
+    (state.nameField ? ` – ${state.nameField}` : "");
+
+  const payload = {
+    title,
+    state,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  };
+
+  const ref = await addDoc(cuppingsCol, payload);
+  return ref.id;
+}
+
+async function listCloudCuppings(){
+  if(!currentUser) throw new Error("Not logged in");
+  const cuppingsCol = collection(db, "users", currentUser.uid, "cuppings");
+  const q = query(cuppingsCol, orderBy("updatedAt","desc"));
+  const snap = await getDocs(q);
+  return snap.docs.map(d=>({ id:d.id, ...d.data() }));
+}
+
+async function loadCuppingFromCloud(id){
+  if(!currentUser) throw new Error("Not logged in");
+  const ref = doc(db, "users", currentUser.uid, "cuppings", id);
+  const snap = await getDoc(ref);
+  if(!snap.exists()) throw new Error("Not found");
+  const data = snap.data();
+  state = data.state;
+  lang = state.lang || lang;
+  renderAll();
+  scheduleLocalSave();
+}
+
+async function deleteCuppingFromCloud(id){
+  if(!currentUser) throw new Error("Not logged in");
+  const ref = doc(db, "users", currentUser.uid, "cuppings", id);
+  await deleteDoc(ref);
+}
+
+function renderHistoryList(items){
+  const host = $("histList");
+  host.innerHTML = "";
+
+  if(!items.length){
+    host.innerHTML = `<div style="color:#6b7280;font-weight:900;">No saved cuppings yet.</div>`;
+    return;
+  }
+
+  items.forEach(it=>{
+    const card = document.createElement("div");
+    card.className = "card";
+    const title = it.title || "Cupping";
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
+        <div>
+          <div style="font-weight:1100;">${escHtml(title)}</div>
+          <div style="color:#6b7280;font-size:12px;margin-top:4px;">
+            ID: <span class="mono">${escHtml(it.id)}</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="ghostBtn" data-act="load" data-id="${escHtml(it.id)}" type="button">Load</button>
+          <button class="ghostBtn" data-act="delete" data-id="${escHtml(it.id)}" type="button" style="border-color:#fca5a5;">Delete</button>
+        </div>
+      </div>
+    `;
+    host.appendChild(card);
+  });
+
+  host.querySelectorAll("button[data-act]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      const id = btn.getAttribute("data-id");
+      const act = btn.getAttribute("data-act");
+      try{
+        if(act === "load"){
+          await loadCuppingFromCloud(id);
+          closeOverlay("overlayHistory");
+        } else if(act === "delete"){
+          if(confirm("Delete this saved cupping?")){
+            await deleteCuppingFromCloud(id);
+            const items2 = await listCloudCuppings();
+            renderHistoryList(items2);
+          }
+        }
+      }catch(e){
+        alert(e.message || String(e));
+      }
+    });
+  });
+}
+
+async function openHistory(){
+  openOverlay("overlayHistory");
+  const items = await listCloudCuppings();
+  renderHistoryList(items);
+}
+
+$("histClose").addEventListener("click", ()=>closeOverlay("overlayHistory"));
+$("histDone").addEventListener("click", ()=>closeOverlay("overlayHistory"));
+$("histRefresh").addEventListener("click", async ()=>{
+  const items = await listCloudCuppings();
+  renderHistoryList(items);
+});
+
+/* =======================
+   Buttons wiring
+   ======================= */
+$("selLang").addEventListener("change", ()=>{
+  lang = $("selLang").value;
+  state.lang = lang;
+  scheduleLocalSave();
+  renderAll();
+});
+$("name").addEventListener("input", ()=>{
+  state.nameField = $("name").value;
+  scheduleLocalSave();
+});
+$("table").addEventListener("input", ()=>{
+  state.tableField = $("table").value;
+  scheduleLocalSave();
+});
+
+$("btnPrint").addEventListener("click", ()=> window.print());
+$("btnExportReport").addEventListener("click", ()=>{
+  openExportModal();
+  closeMenu();
+});
+
+$("btnAddSample").addEventListener("click", ()=>{
+  state.samples.push(newSampleState());
+  scheduleLocalSave();
+  renderAll();
+});
+$("btnRemoveSample").addEventListener("click", ()=>{
+  if(state.samples.length <= 1) return;
+  state.samples.pop();
+  scheduleLocalSave();
+  renderAll();
+});
+$("btnReset").addEventListener("click", ()=>{
+  const keepLang = state.lang || "en";
+  state = {
+    lang: keepLang,
+    nameField: state.nameField || "",
+    tableField: state.tableField || "",
+    samples:[newSampleState(), newSampleState(), newSampleState()]
+  };
+  lang = keepLang;
+  scheduleLocalSave();
+  renderAll();
+});
+
+/* Cloud buttons */
+$("btnCloudSave").addEventListener("click", async ()=>{
+  closeMenu();
+  try{
+    const id = await saveCurrentToCloud();
+    alert("Saved to cloud ✅\nID: " + id);
+  }catch(e){
+    alert(e.message || String(e));
+  }
+});
+$("btnCloudHistory").addEventListener("click", async ()=>{
+  closeMenu();
+  try{
+    await openHistory();
+  }catch(e){
+    alert(e.message || String(e));
+  }
+});
+$("btnLogout").addEventListener("click", async ()=>{
+  closeMenu();
+  await signOut(auth);
+  location.href = "login.html";
+});
+
+/* =======================
+   Auth gate + boot
+   ======================= */
+onAuthStateChanged(auth, (user)=>{
+  if(!user){
+    location.href = "login.html";
+    return;
+  }
+  currentUser = user;
+
+  $("userPill").style.display = "inline-flex";
+  $("userEmail").textContent = user.email || user.uid;
+
+  // Load local first
+  tryLoadLocal();
+  lang = state.lang || "en";
+
+  renderAll();
+  timerUpdate();
+});
+</script>
+</body>
+</html>
