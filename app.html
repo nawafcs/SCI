@@ -8,7 +8,16 @@
 
   <!-- QR library -->
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-
+<script>
+  // CDN fallback (only if QRCode isn't defined)
+  window.addEventListener("load", () => {
+    if (!window.QRCode) {
+      const s = document.createElement("script");
+      s.src = "https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js";
+      document.head.appendChild(s);
+    }
+  });
+</script>
   <style>
     :root{
       --ink:#1a2a2a;
@@ -674,7 +683,7 @@
           <div class="qrBox">
             <div class="card" style="padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
               <div class="small" style="font-weight:1100;">QR</div>
-              <canvas id="invQr" width="240" height="240"></canvas>
+              <canvas id="invQr" width="240" height="240" style="display:none;"></canvas> <img id="invQrImg" alt="QR" style="width:240px;height:240px;display:block;border-radius:12px;border:1px solid #eee;background:#fff;" />
               <div class="small mono" id="invMeta"></div>
             </div>
           </div>
