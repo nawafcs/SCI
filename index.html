@@ -28,7 +28,6 @@
       border-radius:14px;
     }
 
-    /* Error banner */
     .errorBox{
       display:none;
       border:2px solid #b91c1c;
@@ -57,7 +56,7 @@
       top:8px;
       z-index:50;
       backdrop-filter: blur(6px);
-      flex-wrap:wrap; /* ✅ keeps menu visible on mobile */
+      flex-wrap:wrap;
     }
     .toolbar-left{
       display:flex;
@@ -69,8 +68,8 @@
     }
     .menuWrap{
       position:relative;
-      flex:0 0 auto;        /* ✅ don’t shrink away */
-      margin-left:auto;      /* ✅ push to the edge */
+      flex:0 0 auto;
+      margin-left:auto;
     }
     body[dir="rtl"] .menuWrap{ margin-left:0; margin-right:auto; }
 
@@ -100,7 +99,11 @@
     .pill select{
       border:0;outline:none;font:inherit;background:transparent;
       padding:0;margin:0;min-width:110px;
+      font-weight:900;
     }
+
+    /* Language dropdown */
+    .langPill select{ min-width:86px; }
 
     .menuBtn{
       width:44px;height:44px;
@@ -435,7 +438,7 @@
     body[dir="rtl"] .toolbar{direction:rtl}
     body[dir="rtl"] .menuPanel{ right:auto; left:0; }
 
-    /* Print: only print the star graph modal content when printing from export */
+    /* Print: only print the star graph modal content */
     @media print{
       body.print-star *{ visibility:hidden !important; }
       body.print-star #overlayExport,
@@ -454,7 +457,15 @@
 
     <div class="toolbar">
       <div class="toolbar-left">
-        <button id="btnLang" type="button" class="primaryBtn"></button>
+
+        <!-- ✅ Language dropdown (Eng / ar / cn) -->
+        <span class="pill langPill" title="Language">
+          <select id="selLang" aria-label="Language">
+            <option value="en">Eng</option>
+            <option value="ar">ar</option>
+            <option value="zh">cn</option>
+          </select>
+        </span>
 
         <!-- TIMER -->
         <div class="pill" id="timerPill" style="gap:10px;">
@@ -478,14 +489,12 @@
         <button id="btnSession" type="button" class="ghostBtn"></button>
       </div>
 
-      <!-- ✅ menu stays visible on mobile now -->
       <div class="menuWrap">
         <button id="btnMenu" type="button" class="menuBtn" aria-haspopup="true" aria-expanded="false" title="Menu">⋮</button>
 
         <div id="menuPanel" class="menuPanel" role="menu" aria-hidden="true">
           <div class="menuNote" id="menuHint"></div>
 
-          <!-- ✅ re-enabled -->
           <button id="btnExportReport" type="button" role="menuitem"></button>
           <button id="btnPrint" type="button" role="menuitem"></button>
 
@@ -585,7 +594,7 @@
       const params = new URLSearchParams(location.search);
       const VIEW_ONLY = params.get("view") === "1";
 
-      let lang = "en";
+      let lang = "en"; // en | ar | zh
 
       const UI = {
         en: {
@@ -598,7 +607,6 @@
           reset: "Reset current round",
           sessionOn: "Session: ON",
           sessionOff: "Session: OFF",
-          lang: "العربية",
           name: "NAME:",
           table: "TABLE:",
           tableSel: "Table",
@@ -628,8 +636,6 @@
           clear: "Clear",
           menuHint: VIEW_ONLY ? "View-only mode is ON (editing disabled)." : "Export the star graph or print from here.",
           viewOnlyBlocked: "This is view-only mode.",
-          copied: "Copied.",
-          shareFail: "Couldn’t copy.",
           expTitle:"Export Star Graph",
           expPick:"Sample",
           expPrint:"Print PDF",
@@ -649,7 +655,6 @@
           reset: "إعادة ضبط الجولة الحالية",
           sessionOn: "وضع الجلسة: تشغيل",
           sessionOff: "وضع الجلسة: إيقاف",
-          lang: "English",
           name: "الاسم:",
           table: "الطاولة:",
           tableSel: "طاولة",
@@ -679,8 +684,6 @@
           clear: "مسح",
           menuHint: VIEW_ONLY ? "وضع العرض فقط مفعّل (التعديل مقفل)." : "صدّر الرسم النجمي أو اطبع من هنا.",
           viewOnlyBlocked: "هذا وضع عرض فقط.",
-          copied: "تم النسخ.",
-          shareFail: "تعذر النسخ.",
           expTitle:"تصدير الرسم النجمي",
           expPick:"العينة",
           expPrint:"طباعة PDF",
@@ -689,51 +692,100 @@
           tStart:"ابدأ",
           tPause:"إيقاف",
           tReset:"تصفير"
+        },
+        zh: {
+          print: "打印页面",
+          export: "导出星形雷达图（可打印PDF）",
+          add: "+ 添加样品",
+          remove: "− 删除样品",
+          addTable: "+ 添加桌号",
+          addRound: "+ 添加轮次",
+          reset: "重置当前轮次",
+          sessionOn: "会话模式：开",
+          sessionOff: "会话模式：关",
+          name: "姓名：",
+          table: "桌号：",
+          tableSel: "桌号",
+          roundSel: "轮次",
+          sample: "样品编号",
+          total: "总分",
+          checkRoast: "检查烘焙",
+          notes: "备注：",
+          intensity: "强度",
+          thickness: "厚度",
+          duration: "持续时间",
+          woody: "木质感",
+          low: "低",
+          high: "高",
+          flat: "平淡",
+          bright: "明亮",
+          thin: "薄",
+          thick: "厚",
+          short: "短",
+          long: "长",
+          none: "无",
+          intense: "强",
+          uniformity: "一致性",
+          defect: "缺陷",
+          notScored: "未评分",
+          scored: "已评分",
+          clear: "清除",
+          menuHint: VIEW_ONLY ? "只读模式已开启（无法编辑）。" : "在这里导出星形图或打印。",
+          viewOnlyBlocked: "当前为只读模式。",
+          expTitle:"导出星形图",
+          expPick:"样品",
+          expPrint:"打印 PDF",
+          done:"完成",
+          timer:"计时器",
+          tStart:"开始",
+          tPause:"暂停",
+          tReset:"重置"
         }
       };
 
       const ATTRS = [
-        { key:'fragrance',  label:{en:'FRAGRANCE', ar:'العطر'},          rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
-        { key:'aroma',      label:{en:'AROMA', ar:'الرائحة'},            rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
-        { key:'flavor',     label:{en:'FLAVOR', ar:'النكهة'},            rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
-        { key:'acidity',    label:{en:'ACIDITY', ar:'الحموضة'},          rightKey:'intensity', hintLKey:'flat',  hintRKey:'bright' },
-        { key:'mouthfeel',  label:{en:'MOUTHFEEL', ar:'الإحساس بالفم'},  rightKey:'thickness', hintLKey:'thin',  hintRKey:'thick' },
-        { key:'sweetness',  label:{en:'SWEETNESS', ar:'الحلاوة'},        rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
-        { key:'aftertaste', label:{en:'AFTERTASTE', ar:'الأثر'},         rightKey:'duration',  hintLKey:'short', hintRKey:'long' },
-        { key:'freshcrop',  label:{en:'FRESH CROP', ar:'محصول طازج'},    rightKey:'woody',     hintLKey:'none',  hintRKey:'intense' },
+        { key:'fragrance',  label:{en:'FRAGRANCE', ar:'العطر', zh:'干香'},          rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
+        { key:'aroma',      label:{en:'AROMA', ar:'الرائحة', zh:'湿香'},            rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
+        { key:'flavor',     label:{en:'FLAVOR', ar:'النكهة', zh:'风味'},            rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
+        { key:'acidity',    label:{en:'ACIDITY', ar:'الحموضة', zh:'酸质'},          rightKey:'intensity', hintLKey:'flat',  hintRKey:'bright' },
+        { key:'mouthfeel',  label:{en:'MOUTHFEEL', ar:'الإحساس بالفم', zh:'口感'},  rightKey:'thickness', hintLKey:'thin',  hintRKey:'thick' },
+        { key:'sweetness',  label:{en:'SWEETNESS', ar:'الحلاوة', zh:'甜感'},        rightKey:'intensity', hintLKey:'low',   hintRKey:'high' },
+        { key:'aftertaste', label:{en:'AFTERTASTE', ar:'الأثر', zh:'余韵'},         rightKey:'duration',  hintLKey:'short', hintRKey:'long' },
+        { key:'freshcrop',  label:{en:'FRESH CROP', ar:'محصول طازج', zh:'新鲜度'},  rightKey:'woody',     hintLKey:'none',  hintRKey:'intense' },
       ];
 
       const RANGE_MIN = 6.0, RANGE_MAX = 10.0, RANGE_STEP = 0.25;
       const UNIFORMITY_BASE = 10, DEFECT_BASE = 10, DEDUCT_PER_CHECK = 2;
 
+      // Note helpers now include zh
       const NOTE_HELPERS = {
-        fragrance: [{en:"Floral",ar:"زهري"},{en:"Fruity",ar:"فاكهي"},{en:"Citrus",ar:"حمضيات"},{en:"Sweet",ar:"حلو"},{en:"Honey",ar:"عسل"},{en:"Vanilla",ar:"فانيلا"},{en:"Nutty",ar:"مكسرات"},{en:"Cocoa",ar:"كاكاو"},{en:"Spices",ar:"بهارات"},{en:"Green/Herbal",ar:"أخضر/أعشاب"},{en:"Roasted",ar:"محمص"},{en:"Earthy",ar:"ترابي"}],
-        aroma: [{en:"Fruity",ar:"فاكهي"},{en:"Berry",ar:"توتي"},{en:"Stone fruit",ar:"فاكهة نواة"},{en:"Tropical",ar:"استوائي"},{en:"Floral",ar:"زهري"},{en:"Sweet",ar:"حلو"},{en:"Caramel",ar:"كراميل"},{en:"Brown sugar",ar:"سكر بني"},{en:"Nutty/Cocoa",ar:"مكسرات/كاكاو"},{en:"Spices",ar:"بهارات"},{en:"Roasted",ar:"محمص"},{en:"Green/Vegetative",ar:"أخضر/نباتي"},{en:"Sour/Fermented",ar:"حامض/مخمّر"}],
-        flavor: [{en:"Sweet",ar:"حلو"},{en:"Fruity",ar:"فاكهي"},{en:"Citrus",ar:"حمضيات"},{en:"Berry",ar:"توت"},{en:"Tropical",ar:"استوائي"},{en:"Floral",ar:"زهري"},{en:"Nutty",ar:"مكسرات"},{en:"Cocoa/Chocolate",ar:"كاكاو/شوكولاتة"},{en:"Spices",ar:"بهارات"},{en:"Roasted",ar:"محمص"},{en:"Green/Vegetative",ar:"أخضر/نباتي"},{en:"Sour/Fermented",ar:"حامض/مخمّر"}],
-        acidity: [{en:"Bright",ar:"لامعة"},{en:"Crisp",ar:"واضحة/حادة"},{en:"Soft",ar:"ناعمة"},{en:"Citric (lemon)",ar:"ستريك (ليمون)"},{en:"Malic (apple)",ar:"ماليك (تفاح)"},{en:"Tartaric (grape)",ar:"تارتاريك (عنب)"},{en:"Phosphoric",ar:"فوسفوريك"},{en:"Lactic (creamy)",ar:"لاكتيك (كريمي)"},{en:"Sour",ar:"حامض"},{en:"Flat",ar:"مسطح"}],
-        mouthfeel: [{en:"Silky",ar:"حريري"},{en:"Creamy",ar:"كريمي"},{en:"Velvety",ar:"مخملي"},{en:"Syrupy",ar:"لزج/شرابي"},{en:"Round",ar:"مستدير"},{en:"Watery",ar:"مائي"},{en:"Drying",ar:"يجفف"},{en:"Astringent",ar:"قابض"}],
-        sweetness: [{en:"Honey",ar:"عسل"},{en:"Caramel",ar:"كراميل"},{en:"Brown sugar",ar:"سكر بني"},{en:"Vanilla",ar:"فانيلا"},{en:"Molasses",ar:"دبس/مولاس"},{en:"Candy-like",ar:"حلوى"},{en:"Low sweetness",ar:"حلاوة منخفضة"}],
-        aftertaste: [{en:"Long",ar:"طويل"},{en:"Short",ar:"قصير"},{en:"Clean",ar:"نظيف"},{en:"Sweet finish",ar:"نهاية حلوة"},{en:"Bitter finish",ar:"نهاية مُرّة"},{en:"Dry finish",ar:"نهاية جافة"},{en:"Roasty finish",ar:"نهاية محمصة"}],
-        freshcrop: [{en:"No woody",ar:"بدون خشبي"},{en:"Slight woody",ar:"خشبي خفيف"},{en:"Woody",ar:"خشبي"},{en:"Baggy (jute)",ar:"خيش/شنطة"},{en:"Papery",ar:"ورقي"},{en:"Stale",ar:"قديم/بايت"}],
-        uniformityNotes: [{en:"Cups consistent",ar:"الأكواب متجانسة"},{en:"Slight variation",ar:"اختلاف بسيط"},{en:"Temp inconsistency",ar:"عدم ثبات الحرارة"},{en:"Grind inconsistency",ar:"عدم ثبات الطحن"}],
-        defectNotes: [{en:"Phenolic/Medicinal",ar:"فينولي/طبي"},{en:"Rubbery",ar:"مطاطي"},{en:"Musty/Moldy",ar:"عفن/متعفن"},{en:"Smoky/Ashy",ar:"دخاني/رمادي"},{en:"Sour/Ferment",ar:"حامض/تخمّر"},{en:"Dirty",ar:"وسخ"},{en:"Baggy",ar:"خيش/شنطة"},{en:"Stale",ar:"قديم/بايت"}]
+        fragrance: [{en:"Floral",ar:"زهري",zh:"花香"},{en:"Fruity",ar:"فاكهي",zh:"果香"},{en:"Citrus",ar:"حمضيات",zh:"柑橘"},{en:"Sweet",ar:"حلو",zh:"甜香"},{en:"Honey",ar:"عسل",zh:"蜂蜜"},{en:"Vanilla",ar:"فانيلا",zh:"香草"},{en:"Nutty",ar:"مكسرات",zh:"坚果"},{en:"Cocoa",ar:"كاكاو",zh:"可可"},{en:"Spices",ar:"بهارات",zh:"香料"},{en:"Green/Herbal",ar:"أخضر/أعشاب",zh:"青草/草本"},{en:"Roasted",ar:"محمص",zh:"烘烤"},{en:"Earthy",ar:"ترابي",zh:"泥土"}],
+        aroma: [{en:"Fruity",ar:"فاكهي",zh:"果香"},{en:"Berry",ar:"توتي",zh:"莓果"},{en:"Stone fruit",ar:"فاكهة نواة",zh:"核果"},{en:"Tropical",ar:"استوائي",zh:"热带"},{en:"Floral",ar:"زهري",zh:"花香"},{en:"Sweet",ar:"حلو",zh:"甜香"},{en:"Caramel",ar:"كراميل",zh:"焦糖"},{en:"Brown sugar",ar:"سكر بني",zh:"红糖"},{en:"Nutty/Cocoa",ar:"مكسرات/كاكاو",zh:"坚果/可可"},{en:"Spices",ar:"بهارات",zh:"香料"},{en:"Roasted",ar:"محمص",zh:"烘烤"},{en:"Green/Vegetative",ar:"أخضر/نباتي",zh:"青味/蔬菜"},{en:"Sour/Fermented",ar:"حامض/مخمّر",zh:"酸/发酵"}],
+        flavor: [{en:"Sweet",ar:"حلو",zh:"甜"},{en:"Fruity",ar:"فاكهي",zh:"果味"},{en:"Citrus",ar:"حمضيات",zh:"柑橘"},{en:"Berry",ar:"توت",zh:"莓果"},{en:"Tropical",ar:"استوائي",zh:"热带"},{en:"Floral",ar:"زهري",zh:"花香"},{en:"Nutty",ar:"مكسرات",zh:"坚果"},{en:"Cocoa/Chocolate",ar:"كاكاو/شوكولاتة",zh:"可可/巧克力"},{en:"Spices",ar:"بهارات",zh:"香料"},{en:"Roasted",ar:"محمص",zh:"烘烤"},{en:"Green/Vegetative",ar:"أخضر/نباتي",zh:"青味/蔬菜"},{en:"Sour/Fermented",ar:"حامض/مخمّر",zh:"酸/发酵"}],
+        acidity: [{en:"Bright",ar:"لامعة",zh:"明亮"},{en:"Crisp",ar:"واضحة/حادة",zh:"清脆"},{en:"Soft",ar:"ناعمة",zh:"柔和"},{en:"Citric (lemon)",ar:"ستريك (ليمون)",zh:"柠檬酸"},{en:"Malic (apple)",ar:"ماليك (تفاح)",zh:"苹果酸"},{en:"Tartaric (grape)",ar:"تارتاريك (عنب)",zh:"酒石酸"},{en:"Phosphoric",ar:"فوسفوريك",zh:"磷酸感"},{en:"Lactic (creamy)",ar:"لاكتيك (كريمي)",zh:"乳酸感"},{en:"Sour",ar:"حامض",zh:"酸"},{en:"Flat",ar:"مسطح",zh:"平淡"}],
+        mouthfeel: [{en:"Silky",ar:"حريري",zh:"丝滑"},{en:"Creamy",ar:"كريمي",zh:"奶油感"},{en:"Velvety",ar:"مخملي",zh:"绒感"},{en:"Syrupy",ar:"لزج/شرابي",zh:"糖浆感"},{en:"Round",ar:"مستدير",zh:"圆润"},{en:"Watery",ar:"مائي",zh:"水感"},{en:"Drying",ar:"يجفف",zh:"干涩"},{en:"Astringent",ar:"قابض",zh:"收敛"}],
+        sweetness: [{en:"Honey",ar:"عسل",zh:"蜂蜜"},{en:"Caramel",ar:"كراميل",zh:"焦糖"},{en:"Brown sugar",ar:"سكر بني",zh:"红糖"},{en:"Vanilla",ar:"فانيلا",zh:"香草"},{en:"Molasses",ar:"دبس/مولاس",zh:"糖蜜"},{en:"Candy-like",ar:"حلوى",zh:"糖果感"},{en:"Low sweetness",ar:"حلاوة منخفضة",zh:"甜感低"}],
+        aftertaste: [{en:"Long",ar:"طويل",zh:"长"},{en:"Short",ar:"قصير",zh:"短"},{en:"Clean",ar:"نظيف",zh:"干净"},{en:"Sweet finish",ar:"نهاية حلوة",zh:"回甘"},{en:"Bitter finish",ar:"نهاية مُرّة",zh:"苦尾"},{en:"Dry finish",ar:"نهاية جافة",zh:"干尾"},{en:"Roasty finish",ar:"نهاية محمصة",zh:"烘烤尾"}],
+        freshcrop: [{en:"No woody",ar:"بدون خشبي",zh:"无木质"},{en:"Slight woody",ar:"خشبي خفيف",zh:"轻木质"},{en:"Woody",ar:"خشبي",zh:"木质"},{en:"Baggy (jute)",ar:"خيش/شنطة",zh:"麻袋味"},{en:"Papery",ar:"ورقي",zh:"纸味"},{en:"Stale",ar:"قديم/بايت",zh:"陈旧"}],
+        uniformityNotes: [{en:"Cups consistent",ar:"الأكواب متجانسة",zh:"杯间一致"},{en:"Slight variation",ar:"اختلاف بسيط",zh:"轻微差异"},{en:"Temp inconsistency",ar:"عدم ثبات الحرارة",zh:"温度不一致"},{en:"Grind inconsistency",ar:"عدم ثبات الطحن",zh:"研磨不一致"}],
+        defectNotes: [{en:"Phenolic/Medicinal",ar:"فينولي/طبي",zh:"药味/酚味"},{en:"Rubbery",ar:"مطاطي",zh:"橡胶味"},{en:"Musty/Moldy",ar:"عفن/متعفن",zh:"霉味"},{en:"Smoky/Ashy",ar:"دخاني/رمادي",zh:"烟灰味"},{en:"Sour/Ferment",ar:"حامض/تخمّر",zh:"酸败/发酵"},{en:"Dirty",ar:"وسخ",zh:"脏味"},{en:"Baggy",ar:"خيش/شنطة",zh:"麻袋味"},{en:"Stale",ar:"قديم/بايت",zh:"陈旧"}]
       };
 
       function chipColorForText(txt){
         const s = String(txt||"").toLowerCase();
         const has = (k)=> s.indexOf(k) !== -1;
-        if (has("floral")||has("زهري")) return "#7c3aed";
-        if (has("fruity")||has("berry")||has("tropical")||has("فاكهي")||has("توت")||has("استوائي")) return "#e11d48";
-        if (has("citrus")||has("lemon")||has("حمض")||has("حمضيات")||has("ليمون")) return "#f97316";
-        if (has("sweet")||has("honey")||has("vanilla")||has("caramel")||has("brown sugar")||has("molasses")||has("candy")||has("حلو")||has("عسل")||has("فانيلا")||has("كراميل")||has("سكر")||has("دبس")||has("حلوى")) return "#b45309";
-        if (has("nutty")||has("cocoa")||has("chocolate")||has("مكسرات")||has("كاكاو")||has("شوكولاتة")) return "#7c2d12";
-        if (has("spices")||has("بهارات")) return "#b91c1c";
-        if (has("green")||has("herbal")||has("vegetative")||has("أخضر")||has("أعشاب")||has("نباتي")) return "#15803d";
-        if (has("roasted")||has("smoky")||has("ashy")||has("bitter")||has("محمص")||has("دخاني")||has("رمادي")||has("مر")) return "#374151";
-        if (has("sour")||has("ferment")||has("حامض")||has("مخمّر")||has("تخمّر")) return "#0f766e";
-        if (has("earthy")||has("musty")||has("moldy")||has("dirty")||has("ترابي")||has("عفن")||has("وسخ")) return "#4d7c0f";
-        if (has("woody")||has("baggy")||has("papery")||has("stale")||has("خشبي")||has("خيش")||has("ورقي")||has("قديم")) return "#334155";
-        if (has("silky")||has("creamy")||has("velvety")||has("syrupy")||has("round")||has("watery")||has("drying")||has("astringent")||has("حريري")||has("كريمي")||has("مخملي")||has("شرابي")||has("مستدير")||has("مائي")||has("يجفف")||has("قابض")) return "#1d4ed8";
+        if (has("floral")||has("زهري")||has("花")) return "#7c3aed";
+        if (has("fruity")||has("berry")||has("tropical")||has("فاكهي")||has("توت")||has("استوائي")||has("果")||has("莓")||has("热带")) return "#e11d48";
+        if (has("citrus")||has("lemon")||has("حمض")||has("حمضيات")||has("ليمون")||has("柑橘")||has("柠檬")) return "#f97316";
+        if (has("sweet")||has("honey")||has("vanilla")||has("caramel")||has("brown sugar")||has("molasses")||has("candy")||has("حلو")||has("عسل")||has("فانيلا")||has("كراميل")||has("سكر")||has("دبس")||has("حلوى")||has("甜")||has("焦糖")||has("红糖")||has("蜂蜜")||has("香草")) return "#b45309";
+        if (has("nutty")||has("cocoa")||has("chocolate")||has("مكسرات")||has("كاكاو")||has("شوكولاتة")||has("坚果")||has("可可")||has("巧克力")) return "#7c2d12";
+        if (has("spices")||has("بهارات")||has("香料")) return "#b91c1c";
+        if (has("green")||has("herbal")||has("vegetative")||has("أخضر")||has("أعشاب")||has("نباتي")||has("草")||has("青")) return "#15803d";
+        if (has("roasted")||has("smoky")||has("ashy")||has("bitter")||has("محمص")||has("دخاني")||has("رمادي")||has("مر")||has("烘")||has("烟")||has("苦")) return "#374151";
+        if (has("sour")||has("ferment")||has("حامض")||has("مخمّر")||has("تخمّر")||has("酸")||has("发酵")) return "#0f766e";
+        if (has("earthy")||has("musty")||has("moldy")||has("dirty")||has("ترابي")||has("عفن")||has("وسخ")||has("泥")||has("霉")||has("脏")) return "#4d7c0f";
+        if (has("woody")||has("baggy")||has("papery")||has("stale")||has("خشبي")||has("خيش")||has("ورقي")||has("قديم")||has("木")||has("麻袋")||has("纸")||has("陈旧")) return "#334155";
+        if (has("silky")||has("creamy")||has("velvety")||has("syrupy")||has("round")||has("watery")||has("drying")||has("astringent")||has("حريري")||has("كريمي")||has("مخملي")||has("شرابي")||has("مستدير")||has("مائي")||has("يجفف")||has("قابض")||has("丝滑")||has("奶油")||has("糖浆")||has("圆润")||has("水")||has("干涩")||has("收敛")) return "#1d4ed8";
         return "#111827";
       }
 
@@ -859,7 +911,7 @@
 
       let state = { lang:"en", tables:[newTable("Table A")], currentTable:0, currentRound:0 };
 
-      const LS_KEY = "sci_cupping_form_v11_export_print_menuFix";
+      const LS_KEY = "sci_cupping_form_v12_langDropdown_cn";
 
       function tryLoadFromLocalStorage(){
         try{
@@ -872,7 +924,7 @@
         }catch(e){ return false; }
       }
 
-      // Keep share URL machinery (even if you removed buttons) so old links still open
+      // Keep share URL machinery so old links still open
       function b64urlEncode(str){
         const b64 = btoa(unescape(encodeURIComponent(str)));
         return repAll(repAll(repAll(b64, "+","-"), "/","_"), "=","");
@@ -906,7 +958,6 @@
       function getCurrentTable(){ return state.tables[state.currentTable]; }
       function getCurrentRound(){ return getCurrentTable().rounds[state.currentRound]; }
 
-      // ---------- Menu ----------
       function openMenu(){ $("menuPanel").classList.add("open"); $("btnMenu").setAttribute("aria-expanded","true"); }
       function closeMenu(){ $("menuPanel").classList.remove("open"); $("btnMenu").setAttribute("aria-expanded","false"); }
       function toggleMenu(){
@@ -981,22 +1032,22 @@
         return wrap;
       }
 
-      // ---------- UI language ----------
       function updateTimerLang(){
         const t = UI[lang];
-        if(timerLabel) timerLabel.textContent = t.timer;
-        if(btnStart) btnStart.textContent = t.tStart;
-        if(btnPause) btnPause.textContent = t.tPause;
-        if(btnReset) btnReset.textContent = t.tReset;
+        safeSetText("timerLabel", t.timer);
+        safeSetText("btnTimerStart", t.tStart);
+        safeSetText("btnTimerPause", t.tPause);
+        safeSetText("btnTimerReset", t.tReset);
       }
 
       function applyLang(){
-        document.documentElement.lang = (lang==="ar")?"ar":"en";
-        document.documentElement.dir  = (lang==="ar")?"rtl":"ltr";
-        document.body.dir             = (lang==="ar")?"rtl":"ltr";
+        // direction rules: Arabic is RTL, English & Chinese are LTR
+        const dir = (lang==="ar") ? "rtl" : "ltr";
+        document.documentElement.lang = (lang==="zh") ? "zh" : lang;
+        document.documentElement.dir  = dir;
+        document.body.dir             = dir;
 
         const t = UI[lang];
-        safeSetText("btnLang", t.lang);
         safeSetText("btnPrint", t.print);
         safeSetText("btnExportReport", t.export);
         safeSetText("btnAddSample", t.add);
@@ -1016,6 +1067,10 @@
         safeSetText("expDone", t.done);
 
         updateTimerLang();
+
+        // sync dropdown selection
+        const selLang = $("selLang");
+        if(selLang) selLang.value = lang;
       }
 
       function rebuildSelectors(){
@@ -1203,7 +1258,7 @@
 
           if(sObj.history && sObj.history.length){
             const last = sObj.history[sObj.history.length - 1];
-            hist.textContent = `${last.from.toFixed(2)}→${last.toFixed ? last.toFixed(2) : Number(last.to).toFixed(2)}`;
+            hist.textContent = `${Number(last.from).toFixed(2)}→${Number(last.to).toFixed(2)}`;
           }else{
             hist.textContent = "";
           }
@@ -1407,7 +1462,7 @@
         updateTotals();
       }
 
-      // ---------- STAR GRAPH EXPORT (SVG) ----------
+      // ---------- STAR GRAPH EXPORT ----------
       function buildStarSvg(sampleIdx){
         const t = UI[lang];
         const rd = getCurrentRound();
@@ -1424,7 +1479,7 @@
           if(ax.key === "uniformityScore") return tot.uniformityScore;
           if(ax.key === "defectScore") return tot.defectScore;
           const obj = s[ax.key];
-          return (obj && obj.scored) ? Number(obj.score||0) : 0; // unscored=0
+          return (obj && obj.scored) ? Number(obj.score||0) : 0;
         }
 
         const W=520, H=520;
@@ -1433,14 +1488,11 @@
         const n=axes.length;
 
         const ringVals = [2,4,6,8,10];
-
         function pt(angle, r){
           return [cx + Math.cos(angle)*r, cy + Math.sin(angle)*r];
         }
-
         const startAngle = -Math.PI/2;
 
-        // polygon points
         const poly = axes.map((ax,i)=>{
           const v = Math.max(0, Math.min(10, getValue(ax)));
           const r = (v/10)*R;
@@ -1449,11 +1501,9 @@
           return p[0].toFixed(1)+","+p[1].toFixed(1);
         }).join(" ");
 
-        // build svg
         let svg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
         svg += `<rect x="0" y="0" width="${W}" height="${H}" fill="#fff"/>`;
 
-        // rings
         ringVals.forEach(rv=>{
           const rr = (rv/10)*R;
           const ringPts = axes.map((ax,i)=>{
@@ -1464,7 +1514,6 @@
           svg += `<polygon points="${ringPts}" fill="none" stroke="#cfcfcf" stroke-width="1"/>`;
         });
 
-        // spokes + labels
         axes.forEach((ax,i)=>{
           const a = startAngle + (i*(2*Math.PI/n));
           const p0 = pt(a, 0);
@@ -1474,14 +1523,11 @@
           const labelPos = pt(a, R+44);
           const anchor = (Math.cos(a) > 0.25) ? "start" : (Math.cos(a) < -0.25 ? "end" : "middle");
           const dy = (Math.sin(a) > 0.25) ? 14 : (Math.sin(a) < -0.25 ? -6 : 4);
-          const txt = escHtml(ax.label);
-          svg += `<text x="${labelPos[0].toFixed(1)}" y="${(labelPos[1]+dy).toFixed(1)}" font-size="12" font-weight="700" fill="#111" text-anchor="${anchor}">${txt}</text>`;
+          svg += `<text x="${labelPos[0].toFixed(1)}" y="${(labelPos[1]+dy).toFixed(1)}" font-size="12" font-weight="700" fill="#111" text-anchor="${anchor}">${escHtml(ax.label)}</text>`;
         });
 
-        // polygon (data)
         svg += `<polygon points="${poly}" fill="rgba(15,118,110,.18)" stroke="#0f766e" stroke-width="2"/>`;
 
-        // dots
         axes.forEach((ax,i)=>{
           const v = Math.max(0, Math.min(10, getValue(ax)));
           const r = (v/10)*R;
@@ -1490,7 +1536,6 @@
           svg += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.2" fill="#0f766e"/>`;
         });
 
-        // title block
         const title = (s.sampleNo && s.sampleNo.trim()) ? s.sampleNo.trim() : `${t.sample} ${sampleIdx+1}`;
         const meta1 = `${t.tableSel}: ${state.tables[state.currentTable].name}  •  ${t.roundSel}: ${getCurrentRound().name}`;
         const meta2 = `${t.total}: ${tot.total.toFixed(2)}`;
@@ -1509,7 +1554,6 @@
         ov.classList.add("open");
         ov.setAttribute("aria-hidden","false");
 
-        // populate sample picker
         const pick = $("expPick");
         const rd = getCurrentRound();
         pick.innerHTML = "";
@@ -1537,7 +1581,6 @@
         const { svg, tot, title } = buildStarSvg(sampleIdx);
         $("starWrap").innerHTML = svg;
 
-        // notes summary
         const rd = getCurrentRound();
         const s = rd.samples[sampleIdx];
         const lines = [];
@@ -1545,7 +1588,6 @@
         lines.push(`${escHtml(UI[lang].total)}: <b>${tot.total.toFixed(2)}</b>`);
         lines.push(`${escHtml(UI[lang].uniformity)}: ${tot.uniformityScore.toFixed(2)} • ${escHtml(UI[lang].defect)}: ${tot.defectScore.toFixed(2)}`);
 
-        // include notes per attribute if present
         ATTRS.forEach(a=>{
           const obj = s[a.key];
           const val = (obj && obj.scored) ? Number(obj.score).toFixed(2) : "0.00";
@@ -1555,7 +1597,6 @@
           }
         });
 
-        // uniformity/defect notes
         if(s.uniformityNotes && s.uniformityNotes.trim()){
           lines.push(`<div style="margin-top:6px;"><b>${escHtml(UI[lang].uniformity)}</b>: ${escHtml(s.uniformityNotes.trim())}</div>`);
         }
@@ -1567,13 +1608,14 @@
         $("expMeta").textContent = `${UI[lang].total}: ${tot.total.toFixed(2)}`;
       }
 
-      // ---------- Buttons wiring ----------
+      // ---------- Wiring ----------
       $("btnMenu").addEventListener("click", (e)=>{ e.stopPropagation(); toggleMenu(); });
       document.addEventListener("click", ()=> closeMenu());
       $("menuPanel").addEventListener("click", (e)=> e.stopPropagation());
 
-      $("btnLang").addEventListener("click", ()=>{
-        lang = (lang==="en") ? "ar" : "en";
+      // ✅ language selector
+      $("selLang").addEventListener("change", ()=>{
+        lang = $("selLang").value; // en / ar / zh
         state.lang = lang;
         scheduleAutoSave();
         renderAll();
@@ -1609,10 +1651,7 @@
       }
       $("btnSession").addEventListener("click", ()=> setSession(!sessionMode));
 
-      // ✅ re-activated print page
       $("btnPrint").addEventListener("click", ()=> window.print());
-
-      // ✅ re-activated export star graph (printable as PDF)
       $("btnExportReport").addEventListener("click", ()=>{
         openExportModal();
         closeMenu();
@@ -1620,9 +1659,7 @@
 
       $("expClose").addEventListener("click", closeExportModal);
       $("expDone").addEventListener("click", closeExportModal);
-
       $("expPrintPdf").addEventListener("click", ()=>{
-        // Print ONLY the modal content as PDF
         document.body.classList.add("print-star");
         window.print();
         setTimeout(()=> document.body.classList.remove("print-star"), 250);
@@ -1668,7 +1705,6 @@
         renderAll();
       });
 
-      // Timer buttons
       if(btnStart){
         btnStart.addEventListener("click", async ()=>{
           await ensureAudio();
@@ -1677,27 +1713,28 @@
       }
       if(btnPause) btnPause.addEventListener("click", timerPause);
       if(btnReset) btnReset.addEventListener("click", timerReset);
-      timerUpdate();
 
-      // ---------- Boot load order ----------
+      // ---------- Boot load ----------
       const loadedFromUrl = tryLoadFromUrl();
       if(!loadedFromUrl) tryLoadFromLocalStorage();
       lang = state.lang || "en";
 
+      // set lang dropdown options selected
+      $("selLang").value = lang;
+
       renderAll();
       setSession(false);
+      timerUpdate();
 
       if(VIEW_ONLY){
         document.querySelectorAll("input,textarea,select").forEach(el=> el.disabled = true);
-        $("btnLang").disabled = false;
+        // allow language switching and export/print and timer even in view-only
+        $("selLang").disabled = false;
         $("btnMenu").disabled = false;
         $("btnSession").disabled = false;
-
         $("btnTimerStart").disabled = false;
         $("btnTimerPause").disabled = false;
         $("btnTimerReset").disabled = false;
-
-        // still allow export + print in view-only:
         $("btnExportReport").disabled = false;
         $("btnPrint").disabled = false;
       }
