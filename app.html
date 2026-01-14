@@ -1,10 +1,14 @@
-<!-- app.html (FULL UPDATED) -->
+<!-- app.html (FULL VERSION with Session Mode + Invite Link + QR + HOST Session Results Overlay) -->
 <!doctype html>
 <html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SCI Cupping Form (Cloud)</title>
+  <title>SCI Cupping Form (Cloud + Sessions)</title>
+
+  <!-- QR library -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
   <style>
     :root{
       --ink:#1a2a2a;
@@ -42,7 +46,6 @@
     }
     .errorBox.open{display:block}
 
-    /* Toolbar (NOT sticky) */
     .toolbar{
       display:flex;
       justify-content:space-between;
@@ -113,7 +116,7 @@
       position:absolute;
       top:50px;
       right:0;
-      min-width:280px;
+      min-width:320px;
       background:#fff;
       border:1px solid #ddd;
       border-radius:12px;
@@ -139,11 +142,23 @@
     body[dir="rtl"] .menuPanel button{text-align:right}
     .menuPanel button:hover{background:#f2f2f2}
     .menuSep{height:1px;background:#e5e5e5;margin:6px 4px;border-radius:999px}
-    .menuNote{padding:8px 10px;color:var(--muted);font-size:11px;line-height:1.3}
-
+    .menuNote{padding:8px 10px;color:var(--muted);font-size:11px;line-height:1.35}
+    .menuBadge{
+      display:inline-flex;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid #ddd;
+      background:#fafafa;
+      font-size:11px;
+      font-weight:1100;
+      margin-inline-start:8px;
+      color:#374151;
+      white-space:nowrap;
+    }
+    .menuBadge.ok{border-color:rgba(15,118,110,.35);background:rgba(15,118,110,.08);color:var(--ok)}
+    .menuBadge.bad{border-color:rgba(185,28,28,.35);background:rgba(185,28,28,.08);color:var(--bad)}
     .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}
 
-    /* Sticky timer only */
     .timerDock{
       position:sticky;
       top:10px;
@@ -183,7 +198,7 @@
     .sample{
       border:2px solid var(--line);
       padding:0;
-      min-height:920px;
+      min-height:940px;
       display:flex;flex-direction:column;
       background:#fff;
       border-radius:10px;
@@ -207,38 +222,44 @@
       border:0;border-bottom:1px solid var(--ink);
       outline:none;font-size:13px;padding:6px 6px;width:100%;
     }
+    .metaGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:6px;
+      margin-top:4px;
+    }
+    .metaGrid input[disabled]{opacity:.85;cursor:not-allowed}
 
     .scorebox{
       width:240px;border:2px solid var(--line);
       padding:8px;border-radius:10px;
       display:flex;flex-direction:column;gap:6px;align-items:stretch;background:#fff;
     }
-    .scorebox .lbl{font-size:11px;color:#333;font-weight:1000;text-align:center}
+    .scorebox .lbl{font-size:11px;color:#333;font-weight:1100;text-align:center}
     .scorebox .total{
       font-size:22px;font-weight:1100;text-align:center;
       border-top:1px solid #999;padding-top:6px;
     }
     .scorebox .subtot{
-      font-size:11px;color:#222;font-weight:1000;line-height:1.35;
+      font-size:11px;color:#222;font-weight:1100;line-height:1.35;
       border-top:1px dashed #aaa;padding-top:6px;margin-top:2px;
     }
     .scorebox .flags{
       display:flex;gap:8px;justify-content:space-between;align-items:center;
       border-top:1px dashed #aaa;padding-top:6px;margin-top:2px;
-      font-size:11px;font-weight:1000;color:#333;
+      font-size:11px;font-weight:1100;color:#333;
       flex-wrap:wrap;
     }
     .scorebox .badge{
       padding:4px 8px;border-radius:999px;border:1px solid #ddd;background:#fafafa;
-      font-size:11px;font-weight:1100;
-      white-space:nowrap;
+      font-size:11px;font-weight:1100;white-space:nowrap;
     }
     .badge.ok{border-color:rgba(15,118,110,.35); background:rgba(15,118,110,.08); color:var(--ok)}
     .badge.warn{border-color:rgba(180,83,9,.35); background:rgba(180,83,9,.08); color:var(--warn)}
     .badge.bad{border-color:rgba(185,28,28,.35); background:rgba(185,28,28,.08); color:var(--bad)}
     .scorebox .checkroast{
       display:flex;align-items:center;justify-content:center;gap:8px;
-      font-size:11px;font-weight:1000;color:#333;margin-top:4px;
+      font-size:11px;font-weight:1100;color:#333;margin-top:4px;
     }
     .scorebox input[type="checkbox"]{width:18px;height:18px}
 
@@ -265,15 +286,13 @@
       display:flex;
       justify-content:space-between;
       font-size:9px;
-      font-weight:1000;
+      font-weight:1100;
       color:#444;
       letter-spacing:.1px;
       opacity:.95;
       padding-inline:2px;
     }
-    .rowhead .leftLabel{
-      display:flex;align-items:center;gap:8px;flex-wrap:wrap;
-    }
+    .rowhead .leftLabel{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
     .miniTag{
       font-size:10px;font-weight:1100;color:var(--muted);
       border:1px solid #e5e7eb;background:#f9fafb;border-radius:999px;
@@ -337,13 +356,7 @@
     .ticks{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#222}
     .ticks span{min-width:16px;text-align:center}
 
-    .notes{
-      margin-top:8px;
-      display:grid;
-      grid-template-columns: 44px 1fr;
-      gap:8px;
-      align-items:start;
-    }
+    .notes{margin-top:8px;display:grid;grid-template-columns: 44px 1fr;gap:8px;align-items:start}
     .notes label{font-size:11px;font-weight:1100;color:#333}
     .notes textarea{
       width:100%;min-height:44px;resize:vertical;
@@ -351,31 +364,10 @@
       outline:none;padding:8px 8px 0 8px;font-size:12px;
     }
 
-    /* Helpers */
-    .helperWrap{
-      margin-top:8px;
-      padding-left:52px;
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
+    .helperWrap{margin-top:8px;padding-left:52px;display:flex;flex-direction:column;gap:8px}
     body[dir="rtl"] .helperWrap{padding-left:0;padding-right:52px}
-
-    .helperLabels{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      margin-top:2px;
-    }
-    .helperLabels .hl{
-      font-size:10px;
-      font-weight:1100;
-      color:var(--muted);
-      letter-spacing:.2px;
-      text-transform:uppercase;
-    }
-
+    .helperLabels{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:2px}
+    .helperLabels .hl{font-size:10px;font-weight:1100;color:var(--muted);letter-spacing:.2px;text-transform:uppercase}
     .catRow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
     .subRow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
     .chip{
@@ -388,11 +380,10 @@
       user-select:none;
       min-height:34px;
       display:flex;align-items:center;
-      font-weight:1000;
+      font-weight:1100;
       background: rgba(0,0,0,.02);
     }
     .chip:hover{ background: rgba(0,0,0,.06); }
-
     .chip.cat{padding:7px 12px;font-size:12px;font-weight:1100}
     .chip.cat.active{
       background: rgba(0,0,0,.08);
@@ -400,11 +391,7 @@
     }
 
     .circles{display:flex;gap:10px;align-items:center}
-    .circle{
-      width:18px;height:18px;border-radius:50%;
-      border:2px solid var(--ink);
-      background:#fff;cursor:pointer;
-    }
+    .circle{width:18px;height:18px;border-radius:50%;border:2px solid var(--ink);background:#fff;cursor:pointer}
     .circle.on{background:var(--ink)}
 
     .bottomRow{
@@ -416,10 +403,7 @@
       border-top:2px solid var(--line);
     }
     .bottomItem{border:1px solid #bbb;border-radius:10px;padding:10px}
-    .bottomTitle{
-      display:flex;justify-content:space-between;align-items:center;
-      font-size:12px;font-weight:1100;margin-bottom:8px;
-    }
+    .bottomTitle{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:1100;margin-bottom:8px}
     .bigcircles .circle{width:20px;height:20px}
 
     .overlay{
@@ -429,25 +413,41 @@
     }
     .overlay.open{display:flex}
     .modal{
-      width:min(920px, 98vw);
+      width:min(980px, 98vw);
       background:#fff;border:1px solid #ddd;border-radius:16px;
       box-shadow:0 18px 60px rgba(0,0,0,.22);
       overflow:hidden;
     }
-    .modalHead{
-      display:flex;justify-content:space-between;align-items:center;
-      padding:10px 12px;border-bottom:1px solid #eee;
-      background:#fafafa;
-    }
+    .modalHead{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid #eee;background:#fafafa}
     .modalHead .title{font-weight:1100}
     .modalBody{padding:12px; max-height:78vh; overflow:auto}
     .modalFoot{
       padding:10px 12px;border-top:1px solid #eee;background:#fafafa;
       display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;
     }
-    .card{
-      border:1px solid #e5e7eb;border-radius:14px;padding:10px;background:#fff;
+    .card{border:1px solid #e5e7eb;border-radius:14px;padding:10px;background:#fff}
+    .row2{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .inp{
+      padding:10px;border:1px solid #ddd;border-radius:12px;font:inherit;min-width:220px;
+      outline:none;
     }
+    .inp:focus{border-color:#9ca3af}
+    .small{font-size:12px;color:#374151;line-height:1.35}
+    .copyBox{width:100%;padding:10px;border:1px solid #ddd;border-radius:12px;font:inherit;outline:none}
+    .qrBox{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;justify-content:center;margin-top:12px}
+    canvas{image-rendering:pixelated}
+
+    /* Results tables */
+    table{border-collapse:separate;border-spacing:0;width:100%}
+    th,td{border-bottom:1px solid #eee;padding:8px 8px;font-size:12px;vertical-align:top}
+    th{background:#fafafa;text-align:left;font-weight:1100;position:sticky;top:0;z-index:2}
+    body[dir="rtl"] th, body[dir="rtl"] td{text-align:right}
+    .kpi{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .kpi .pill{min-height:34px;font-size:11px}
+    .dim{color:var(--muted);font-weight:900}
+    .hiVar{color:#b91c1c;font-weight:1100}
+    .midVar{color:#b45309;font-weight:1100}
+    .loVar{color:#0f766e;font-weight:1100}
 
     @media (max-width: 900px){
       .page{padding:10px}
@@ -459,11 +459,7 @@
         -webkit-overflow-scrolling: touch;
         padding-bottom:8px;
       }
-      .sample{
-        flex:0 0 92%;
-        scroll-snap-align: start;
-        min-height:unset;
-      }
+      .sample{flex:0 0 92%;scroll-snap-align: start;min-height:unset}
       .header{flex-direction:column;align-items:flex-start}
       .brand{text-align:left}
       .timerDock{ top:8px; }
@@ -484,6 +480,8 @@
     body[dir="rtl"] .sample .toprow input{ text-align:right; }
     body[dir="rtl"] .toolbar{direction:rtl}
     body[dir="rtl"] .menuPanel{ right:auto; left:0; }
+    body[dir="rtl"] .modalHead{flex-direction:row-reverse}
+    body[dir="rtl"] .modalFoot{justify-content:flex-start}
 
     @media print{
       body.print-star *{ visibility:hidden !important; }
@@ -493,6 +491,15 @@
       body.print-star .modal{ box-shadow:none !important; border:0 !important; width:100% !important; height:100% !important; border-radius:0 !important; }
       body.print-star .modalHead, body.print-star .modalFoot{ display:none !important; }
       body.print-star .modalBody{ max-height:none !important; overflow:visible !important; padding:20px !important; }
+
+      body.print-results *{ visibility:hidden !important; }
+      body.print-results #overlayResults,
+      body.print-results #overlayResults *{ visibility:visible !important; }
+      body.print-results #overlayResults{ position:fixed; inset:0; background:#fff !important; }
+      body.print-results .modal{ box-shadow:none !important; border:0 !important; width:100% !important; height:100% !important; border-radius:0 !important; }
+      body.print-results .modalHead, body.print-results .modalFoot{ display:none !important; }
+      body.print-results .modalBody{ max-height:none !important; overflow:visible !important; padding:20px !important; }
+      body.print-results th{position:static !important}
     }
   </style>
 </head>
@@ -501,7 +508,6 @@
   <div class="page">
     <div id="err" class="errorBox"></div>
 
-    <!-- Toolbar NOT sticky -->
     <div class="toolbar">
       <div class="toolbar-left">
         <span class="pill langPill" title="Language">
@@ -516,6 +522,16 @@
           <span style="font-weight:1100;">User:</span>
           <span id="userEmail" class="mono"></span>
         </span>
+
+        <span class="pill" id="sessionPill" style="display:none;">
+          <span id="sessionLabel" style="font-weight:1100;">Session</span>
+          <span id="sessionIdTxt" class="mono"></span>
+        </span>
+
+        <span class="pill" id="hostPill" style="display:none;">
+          <span style="font-weight:1100;">Host</span>
+          <span class="menuBadge ok">✓</span>
+        </span>
       </div>
 
       <div class="menuWrap">
@@ -524,7 +540,11 @@
           <div class="menuNote" id="menuHint"></div>
 
           <button id="btnCloudSave" type="button" role="menuitem">Save to Cloud</button>
-          <button id="btnCloudHistory" type="button" role="menuitem">Cloud History</button>
+
+          <button id="btnCloudHistory" type="button" role="menuitem">
+            Cloud History
+            <span id="histBadge" class="menuBadge">user</span>
+          </button>
 
           <div class="menuSep"></div>
 
@@ -538,13 +558,24 @@
 
           <div class="menuSep"></div>
 
+          <button id="btnHostCreateSession" type="button" role="menuitem">
+            Create Session + Invite QR
+            <span class="menuBadge ok">host</span>
+          </button>
+
+          <button id="btnSessionResults" type="button" role="menuitem" style="display:none;">
+            Session Results (Host)
+            <span class="menuBadge ok">avg</span>
+          </button>
+
+          <div class="menuSep"></div>
+
           <button id="btnReset" type="button" role="menuitem">Reset current round</button>
           <button id="btnLogout" type="button" role="menuitem">Logout</button>
         </div>
       </div>
     </div>
 
-    <!-- Sticky timer only -->
     <div class="timerDock" aria-label="Timer Dock">
       <div class="pill" id="timerPill" style="gap:10px;">
         <span id="timerLabel" style="font-weight:1100;">Timer</span>
@@ -585,7 +616,7 @@
       <div class="modalBody">
         <div class="card" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
           <div style="font-weight:1100;" id="expPickLbl">Sample</div>
-          <select id="expPick" style="padding:10px;border:1px solid #ddd;border-radius:12px;font:inherit;min-width:220px;"></select>
+          <select id="expPick" class="inp" style="min-width:220px;"></select>
           <div class="mono" id="expMeta" style="color:#374151;font-size:12px;"></div>
         </div>
 
@@ -618,11 +649,130 @@
     </div>
   </div>
 
+  <!-- Session Invite (Link + QR) -->
+  <div class="overlay" id="overlayInvite" aria-hidden="true">
+    <div class="modal">
+      <div class="modalHead">
+        <div class="title" id="invTitle">Session Invite</div>
+        <button class="ghostBtn" id="invClose" type="button" style="min-height:38px;padding:8px 10px;">✕</button>
+      </div>
+      <div class="modalBody">
+        <div class="card">
+          <div class="small" id="invDesc">
+            Share this link (or QR). Cuppers will see the same sample numbers and origins you entered.
+          </div>
+          <div style="margin-top:10px;">
+            <div class="small" style="font-weight:1100;margin-bottom:6px;">Invite Link</div>
+            <input id="invLink" class="copyBox mono" readonly />
+          </div>
+
+          <div class="row2" style="margin-top:10px;">
+            <button id="invCopy" class="ghostBtn" type="button">Copy link</button>
+            <button id="invOpen" class="ghostBtn" type="button">Open link</button>
+          </div>
+
+          <div class="qrBox">
+            <div class="card" style="padding:12px; display:flex; flex-direction:column; align-items:center; gap:8px;">
+              <div class="small" style="font-weight:1100;">QR</div>
+              <canvas id="invQr" width="240" height="240"></canvas>
+              <div class="small mono" id="invMeta"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modalFoot">
+        <button class="primaryBtn" id="invDone" type="button">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOST Session Results -->
+  <div class="overlay" id="overlayResults" aria-hidden="true">
+    <div class="modal">
+      <div class="modalHead">
+        <div class="title" id="resTitle">Session Results</div>
+        <button class="ghostBtn" id="resClose" type="button" style="min-height:38px;padding:8px 10px;">✕</button>
+      </div>
+      <div class="modalBody">
+        <div class="card">
+          <div class="row2" style="justify-content:space-between;">
+            <div class="kpi">
+              <span class="pill"><span style="font-weight:1100;" id="resSessLbl">Session</span> <span id="resSessId" class="mono"></span></span>
+              <span class="pill"><span style="font-weight:1100;" id="resCuppersLbl">Cuppers</span> <span id="resCuppers" class="mono"></span></span>
+              <span class="pill"><span style="font-weight:1100;" id="resSamplesLbl">Samples</span> <span id="resSamples" class="mono"></span></span>
+            </div>
+            <div class="row2">
+              <button id="resRefresh" class="ghostBtn" type="button">Refresh</button>
+              <button id="resPrint" class="ghostBtn" type="button">Print PDF</button>
+            </div>
+          </div>
+
+          <div class="row2" style="margin-top:10px;">
+            <div style="font-weight:1100;" id="resPickLbl">Sample</div>
+            <select id="resPick" class="inp" style="min-width:240px;"></select>
+            <div class="mono" id="resSampleMeta" style="color:#374151;font-size:12px;"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:10px;">
+          <div style="display:flex;justify-content:center;" id="resStarWrap"></div>
+          <div class="small" id="resStarMeta" style="margin-top:10px;"></div>
+        </div>
+
+        <div class="card" style="margin-top:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div style="font-weight:1100;" id="resAttrTitle">Attributes (Average + Differences)</div>
+            <div class="small dim" id="resLegend">
+              Diff = StdDev • Range. Higher means more disagreement.
+            </div>
+          </div>
+          <div style="overflow:auto; margin-top:10px;">
+            <table>
+              <thead>
+                <tr>
+                  <th id="thAttr">Attribute</th>
+                  <th id="thAvg">Average</th>
+                  <th id="thStd">Diff (StdDev)</th>
+                  <th id="thRange">Range</th>
+                </tr>
+              </thead>
+              <tbody id="resAttrRows"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div style="font-weight:1100;" id="resCupperTitle">Cuppers (Totals)</div>
+            <div class="small dim" id="resCupperHint">
+              Totals include: Attributes + Uniformity + Defect.
+            </div>
+          </div>
+          <div style="overflow:auto; margin-top:10px;">
+            <table>
+              <thead>
+                <tr>
+                  <th id="thName">Name</th>
+                  <th id="thEmail">Email</th>
+                  <th id="thTotal">Total</th>
+                  <th id="thUpdated">Updated</th>
+                </tr>
+              </thead>
+              <tbody id="resCupperRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="modalFoot">
+        <button class="primaryBtn" id="resDone" type="button">Done</button>
+      </div>
+    </div>
+  </div>
+
 <script type="module">
 /* =======================
    Firebase (Auth + Cloud)
    ======================= */
-
 const firebaseConfig = {
   apiKey: "AIzaSyCwrhMSBFbmvzQXkzEgtHBZZecrdbCN7ZU",
   authDomain: "sci-cupping-form.firebaseapp.com",
@@ -651,17 +801,31 @@ import {
   query,
   orderBy,
   serverTimestamp,
-  deleteDoc
+  deleteDoc,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const fbApp = initializeApp(firebaseConfig);
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 
-// ✅ CRITICAL: persist auth session to stop login/app bouncing
+// Persist auth session
 await setPersistence(auth, browserLocalPersistence);
 
 let currentUser = null;
+
+/* =======================
+   Session Mode (from URL)
+   ======================= */
+const params = new URLSearchParams(location.search);
+const SESSION_ID = params.get("session");
+const INVITE_ID  = params.get("invite");
+
+let sessionMode = !!SESSION_ID;
+let sessionId = SESSION_ID || null;
+let inviteId = INVITE_ID || null;
+let sessionDoc = null; // {id, hostUid, title, table, samples[]...}
+let isHost = false;
 
 /* =======================
    App utilities
@@ -669,9 +833,13 @@ let currentUser = null;
 function $(id){ return document.getElementById(id); }
 function showErr(e){
   const box = $("err");
-  if(!box) return;
   box.classList.add("open");
   box.textContent = "Error:\n" + (e && e.stack ? e.stack : String(e));
+}
+function clearErr(){
+  const box = $("err");
+  box.classList.remove("open");
+  box.textContent = "";
 }
 function escHtml(s){
   return String(s ?? "")
@@ -693,6 +861,16 @@ function closeOverlay(id){
 }
 
 /* =======================
+   Menu
+   ======================= */
+function openMenu(){ $("menuPanel").classList.add("open"); $("btnMenu").setAttribute("aria-expanded","true"); }
+function closeMenu(){ $("menuPanel").classList.remove("open"); $("btnMenu").setAttribute("aria-expanded","false"); }
+function toggleMenu(){ $("menuPanel").classList.contains("open") ? closeMenu() : openMenu(); }
+$("btnMenu").addEventListener("click", (e)=>{ e.stopPropagation(); toggleMenu(); });
+document.addEventListener("click", ()=> closeMenu());
+$("menuPanel").addEventListener("click", (e)=> e.stopPropagation());
+
+/* =======================
    Language strings
    ======================= */
 let lang = "en";
@@ -706,6 +884,9 @@ const UI = {
     name: "NAME:",
     table: "TABLE:",
     sample: "SAMPLE #",
+    origin: "Origin",
+    process: "Process",
+    roastDate: "Roast date",
     total: "TOTAL SCORE",
     checkRoast: "CHECK ROAST",
     notes: "NOTES:",
@@ -728,7 +909,8 @@ const UI = {
     notScored: "Not scored",
     scored: "Scored",
     clear: "Clear",
-    menuHint: "Cloud save is manual. Local auto-save stays on this device.",
+    menuHint_user: "Cloud save is manual. Local auto-save stays on this device.",
+    menuHint_session: "Session mode: samples are locked (same numbers + origins). Save stores YOUR scores into the session.",
     expTitle:"Export Star Graph",
     expPick:"Sample",
     expPrint:"Print PDF",
@@ -746,7 +928,36 @@ const UI = {
     cat_roast:"Roasted",
     cat_green:"Green/Herbal",
     cat_earthy:"Earthy",
-    cat_ferment:"Fermented"
+    cat_ferment:"Fermented",
+    hist_user:"User",
+    hist_session:"Session",
+    hostCreateTitle:"Create Session + Invite QR",
+    inviteTitle:"Session Invite",
+    inviteDesc:"Share this link (or QR). Cuppers will see the same sample numbers and origins you entered.",
+    copy:"Copy link",
+    open:"Open link",
+    savedUser:"Saved to cloud ✅",
+    savedSession:"Saved to session ✅",
+
+    resultsTitle:"Session Results",
+    resSession:"Session",
+    resCuppers:"Cuppers",
+    resSamples:"Samples",
+    resRefresh:"Refresh",
+    resPrint:"Print PDF",
+    resPick:"Sample",
+    resAttrTitle:"Attributes (Average + Differences)",
+    resLegend:"Diff = StdDev • Range. Higher means more disagreement.",
+    resCupperTitle:"Cuppers (Totals)",
+    resCupperHint:"Totals include: Attributes + Uniformity + Defect.",
+    thAttr:"Attribute",
+    thAvg:"Average",
+    thStd:"Diff (StdDev)",
+    thRange:"Range",
+    thName:"Name",
+    thEmail:"Email",
+    thTotal:"Total",
+    thUpdated:"Updated"
   },
   ar: {
     print: "طباعة الصفحة",
@@ -757,6 +968,9 @@ const UI = {
     name: "الاسم:",
     table: "الطاولة:",
     sample: "رقم العينة",
+    origin: "الأصل",
+    process: "المعالجة",
+    roastDate: "تاريخ التحميص",
     total: "المجموع",
     checkRoast: "فحص التحميص",
     notes: "ملاحظات:",
@@ -779,7 +993,8 @@ const UI = {
     notScored: "غير مُسجّل",
     scored: "مُسجّل",
     clear: "مسح",
-    menuHint: "الحفظ السحابي يدوي. الحفظ المحلي تلقائي على هذا الجهاز.",
+    menuHint_user: "الحفظ السحابي يدوي. الحفظ المحلي تلقائي على هذا الجهاز.",
+    menuHint_session: "وضع الجلسة: معلومات العينات مقفلة (نفس الأرقام + الأصل). الحفظ يسجل تقييمك داخل الجلسة.",
     expTitle:"تصدير الرسم النجمي",
     expPick:"العينة",
     expPrint:"طباعة PDF",
@@ -797,7 +1012,36 @@ const UI = {
     cat_roast:"محمّص",
     cat_green:"أخضر/أعشاب",
     cat_earthy:"ترابي",
-    cat_ferment:"مخمّر"
+    cat_ferment:"مخمّر",
+    hist_user:"مستخدم",
+    hist_session:"جلسة",
+    hostCreateTitle:"إنشاء جلسة + QR دعوة",
+    inviteTitle:"دعوة الجلسة",
+    inviteDesc:"شارك هذا الرابط أو QR. المقيمون سيشاهدون نفس أرقام العينات والأصل الذي أدخلته.",
+    copy:"نسخ الرابط",
+    open:"فتح الرابط",
+    savedUser:"تم الحفظ سحابيًا ✅",
+    savedSession:"تم حفظ تقييمك في الجلسة ✅",
+
+    resultsTitle:"نتائج الجلسة",
+    resSession:"الجلسة",
+    resCuppers:"المقيمون",
+    resSamples:"العينات",
+    resRefresh:"تحديث",
+    resPrint:"طباعة PDF",
+    resPick:"العينة",
+    resAttrTitle:"الخصائص (المتوسط + الاختلاف)",
+    resLegend:"الاختلاف = الانحراف المعياري • المدى. الأعلى يعني اختلاف أكبر بين المقيمين.",
+    resCupperTitle:"المقيمون (المجموع)",
+    resCupperHint:"المجموع يشمل: الخصائص + التجانس + العيوب.",
+    thAttr:"الخاصية",
+    thAvg:"المتوسط",
+    thStd:"الاختلاف (StdDev)",
+    thRange:"المدى",
+    thName:"الاسم",
+    thEmail:"البريد",
+    thTotal:"المجموع",
+    thUpdated:"آخر تحديث"
   },
   zh: {
     print: "打印页面",
@@ -808,6 +1052,9 @@ const UI = {
     name: "姓名：",
     table: "桌号：",
     sample: "样品编号",
+    origin: "产地",
+    process: "处理方式",
+    roastDate: "烘焙日期",
     total: "总分",
     checkRoast: "检查烘焙",
     notes: "备注：",
@@ -830,7 +1077,8 @@ const UI = {
     notScored: "未评分",
     scored: "已评分",
     clear: "清除",
-    menuHint: "云端保存为手动。此设备会自动本地保存。",
+    menuHint_user: "云端保存为手动。此设备会自动本地保存。",
+    menuHint_session: "会话模式：样品信息已锁定（同编号+产地）。保存会把你的评分写入会话。",
     expTitle:"导出星形图",
     expPick:"样品",
     expPrint:"打印 PDF",
@@ -848,7 +1096,36 @@ const UI = {
     cat_roast:"烘烤",
     cat_green:"青草/草本",
     cat_earthy:"泥土",
-    cat_ferment:"发酵"
+    cat_ferment:"发酵",
+    hist_user:"用户",
+    hist_session:"会话",
+    hostCreateTitle:"创建会话 + 邀请二维码",
+    inviteTitle:"会话邀请",
+    inviteDesc:"分享此链接或二维码。评测者将看到你输入的相同样品编号和产地信息。",
+    copy:"复制链接",
+    open:"打开链接",
+    savedUser:"已保存到云端 ✅",
+    savedSession:"已保存到会话 ✅",
+
+    resultsTitle:"会话结果",
+    resSession:"会话",
+    resCuppers:"评测者",
+    resSamples:"样品数",
+    resRefresh:"刷新",
+    resPrint:"打印 PDF",
+    resPick:"样品",
+    resAttrTitle:"属性（平均 + 差异）",
+    resLegend:"差异 = 标准差 • 范围。越高说明分歧越大。",
+    resCupperTitle:"评测者（总分）",
+    resCupperHint:"总分包含：属性 + 一致性 + 缺陷。",
+    thAttr:"属性",
+    thAvg:"平均",
+    thStd:"差异(StdDev)",
+    thRange:"范围",
+    thName:"姓名",
+    thEmail:"邮箱",
+    thTotal:"总分",
+    thUpdated:"更新时间"
   }
 };
 
@@ -1048,10 +1325,7 @@ function timerReset(){
   timerTick = null;
   timerUpdate();
 }
-btnStart.addEventListener("click", async ()=>{
-  await ensureAudio();
-  timerStart();
-});
+btnStart.addEventListener("click", async ()=>{ await ensureAudio(); timerStart(); });
 btnReset.addEventListener("click", timerReset);
 
 /* =======================
@@ -1060,6 +1334,9 @@ btnReset.addEventListener("click", timerReset);
 function newSampleState(){
   const obj = {
     sampleNo:'',
+    origin:'',
+    process:'',
+    roastDate:'',
     checkRoast:false,
     uniformity:[false,false,false,false,false],
     defect:[false,false,false,false,false],
@@ -1078,7 +1355,7 @@ let state = {
   samples:[newSampleState(), newSampleState(), newSampleState()]
 };
 
-const LS_KEY = "sci_cupping_cloud_v1";
+const LS_KEY = "sci_cupping_cloud_sessions_v2";
 let saveTimer=null;
 function scheduleLocalSave(){
   if(saveTimer) clearTimeout(saveTimer);
@@ -1100,7 +1377,8 @@ function tryLoadLocal(){
 /* =======================
    Scoring
    ======================= */
-function countTrue(arr){ return arr.reduce((n,v)=>n+(v?1:0),0); }
+function countTrue(arr){ return (arr||[]).reduce((n,v)=>n+(v?1:0),0); }
+function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
 function computeSampleTotals(sample){
   const attributesSum = ATTRS.reduce((sum,a)=>{
     const obj = sample[a.key];
@@ -1119,101 +1397,166 @@ function computeSampleTotals(sample){
 }
 
 /* =======================
-   Menu
+   Session helpers (IDs + URL)
    ======================= */
-function openMenu(){ $("menuPanel").classList.add("open"); $("btnMenu").setAttribute("aria-expanded","true"); }
-function closeMenu(){ $("menuPanel").classList.remove("open"); $("btnMenu").setAttribute("aria-expanded","false"); }
-function toggleMenu(){ $("menuPanel").classList.contains("open") ? closeMenu() : openMenu(); }
-
-$("btnMenu").addEventListener("click", (e)=>{ e.stopPropagation(); toggleMenu(); });
-document.addEventListener("click", ()=> closeMenu());
-$("menuPanel").addEventListener("click", (e)=> e.stopPropagation());
-
-/* =======================
-   Apply Language
-   ======================= */
-function applyLang(){
-  const dir = (lang==="ar") ? "rtl" : "ltr";
-  document.documentElement.lang = (lang==="zh") ? "zh" : lang;
-  document.documentElement.dir  = dir;
-  document.body.dir             = dir;
-
-  const t = UI[lang];
-  $("btnPrint").textContent = t.print;
-  $("btnExportReport").textContent = t.export;
-  $("btnAddSample").textContent = t.add;
-  $("btnRemoveSample").textContent = t.remove;
-  $("btnReset").textContent = t.reset;
-  $("lblName").textContent = t.name;
-  $("lblTable").textContent = t.table;
-  $("menuHint").textContent = t.menuHint;
-
-  $("timerLabel").textContent = t.timer;
-  $("btnTimerStart").textContent = t.tStart;
-  $("btnTimerReset").textContent = t.tReset;
-
-  $("expTitle").textContent = t.expTitle;
-  $("expPickLbl").textContent = t.expPick;
-  $("expPrintPdf").textContent = t.expPrint;
-  $("expDone").textContent = t.done;
-
-  $("selLang").value = lang;
+function genId(len=20){
+  const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let s="";
+  crypto.getRandomValues(new Uint8Array(len)).forEach(n=> s += chars[n % chars.length]);
+  return s;
+}
+function appBaseUrl(){
+  const base = location.origin + location.pathname.replace(/\/[^\/]*$/, "/");
+  return base + "app.html";
 }
 
 /* =======================
-   Render pieces
+   Session: create + invite + load
    ======================= */
-function renderBottomRow(sampleIdx, which){
-  const arr = state.samples[sampleIdx][which];
-  const host = document.querySelector(`[data-bottom="${sampleIdx}.${which}"]`);
-  if(!host) return;
-  host.querySelectorAll(".circle").forEach((c,idx)=>{
-    c.classList.toggle("on", !!arr[idx]);
+async function createSessionOnCloud({title, table, samples}){
+  if(!currentUser) throw new Error("Not logged in");
+  const sid = genId(20);
+  const ref = doc(db, "sessions", sid);
+
+  await setDoc(ref, {
+    hostUid: currentUser.uid,
+    title: title || "Cupping Session",
+    table: table || "",
+    locked: true,
+    samples: samples || [],
+    createdAt: serverTimestamp()
   });
+
+  return sid;
+}
+async function createInvite(sessionId){
+  if(!currentUser) throw new Error("Not logged in");
+  const iid = genId(20);
+  const ref = doc(db, "sessions", sessionId, "invites", iid);
+  await setDoc(ref, { active:true, role:"cupper", createdAt: serverTimestamp() });
+  return iid;
+}
+async function loadSession(sessionId){
+  const ref = doc(db, "sessions", sessionId);
+  const snap = await getDoc(ref);
+  if(!snap.exists()) throw new Error("Session not found");
+  sessionDoc = { id: snap.id, ...snap.data() };
+  return sessionDoc;
+}
+async function validateInvite(sessionId, inviteId){
+  if(!inviteId) return true;
+  const ref = doc(db, "sessions", sessionId, "invites", inviteId);
+  const snap = await getDoc(ref);
+  if(!snap.exists()) throw new Error("Invite not found");
+  const data = snap.data();
+  if(!data.active) throw new Error("Invite is inactive");
+  return true;
 }
 
-function updateTotals(){
+function applySessionSamplesToState(){
+  if(!sessionDoc || !Array.isArray(sessionDoc.samples)) return;
+  state.samples = sessionDoc.samples.map((ss, idx)=>{
+    const base = newSampleState();
+    base.sampleNo = ss.sampleNo || ss.id || String(idx+1);
+    base.origin = ss.origin || "";
+    base.process = ss.process || "";
+    base.roastDate = ss.roastDate || "";
+    return base;
+  });
+  if(sessionDoc.table) state.tableField = sessionDoc.table;
+}
+
+function mergeScoreIntoState(scoreDoc){
+  if(!scoreDoc || !Array.isArray(scoreDoc.samples)) return;
   for(let i=0;i<state.samples.length;i++){
-    const tot = computeSampleTotals(state.samples[i]);
-    const totalEl = document.querySelector(`[data-total="${i}"]`);
-    const subEl   = document.querySelector(`[data-subtot="${i}"]`);
-    const uBadge  = document.querySelector(`[data-ubadge="${i}"]`);
-    const dBadge  = document.querySelector(`[data-dbadge="${i}"]`);
-    if(totalEl) totalEl.textContent = tot.total.toFixed(2);
-    if(subEl){
-      subEl.innerHTML =
-        `Attr: ${tot.attributesSum.toFixed(2)}<br>` +
-        `Uniformity: ${tot.uniformityScore.toFixed(2)} (10 - ${tot.uniChecks}×2)<br>` +
-        `Defect: ${tot.defectScore.toFixed(2)} (10 - ${tot.defChecks}×2)`;
-    }
-    if(uBadge){
-      uBadge.className = "badge " + (tot.uniformityScore >= 8 ? "ok" : (tot.uniformityScore >= 6 ? "warn" : "bad"));
-      uBadge.textContent = `${UI[lang].uniformity}: ${tot.uniformityScore.toFixed(2)}`;
-    }
-    if(dBadge){
-      dBadge.className = "badge " + (tot.defectScore >= 8 ? "ok" : (tot.defectScore >= 6 ? "warn" : "bad"));
-      dBadge.textContent = `${UI[lang].defect}: ${tot.defectScore.toFixed(2)}`;
-    }
+    const target = state.samples[i];
+    const src = scoreDoc.samples[i];
+    if(!src) continue;
+    ATTRS.forEach(a=>{ if(src[a.key]) target[a.key] = src[a.key]; });
+    if(Array.isArray(src.uniformity)) target.uniformity = src.uniformity;
+    if(Array.isArray(src.defect)) target.defect = src.defect;
+    if(typeof src.uniformityNotes === "string") target.uniformityNotes = src.uniformityNotes;
+    if(typeof src.defectNotes === "string") target.defectNotes = src.defectNotes;
+    if(typeof src.checkRoast === "boolean") target.checkRoast = src.checkRoast;
   }
 }
 
-function circleGroup(sampleIdx, attrKey){
-  const wrap = document.createElement("div");
-  wrap.className = "circles";
-  for(let i=1;i<=5;i++){
-    const c = document.createElement("div");
-    c.className = "circle";
-    c.addEventListener("click", ()=>{
-      state.samples[sampleIdx][attrKey].intensity = i;
-      const cs = wrap.querySelectorAll(".circle");
-      cs.forEach((x,idx)=> x.classList.toggle("on", idx < i));
-      scheduleLocalSave();
-    });
-    wrap.appendChild(c);
-  }
-  return wrap;
+async function loadMyScoreFromSession(){
+  if(!currentUser || !sessionDoc) return;
+  const ref = doc(db, "sessions", sessionDoc.id, "scores", currentUser.uid);
+  const snap = await getDoc(ref);
+  if(!snap.exists()) return;
+  mergeScoreIntoState(snap.data());
 }
 
+/* =======================
+   Cloud: User History (legacy)
+   ======================= */
+async function saveCurrentToUserCloud(){
+  if(!currentUser) throw new Error("Not logged in");
+  const cuppingsCol = collection(db, "users", currentUser.uid, "cuppings");
+  const title =
+    (state.tableField ? `Table ${state.tableField}` : "Cupping") +
+    (state.nameField ? ` – ${state.nameField}` : "");
+  const payload = { title, state, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
+  const ref = await addDoc(cuppingsCol, payload);
+  return ref.id;
+}
+async function listUserCuppings(){
+  if(!currentUser) throw new Error("Not logged in");
+  const cuppingsCol = collection(db, "users", currentUser.uid, "cuppings");
+  const q = query(cuppingsCol, orderBy("updatedAt","desc"));
+  const snap = await getDocs(q);
+  return snap.docs.map(d=>({ id:d.id, ...d.data() }));
+}
+async function loadUserCupping(id){
+  if(!currentUser) throw new Error("Not logged in");
+  const ref = doc(db, "users", currentUser.uid, "cuppings", id);
+  const snap = await getDoc(ref);
+  if(!snap.exists()) throw new Error("Not found");
+  const data = snap.data();
+  state = data.state;
+  lang = state.lang || lang;
+  renderAll();
+  scheduleLocalSave();
+}
+async function deleteUserCupping(id){
+  if(!currentUser) throw new Error("Not logged in");
+  const ref = doc(db, "users", currentUser.uid, "cuppings", id);
+  await deleteDoc(ref);
+}
+
+/* =======================
+   Cloud: Session score save
+   ======================= */
+async function saveMyScoreToSession(){
+  if(!currentUser) throw new Error("Not logged in");
+  if(!sessionDoc) throw new Error("Session not loaded");
+
+  const scoreSamples = state.samples.map(s=>{
+    const copy = structuredClone(s);
+    delete copy.sampleNo;
+    delete copy.origin;
+    delete copy.process;
+    delete copy.roastDate;
+    return copy;
+  });
+
+  const ref = doc(db, "sessions", sessionDoc.id, "scores", currentUser.uid);
+  await setDoc(ref, {
+    uid: currentUser.uid,
+    email: currentUser.email || "",
+    displayName: currentUser.displayName || "",
+    updatedAt: serverTimestamp(),
+    nameField: state.nameField || "",
+    tableField: state.tableField || "",
+    samples: scoreSamples
+  }, { merge:true });
+}
+
+/* =======================
+   Render helpers
+   ======================= */
 function makeChip(text, isCat=false){
   const chip = document.createElement("div");
   chip.className = "chip" + (isCat ? " cat" : "");
@@ -1221,7 +1564,6 @@ function makeChip(text, isCat=false){
   chip.style.color = chipColorForText(text);
   return chip;
 }
-
 function buildHelperUI(attrKey, textarea, sampleObj){
   const wrap = document.createElement("div");
   wrap.className = "helperWrap";
@@ -1284,6 +1626,57 @@ function buildHelperUI(attrKey, textarea, sampleObj){
   wrap.appendChild(catRow);
   wrap.appendChild(subRow);
   return wrap;
+}
+
+function circleGroup(sampleIdx, attrKey){
+  const wrap = document.createElement("div");
+  wrap.className = "circles";
+  for(let i=1;i<=5;i++){
+    const c = document.createElement("div");
+    c.className = "circle";
+    c.addEventListener("click", ()=>{
+      state.samples[sampleIdx][attrKey].intensity = i;
+      const cs = wrap.querySelectorAll(".circle");
+      cs.forEach((x,idx)=> x.classList.toggle("on", idx < i));
+      scheduleLocalSave();
+    });
+    wrap.appendChild(c);
+  }
+  return wrap;
+}
+
+function renderBottomRow(sampleIdx, which){
+  const arr = state.samples[sampleIdx][which];
+  const host = document.querySelector(`[data-bottom="${sampleIdx}.${which}"]`);
+  if(!host) return;
+  host.querySelectorAll(".circle").forEach((c,idx)=>{
+    c.classList.toggle("on", !!arr[idx]);
+  });
+}
+
+function updateTotals(){
+  for(let i=0;i<state.samples.length;i++){
+    const tot = computeSampleTotals(state.samples[i]);
+    const totalEl = document.querySelector(`[data-total="${i}"]`);
+    const subEl   = document.querySelector(`[data-subtot="${i}"]`);
+    const uBadge  = document.querySelector(`[data-ubadge="${i}"]`);
+    const dBadge  = document.querySelector(`[data-dbadge="${i}"]`);
+    if(totalEl) totalEl.textContent = tot.total.toFixed(2);
+    if(subEl){
+      subEl.innerHTML =
+        `Attr: ${tot.attributesSum.toFixed(2)}<br>` +
+        `Uniformity: ${tot.uniformityScore.toFixed(2)} (10 - ${tot.uniChecks}×2)<br>` +
+        `Defect: ${tot.defectScore.toFixed(2)} (10 - ${tot.defChecks}×2)`;
+    }
+    if(uBadge){
+      uBadge.className = "badge " + (tot.uniformityScore >= 8 ? "ok" : (tot.uniformityScore >= 6 ? "warn" : "bad"));
+      uBadge.textContent = `${UI[lang].uniformity}: ${tot.uniformityScore.toFixed(2)}`;
+    }
+    if(dBadge){
+      dBadge.className = "badge " + (tot.defectScore >= 8 ? "ok" : (tot.defectScore >= 6 ? "warn" : "bad"));
+      dBadge.textContent = `${UI[lang].defect}: ${tot.defectScore.toFixed(2)}`;
+    }
+  }
 }
 
 function sliderRow(sampleIdx, attr){
@@ -1410,10 +1803,7 @@ function sliderRow(sampleIdx, attr){
   notes.innerHTML = `<label>${escHtml(t.notes)}</label>`;
   const ta = document.createElement("textarea");
   ta.value = sObj.notes || "";
-  ta.addEventListener("input", ()=>{
-    sObj.notes = ta.value;
-    scheduleLocalSave();
-  });
+  ta.addEventListener("input", ()=>{ sObj.notes = ta.value; scheduleLocalSave(); });
   notes.appendChild(ta);
 
   row.appendChild(head);
@@ -1421,9 +1811,7 @@ function sliderRow(sampleIdx, attr){
   row.appendChild(ticks);
   row.appendChild(notes);
 
-  if(attr.helper){
-    row.appendChild(buildHelperUI(attr.key, ta, sObj));
-  }
+  if(attr.helper){ row.appendChild(buildHelperUI(attr.key, ta, sObj)); }
 
   const val = sObj.intensity || 0;
   circles.querySelectorAll(".circle").forEach((c,idx)=> c.classList.toggle("on", idx < val));
@@ -1431,9 +1819,7 @@ function sliderRow(sampleIdx, attr){
   if(sObj.history && sObj.history.length){
     const last = sObj.history[sObj.history.length - 1];
     hist.textContent = `${Number(last.from).toFixed(2)}→${Number(last.to).toFixed(2)}`;
-  } else {
-    hist.textContent = "";
-  }
+  } else hist.textContent = "";
 
   requestAnimationFrame(syncBubble);
   window.addEventListener("resize", syncBubble);
@@ -1463,10 +1849,7 @@ function bottomBlock(sampleIdx, which){
   notes.innerHTML = `<label>${escHtml(t.notes)}</label>`;
   const ta = document.createElement("textarea");
   ta.value = s[which+"Notes"] || "";
-  ta.addEventListener("input", ()=>{
-    s[which+"Notes"] = ta.value;
-    scheduleLocalSave();
-  });
+  ta.addEventListener("input", ()=>{ s[which+"Notes"] = ta.value; scheduleLocalSave(); });
   notes.appendChild(ta);
 
   item.appendChild(top);
@@ -1478,8 +1861,7 @@ function bottomBlock(sampleIdx, which){
     c.addEventListener("click", ()=>{
       if(which === "defect"){
         s.defect[i] = !s.defect[i];
-        // mirror uniformity selection
-        s.uniformity[i] = s.defect[i];
+        s.uniformity[i] = s.defect[i]; // mirror
         renderBottomRow(sampleIdx, "defect");
         renderBottomRow(sampleIdx, "uniformity");
       }else{
@@ -1501,7 +1883,6 @@ function buildSample(sampleIdx){
 
   const sample = document.createElement("div");
   sample.className = "sample";
-  sample.setAttribute("data-sample", String(sampleIdx));
 
   const top = document.createElement("div");
   top.className = "toprow";
@@ -1509,14 +1890,34 @@ function buildSample(sampleIdx){
   const sampleNo = document.createElement("div");
   sampleNo.className = "sampleNo";
   sampleNo.innerHTML = `<div>${escHtml(t.sample)}</div>`;
+
   const inp = document.createElement("input");
   inp.type = "text";
   inp.value = s.sampleNo || "";
-  inp.addEventListener("input", ()=>{
-    s.sampleNo = inp.value;
-    scheduleLocalSave();
-  });
+  inp.disabled = !!sessionMode;
+  inp.addEventListener("input", ()=>{ s.sampleNo = inp.value; scheduleLocalSave(); });
   sampleNo.appendChild(inp);
+
+  const meta = document.createElement("div");
+  meta.className = "metaGrid";
+
+  const originInp = document.createElement("input");
+  originInp.type = "text";
+  originInp.placeholder = t.origin;
+  originInp.value = s.origin || "";
+  originInp.disabled = !!sessionMode;
+  originInp.addEventListener("input", ()=>{ s.origin = originInp.value; scheduleLocalSave(); });
+
+  const procInp = document.createElement("input");
+  procInp.type = "text";
+  procInp.placeholder = t.process;
+  procInp.value = s.process || "";
+  procInp.disabled = !!sessionMode;
+  procInp.addEventListener("input", ()=>{ s.process = procInp.value; scheduleLocalSave(); });
+
+  meta.appendChild(originInp);
+  meta.appendChild(procInp);
+  sampleNo.appendChild(meta);
 
   const scorebox = document.createElement("div");
   scorebox.className = "scorebox";
@@ -1533,10 +1934,7 @@ function buildSample(sampleIdx){
   const roast = document.createElement("input");
   roast.type = "checkbox";
   roast.checked = !!s.checkRoast;
-  roast.addEventListener("change", ()=>{
-    s.checkRoast = roast.checked;
-    scheduleLocalSave();
-  });
+  roast.addEventListener("change", ()=>{ s.checkRoast = roast.checked; scheduleLocalSave(); });
   scorebox.querySelector(".checkroast").appendChild(roast);
 
   top.appendChild(sampleNo);
@@ -1554,11 +1952,84 @@ function buildSample(sampleIdx){
   return sample;
 }
 
+function applyLang(){
+  const dir = (lang==="ar") ? "rtl" : "ltr";
+  document.documentElement.lang = (lang==="zh") ? "zh" : lang;
+  document.documentElement.dir  = dir;
+  document.body.dir             = dir;
+
+  const t = UI[lang];
+  $("btnPrint").textContent = t.print;
+  $("btnExportReport").textContent = t.export;
+  $("btnAddSample").textContent = t.add;
+  $("btnRemoveSample").textContent = t.remove;
+  $("btnReset").textContent = t.reset;
+  $("lblName").textContent = t.name;
+  $("lblTable").textContent = t.table;
+  $("timerLabel").textContent = t.timer;
+  $("btnTimerStart").textContent = t.tStart;
+  $("btnTimerReset").textContent = t.tReset;
+  $("expTitle").textContent = t.expTitle;
+  $("expPickLbl").textContent = t.expPick;
+  $("expPrintPdf").textContent = t.expPrint;
+  $("expDone").textContent = t.done;
+
+  $("menuHint").textContent = sessionMode ? t.menuHint_session : t.menuHint_user;
+  $("histBadge").textContent = sessionMode ? t.hist_session : t.hist_user;
+  $("btnHostCreateSession").textContent = t.hostCreateTitle;
+
+  $("invTitle").textContent = t.inviteTitle;
+  $("invDesc").textContent = t.inviteDesc;
+  $("invCopy").textContent = t.copy;
+  $("invOpen").textContent = t.open;
+  $("invDone").textContent = t.done;
+
+  if(sessionMode && sessionId){
+    $("sessionPill").style.display = "inline-flex";
+    $("sessionIdTxt").textContent = sessionId;
+  }else{
+    $("sessionPill").style.display = "none";
+    $("sessionIdTxt").textContent = "";
+  }
+
+  $("selLang").value = lang;
+
+  // Results overlay texts
+  $("resTitle").textContent = t.resultsTitle;
+  $("resSessLbl").textContent = t.resSession;
+  $("resCuppersLbl").textContent = t.resCuppers;
+  $("resSamplesLbl").textContent = t.resSamples;
+  $("resRefresh").textContent = t.resRefresh;
+  $("resPrint").textContent = t.resPrint;
+  $("resPickLbl").textContent = t.resPick;
+  $("resAttrTitle").textContent = t.resAttrTitle;
+  $("resLegend").textContent = t.resLegend;
+  $("resCupperTitle").textContent = t.resCupperTitle;
+  $("resCupperHint").textContent = t.resCupperHint;
+  $("thAttr").textContent = t.thAttr;
+  $("thAvg").textContent = t.thAvg;
+  $("thStd").textContent = t.thStd;
+  $("thRange").textContent = t.thRange;
+  $("thName").textContent = t.thName;
+  $("thEmail").textContent = t.thEmail;
+  $("thTotal").textContent = t.thTotal;
+  $("thUpdated").textContent = t.thUpdated;
+
+  // Host markers
+  $("hostPill").style.display = (sessionMode && isHost) ? "inline-flex" : "none";
+  $("btnSessionResults").style.display = (sessionMode && isHost) ? "block" : "none";
+}
+
 function renderAll(){
   applyLang();
 
   $("name").value = state.nameField || "";
   $("table").value = state.tableField || "";
+
+  $("btnAddSample").disabled = !!sessionMode;
+  $("btnRemoveSample").disabled = !!sessionMode;
+  $("btnHostCreateSession").disabled = !!sessionMode;
+  $("btnHostCreateSession").style.opacity = sessionMode ? 0.45 : 1;
 
   const grid = $("grid");
   grid.innerHTML = "";
@@ -1574,24 +2045,13 @@ function renderAll(){
 /* =======================
    Star Graph Export
    ======================= */
-function buildStarSvg(sampleIdx){
+function buildStarSvgFromValues(values, titleText, metaLines){
   const t = UI[lang];
-  const s = state.samples[sampleIdx];
-  const tot = computeSampleTotals(s);
-
   const axes = [
     ...ATTRS.map(a=> ({ key:a.key, label: a.label[lang] })),
     { key:"uniformityScore", label: t.uniformity },
     { key:"defectScore", label: t.defect },
   ];
-
-  function getValue(ax){
-    if(ax.key === "uniformityScore") return tot.uniformityScore;
-    if(ax.key === "defectScore") return tot.defectScore;
-    const obj = s[ax.key];
-    return (obj && obj.scored) ? Number(obj.score||0) : 0;
-  }
-
   const W=520, H=520;
   const cx=W/2, cy=H/2;
   const R=200;
@@ -1601,7 +2061,7 @@ function buildStarSvg(sampleIdx){
   const startAngle = -Math.PI/2;
 
   const poly = axes.map((ax,i)=>{
-    const v = Math.max(0, Math.min(10, getValue(ax)));
+    const v = clamp(Number(values[ax.key] ?? 0), 0, 10);
     const r = (v/10)*R;
     const a = startAngle + (i*(2*Math.PI/n));
     const p = pt(a, r);
@@ -1636,33 +2096,58 @@ function buildStarSvg(sampleIdx){
   svg += `<polygon points="${poly}" fill="rgba(15,118,110,.18)" stroke="#0f766e" stroke-width="2"/>`;
 
   axes.forEach((ax,i)=>{
-    const v = Math.max(0, Math.min(10, getValue(ax)));
+    const v = clamp(Number(values[ax.key] ?? 0), 0, 10);
     const r = (v/10)*R;
     const a = startAngle + (i*(2*Math.PI/n));
     const p = pt(a, r);
     svg += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.2" fill="#0f766e"/>`;
   });
 
-  const title = (s.sampleNo && s.sampleNo.trim()) ? s.sampleNo.trim() : `${t.sample} ${sampleIdx+1}`;
-  const meta1 = `${t.table}: ${state.tableField || "—"}`;
-  const meta2 = `${t.total}: ${tot.total.toFixed(2)}`;
-
-  svg += `<text x="18" y="28" font-size="16" font-weight="900" fill="#111">${escHtml(title)}</text>`;
-  svg += `<text x="18" y="48" font-size="12" font-weight="700" fill="#374151">${escHtml(meta1)}</text>`;
-  svg += `<text x="18" y="68" font-size="12" font-weight="900" fill="#111">${escHtml(meta2)}</text>`;
+  svg += `<text x="18" y="28" font-size="16" font-weight="900" fill="#111">${escHtml(titleText || "Star Graph")}</text>`;
+  if(Array.isArray(metaLines)){
+    metaLines.slice(0,3).forEach((ln, idx)=>{
+      svg += `<text x="18" y="${48 + idx*18}" font-size="12" font-weight="700" fill="#374151">${escHtml(ln)}</text>`;
+    });
+  }
   svg += `</svg>`;
-  return { svg, tot, title };
+  return svg;
+}
+
+function buildStarSvg(sampleIdx){
+  const t = UI[lang];
+  const s = state.samples[sampleIdx];
+  const tot = computeSampleTotals(s);
+
+  const values = {};
+  ATTRS.forEach(a=>{
+    const obj = s[a.key];
+    values[a.key] = (obj && obj.scored) ? Number(obj.score||0) : 0;
+  });
+  values.uniformityScore = tot.uniformityScore;
+  values.defectScore = tot.defectScore;
+
+  const title = (s.sampleNo && s.sampleNo.trim()) ? s.sampleNo.trim() : `${t.sample} ${sampleIdx+1}`;
+  const meta = [];
+  meta.push(`${t.table}: ${state.tableField || "—"}`);
+  meta.push(`${t.total}: ${tot.total.toFixed(2)}`);
+
+  return { svg: buildStarSvgFromValues(values, title, meta), tot, title };
 }
 
 function renderExportFor(sampleIdx){
   const { svg, tot, title } = buildStarSvg(sampleIdx);
   $("starWrap").innerHTML = svg;
-
   const s = state.samples[sampleIdx];
+
   const lines = [];
   lines.push(`<b>${escHtml(title)}</b>`);
   lines.push(`${escHtml(UI[lang].total)}: <b>${tot.total.toFixed(2)}</b>`);
   lines.push(`${escHtml(UI[lang].uniformity)}: ${tot.uniformityScore.toFixed(2)} • ${escHtml(UI[lang].defect)}: ${tot.defectScore.toFixed(2)}`);
+
+  const meta = [];
+  if(s.origin) meta.push(`${escHtml(UI[lang].origin)}: ${escHtml(s.origin)}`);
+  if(s.process) meta.push(`${escHtml(UI[lang].process)}: ${escHtml(s.process)}`);
+  if(meta.length) lines.push(meta.join(" • "));
 
   ATTRS.forEach(a=>{
     const obj = s[a.key];
@@ -1709,56 +2194,15 @@ $("expPrintPdf").addEventListener("click", ()=>{
 });
 
 /* =======================
-   Cloud: Save / History
+   History overlay (User mode only)
    ======================= */
-async function saveCurrentToCloud(){
-  if(!currentUser) throw new Error("Not logged in");
-  const cuppingsCol = collection(db, "users", currentUser.uid, "cuppings");
-
-  const title =
-    (state.tableField ? `Table ${state.tableField}` : "Cupping") +
-    (state.nameField ? ` – ${state.nameField}` : "");
-
-  const payload = { title, state, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
-  const ref = await addDoc(cuppingsCol, payload);
-  return ref.id;
-}
-
-async function listCloudCuppings(){
-  if(!currentUser) throw new Error("Not logged in");
-  const cuppingsCol = collection(db, "users", currentUser.uid, "cuppings");
-  const q = query(cuppingsCol, orderBy("updatedAt","desc"));
-  const snap = await getDocs(q);
-  return snap.docs.map(d=>({ id:d.id, ...d.data() }));
-}
-
-async function loadCuppingFromCloud(id){
-  if(!currentUser) throw new Error("Not logged in");
-  const ref = doc(db, "users", currentUser.uid, "cuppings", id);
-  const snap = await getDoc(ref);
-  if(!snap.exists()) throw new Error("Not found");
-  const data = snap.data();
-  state = data.state;
-  lang = state.lang || lang;
-  renderAll();
-  scheduleLocalSave();
-}
-
-async function deleteCuppingFromCloud(id){
-  if(!currentUser) throw new Error("Not logged in");
-  const ref = doc(db, "users", currentUser.uid, "cuppings", id);
-  await deleteDoc(ref);
-}
-
 function renderHistoryList(items){
   const host = $("histList");
   host.innerHTML = "";
-
   if(!items.length){
     host.innerHTML = `<div style="color:#6b7280;font-weight:900;">No saved cuppings yet.</div>`;
     return;
   }
-
   items.forEach(it=>{
     const card = document.createElement("div");
     card.className = "card";
@@ -1779,40 +2223,278 @@ function renderHistoryList(items){
     `;
     host.appendChild(card);
   });
-
   host.querySelectorAll("button[data-act]").forEach(btn=>{
     btn.addEventListener("click", async ()=>{
       const id = btn.getAttribute("data-id");
       const act = btn.getAttribute("data-act");
       try{
         if(act === "load"){
-          await loadCuppingFromCloud(id);
+          await loadUserCupping(id);
           closeOverlay("overlayHistory");
         } else if(act === "delete"){
           if(confirm("Delete this saved cupping?")){
-            await deleteCuppingFromCloud(id);
-            const items2 = await listCloudCuppings();
+            await deleteUserCupping(id);
+            const items2 = await listUserCuppings();
             renderHistoryList(items2);
           }
         }
-      }catch(e){
-        alert(e.message || String(e));
-      }
+      }catch(e){ alert(e.message || String(e)); }
     });
   });
 }
-
 async function openHistory(){
   openOverlay("overlayHistory");
-  const items = await listCloudCuppings();
+  const items = await listUserCuppings();
   renderHistoryList(items);
 }
-
 $("histClose").addEventListener("click", ()=>closeOverlay("overlayHistory"));
 $("histDone").addEventListener("click", ()=>closeOverlay("overlayHistory"));
 $("histRefresh").addEventListener("click", async ()=>{
-  const items = await listCloudCuppings();
+  const items = await listUserCuppings();
   renderHistoryList(items);
+});
+
+/* =======================
+   Invite overlay (QR + link)
+   ======================= */
+function setInvite(link, metaText){
+  $("invLink").value = link;
+  $("invMeta").textContent = metaText || "";
+  openOverlay("overlayInvite");
+
+  const canvas = $("invQr");
+  const ctx = canvas.getContext("2d");
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  if(window.QRCode && window.QRCode.toCanvas){
+    window.QRCode.toCanvas(canvas, link, { width: 240, margin: 1 }, (err)=>{ if(err) console.warn(err); });
+  }
+}
+$("invClose").addEventListener("click", ()=>closeOverlay("overlayInvite"));
+$("invDone").addEventListener("click", ()=>closeOverlay("overlayInvite"));
+$("invCopy").addEventListener("click", async ()=>{
+  try{
+    await navigator.clipboard.writeText($("invLink").value);
+    alert("Copied ✅");
+  }catch(e){
+    $("invLink").focus(); $("invLink").select();
+    document.execCommand("copy");
+    alert("Copied ✅");
+  }
+});
+$("invOpen").addEventListener("click", ()=> window.open($("invLink").value, "_blank"));
+
+/* =======================
+   HOST Session Results
+   ======================= */
+function mean(arr){
+  if(!arr.length) return 0;
+  return arr.reduce((s,v)=>s+v,0)/arr.length;
+}
+function stddev(arr){
+  if(arr.length <= 1) return 0;
+  const m = mean(arr);
+  const v = arr.reduce((s,x)=> s + (x-m)*(x-m), 0) / (arr.length - 1);
+  return Math.sqrt(v);
+}
+function fmtDate(ts){
+  try{
+    if(!ts) return "—";
+    if(typeof ts === "object" && typeof ts.toDate === "function"){
+      return ts.toDate().toLocaleString();
+    }
+    return String(ts);
+  }catch{ return "—"; }
+}
+function varClass(sd){
+  // Heuristic thresholds
+  if(sd >= 0.60) return "hiVar";
+  if(sd >= 0.30) return "midVar";
+  return "loVar";
+}
+
+function scoreSampleToValues(scoreSample){
+  // scoreSample contains arrays + attr objects; treat unscored/missing as 0
+  const values = {};
+  ATTRS.forEach(a=>{
+    const obj = scoreSample?.[a.key];
+    values[a.key] = (obj && obj.scored) ? Number(obj.score||0) : 0;
+  });
+  const uniChecks = countTrue(scoreSample?.uniformity);
+  const defChecks = countTrue(scoreSample?.defect);
+  values.uniformityScore = UNIFORMITY_BASE - (uniChecks * DEDUCT_PER_CHECK);
+  values.defectScore = DEFECT_BASE - (defChecks * DEDUCT_PER_CHECK);
+  // total
+  const attrSum = ATTRS.reduce((s,a)=> s + values[a.key], 0);
+  values.total = attrSum + values.uniformityScore + values.defectScore;
+  return values;
+}
+
+async function listSessionScores(){
+  if(!sessionDoc) throw new Error("Session not loaded");
+  const col = collection(db, "sessions", sessionDoc.id, "scores");
+  const snap = await getDocs(col);
+  return snap.docs.map(d=>({ id:d.id, ...d.data() }));
+}
+
+let resultsCache = null; // {cuppers, perSampleStats[]}
+
+function computeResults(scores){
+  // scores: array of {uid,email,displayName,updatedAt,nameField,samples:[...]}
+  const sampleCount = (sessionDoc?.samples?.length) || 0;
+  const cuppers = scores.map(s=>({
+    uid: s.uid || s.id,
+    name: s.nameField || s.displayName || "—",
+    email: s.email || "—",
+    updatedAt: s.updatedAt,
+    samples: Array.isArray(s.samples) ? s.samples : []
+  }));
+
+  // per sample: collect per cupper values
+  const perSampleStats = [];
+  for(let si=0; si<sampleCount; si++){
+    const valsPerCupper = cuppers.map(c=>{
+      const ss = c.samples?.[si] || {};
+      return scoreSampleToValues(ss);
+    });
+
+    // axis stats
+    const axes = [
+      ...ATTRS.map(a=>a.key),
+      "uniformityScore",
+      "defectScore"
+    ];
+    const axisStats = {};
+    axes.forEach(ax=>{
+      const arr = valsPerCupper.map(v=> clamp(Number(v[ax]||0), 0, 10));
+      axisStats[ax] = {
+        avg: mean(arr),
+        sd: stddev(arr),
+        min: arr.length ? Math.min(...arr) : 0,
+        max: arr.length ? Math.max(...arr) : 0
+      };
+    });
+
+    // total stats per cupper
+    const totals = valsPerCupper.map(v=> Number(v.total||0));
+    const totalStats = { avg: mean(totals), sd: stddev(totals), min: totals.length?Math.min(...totals):0, max: totals.length?Math.max(...totals):0 };
+
+    // cupper totals list for this sample
+    const cupperTotals = cuppers.map((c, idx)=>({
+      uid: c.uid,
+      name: c.name,
+      email: c.email,
+      total: totals[idx] || 0,
+      updatedAt: c.updatedAt
+    })).sort((a,b)=> b.total - a.total);
+
+    perSampleStats.push({ sampleIndex: si, axisStats, totalStats, cupperTotals });
+  }
+
+  return { cuppers, perSampleStats };
+}
+
+function renderResultsSample(sampleIdx){
+  if(!resultsCache) return;
+  const t = UI[lang];
+  const stats = resultsCache.perSampleStats[sampleIdx];
+  const meta = sessionDoc.samples[sampleIdx] || {};
+  const title = (meta.sampleNo || meta.id || `${t.sample} ${sampleIdx+1}`);
+
+  $("resSampleMeta").textContent =
+    `${t.origin}: ${(meta.origin||"—")} • ${t.process}: ${(meta.process||"—")}`;
+
+  // Build avg values for star
+  const values = {};
+  ATTRS.forEach(a=> values[a.key] = stats.axisStats[a.key].avg );
+  values.uniformityScore = stats.axisStats.uniformityScore.avg;
+  values.defectScore = stats.axisStats.defectScore.avg;
+
+  const metaLines = [
+    `${t.total}: ${stats.totalStats.avg.toFixed(2)} (avg)`,
+    `StdDev: ${stats.totalStats.sd.toFixed(2)} • Range: ${stats.totalStats.min.toFixed(2)}–${stats.totalStats.max.toFixed(2)}`
+  ];
+  $("resStarWrap").innerHTML = buildStarSvgFromValues(values, `${title} — AVG`, metaLines);
+  $("resStarMeta").innerHTML =
+    `<b>${escHtml(title)}</b><br>` +
+    `${escHtml(t.total)} avg: <b>${stats.totalStats.avg.toFixed(2)}</b> • ` +
+    `StdDev: <b>${stats.totalStats.sd.toFixed(2)}</b> • ` +
+    `Range: <b>${stats.totalStats.min.toFixed(2)}–${stats.totalStats.max.toFixed(2)}</b>`;
+
+  // Attributes table
+  const rows = $("resAttrRows");
+  rows.innerHTML = "";
+
+  function addRow(label, axKey){
+    const st = stats.axisStats[axKey];
+    const range = st.max - st.min;
+    const sd = st.sd;
+    const cls = varClass(sd);
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      `<td><b>${escHtml(label)}</b></td>` +
+      `<td>${st.avg.toFixed(2)}</td>` +
+      `<td class="${cls}">${sd.toFixed(2)}</td>` +
+      `<td>${st.min.toFixed(2)}–${st.max.toFixed(2)} <span class="dim">(${range.toFixed(2)})</span></td>`;
+    rows.appendChild(tr);
+  }
+
+  ATTRS.forEach(a=> addRow(a.label[lang], a.key));
+  addRow(t.uniformity, "uniformityScore");
+  addRow(t.defect, "defectScore");
+
+  // Cuppers totals table (for this sample)
+  const crows = $("resCupperRows");
+  crows.innerHTML = "";
+  stats.cupperTotals.forEach(c=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML =
+      `<td>${escHtml(c.name)}</td>` +
+      `<td class="mono">${escHtml(c.email)}</td>` +
+      `<td><b>${Number(c.total||0).toFixed(2)}</b></td>` +
+      `<td class="mono">${escHtml(fmtDate(c.updatedAt))}</td>`;
+    crows.appendChild(tr);
+  });
+}
+
+async function openResultsOverlay(){
+  if(!sessionMode || !isHost) return;
+  openOverlay("overlayResults");
+
+  $("resSessId").textContent = sessionDoc.id;
+  $("resSamples").textContent = String(sessionDoc.samples?.length || 0);
+
+  try{
+    $("resCuppers").textContent = "…";
+    const scores = await listSessionScores();
+    resultsCache = computeResults(scores);
+    $("resCuppers").textContent = String(resultsCache.cuppers.length);
+
+    const pick = $("resPick");
+    pick.innerHTML = "";
+    (sessionDoc.samples||[]).forEach((s, i)=>{
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      opt.textContent = (s.sampleNo || s.id || `${UI[lang].sample} ${i+1}`);
+      pick.appendChild(opt);
+    });
+    pick.value = "0";
+    renderResultsSample(0);
+    pick.onchange = ()=> renderResultsSample(Number(pick.value));
+  }catch(e){
+    $("resCuppers").textContent = "0";
+    showErr(e);
+  }
+}
+
+$("resClose").addEventListener("click", ()=>closeOverlay("overlayResults"));
+$("resDone").addEventListener("click", ()=>closeOverlay("overlayResults"));
+$("resRefresh").addEventListener("click", async ()=>{
+  await openResultsOverlay(); // re-open refresh logic
+});
+$("resPrint").addEventListener("click", ()=>{
+  document.body.classList.add("print-results");
+  window.print();
+  setTimeout(()=> document.body.classList.remove("print-results"), 250);
 });
 
 /* =======================
@@ -1824,32 +2506,27 @@ $("selLang").addEventListener("change", ()=>{
   scheduleLocalSave();
   renderAll();
 });
-$("name").addEventListener("input", ()=>{
-  state.nameField = $("name").value;
-  scheduleLocalSave();
-});
-$("table").addEventListener("input", ()=>{
-  state.tableField = $("table").value;
-  scheduleLocalSave();
-});
+
+$("name").addEventListener("input", ()=>{ state.nameField = $("name").value; scheduleLocalSave(); });
+$("table").addEventListener("input", ()=>{ state.tableField = $("table").value; scheduleLocalSave(); });
 
 $("btnPrint").addEventListener("click", ()=> window.print());
-$("btnExportReport").addEventListener("click", ()=>{
-  openExportModal();
-  closeMenu();
-});
+$("btnExportReport").addEventListener("click", ()=>{ openExportModal(); closeMenu(); });
 
 $("btnAddSample").addEventListener("click", ()=>{
+  if(sessionMode) return;
   state.samples.push(newSampleState());
   scheduleLocalSave();
   renderAll();
 });
 $("btnRemoveSample").addEventListener("click", ()=>{
+  if(sessionMode) return;
   if(state.samples.length <= 1) return;
   state.samples.pop();
   scheduleLocalSave();
   renderAll();
 });
+
 $("btnReset").addEventListener("click", ()=>{
   const keepLang = state.lang || "en";
   state = {
@@ -1863,63 +2540,119 @@ $("btnReset").addEventListener("click", ()=>{
   renderAll();
 });
 
-/* Cloud buttons */
 $("btnCloudSave").addEventListener("click", async ()=>{
   closeMenu();
   try{
-    const id = await saveCurrentToCloud();
-    alert("Saved to cloud ✅\nID: " + id);
-  }catch(e){
-    alert(e.message || String(e));
-  }
+    if(sessionMode){
+      await saveMyScoreToSession();
+      alert(UI[lang].savedSession);
+    } else {
+      const id = await saveCurrentToUserCloud();
+      alert(UI[lang].savedUser + "\nID: " + id);
+    }
+  }catch(e){ alert(e.message || String(e)); }
 });
+
 $("btnCloudHistory").addEventListener("click", async ()=>{
   closeMenu();
-  try{
-    await openHistory();
-  }catch(e){
-    alert(e.message || String(e));
+  if(sessionMode){
+    alert("Session mode: user cloud history is disabled here.\n(Open app without ?session= to use history.)");
+    return;
   }
+  try{ await openHistory(); }catch(e){ alert(e.message || String(e)); }
 });
+
 $("btnLogout").addEventListener("click", async ()=>{
   closeMenu();
   await signOut(auth);
   location.replace("login.html");
 });
 
+$("btnHostCreateSession").addEventListener("click", async ()=>{
+  closeMenu();
+  if(sessionMode){
+    alert("You are already inside a session. Open app.html without ?session= to create a new session.");
+    return;
+  }
+  try{
+    const title = prompt("Session title?", "Cupping Session");
+    if(title === null) return;
+
+    const samples = state.samples.map((s, idx)=>({
+      id: String(idx+1),
+      sampleNo: (s.sampleNo || String(idx+1)).trim(),
+      origin: (s.origin || "").trim(),
+      process: (s.process || "").trim(),
+      roastDate: (s.roastDate || "").trim()
+    }));
+
+    const sid = await createSessionOnCloud({ title, table: state.tableField || "", samples });
+    const iid = await createInvite(sid);
+    const link = `${appBaseUrl()}?session=${encodeURIComponent(sid)}&invite=${encodeURIComponent(iid)}`;
+    setInvite(link, `session=${sid}`);
+  }catch(e){ alert(e.message || String(e)); }
+});
+
+$("btnSessionResults").addEventListener("click", async ()=>{
+  closeMenu();
+  try{ await openResultsOverlay(); }catch(e){ alert(e.message || String(e)); }
+});
+
 /* =======================
-   Auth gate + boot (FIXED)
+   Auth gate + boot
    ======================= */
 let authChecked = false;
 
-onAuthStateChanged(auth, (user)=>{
+onAuthStateChanged(auth, async (user)=>{
   authChecked = true;
 
   if(!user){
-    // Give browser a moment to restore session before redirecting
-    setTimeout(()=>{
-      if(!currentUser) location.replace("login.html");
-    }, 800);
+    setTimeout(()=>{ if(!currentUser) location.replace("login.html"); }, 800);
     return;
   }
 
   currentUser = user;
-
   $("userPill").style.display = "inline-flex";
   $("userEmail").textContent = user.email || user.uid;
 
-  // Load local state and render
-  tryLoadLocal();
-  lang = state.lang || "en";
-  renderAll();
-  timerUpdate();
+  try{
+    clearErr();
+
+    if(sessionMode){
+      await loadSession(sessionId);
+      await validateInvite(sessionId, inviteId);
+
+      isHost = (sessionDoc?.hostUid && currentUser?.uid) ? (sessionDoc.hostUid === currentUser.uid) : false;
+
+      applySessionSamplesToState();
+      await loadMyScoreFromSession();
+    } else {
+      tryLoadLocal();
+      isHost = false;
+    }
+
+    lang = state.lang || "en";
+    renderAll();
+    timerUpdate();
+  }catch(e){
+    showErr(e);
+    if(sessionMode){
+      alert("Session error. Returning to normal mode.");
+      location.replace("app.html");
+    }
+  }
 });
 
 // Fallback if callback doesn't fire
-setTimeout(()=>{
-  if(!authChecked) location.replace("login.html");
-}, 2000);
+setTimeout(()=>{ if(!authChecked) location.replace("login.html"); }, 2000);
 
+/* =======================
+   Initial apply
+   ======================= */
+(function init(){
+  lang = state.lang || "en";
+  applyLang();
+})();
 </script>
 </body>
 </html>
