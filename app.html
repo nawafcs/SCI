@@ -1,4 +1,4 @@
-<!-- app.html -->
+<!-- app.html (FULL UPDATED) -->
 <!doctype html>
 <html lang="en" dir="ltr">
 <head>
@@ -623,19 +623,23 @@
    Firebase (Auth + Cloud)
    ======================= */
 
-// ✅ Paste your Firebase Web App config here (same config also in login.html)
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyCwrhMSBFbmvzQXkzEgtHBZZecrdbCN7ZU",
+  authDomain: "sci-cupping-form.firebaseapp.com",
+  projectId: "sci-cupping-form",
+  storageBucket: "sci-cupping-form.firebasestorage.app",
+  messagingSenderId: "789783909023",
+  appId: "1:789783909023:web:35372ccd47c55f81bd08aa",
+  measurementId: "G-V10NLBLZGQ"
 };
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getAuth,
   onAuthStateChanged,
-  signOut
+  signOut,
+  setPersistence,
+  browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   getFirestore,
@@ -654,6 +658,9 @@ const fbApp = initializeApp(firebaseConfig);
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 
+// ✅ CRITICAL: persist auth session to stop login/app bouncing
+await setPersistence(auth, browserLocalPersistence);
+
 let currentUser = null;
 
 /* =======================
@@ -665,11 +672,6 @@ function showErr(e){
   if(!box) return;
   box.classList.add("open");
   box.textContent = "Error:\n" + (e && e.stack ? e.stack : String(e));
-}
-function repAll(str, a, b){
-  str = String(str);
-  if(str.replaceAll) return str.replaceAll(a,b);
-  return str.split(a).join(b);
 }
 function escHtml(s){
   return String(s ?? "")
@@ -861,7 +863,7 @@ const ATTRS = [
   { key:'mouthfeel',  label:{en:'MOUTHFEEL', ar:'الإحساس بالفم', zh:'口感'},  rightKey:'thickness', hintLKey:'thin',  hintRKey:'thick', helper:true },
   { key:'sweetness',  label:{en:'SWEETNESS', ar:'الحلاوة', zh:'甜感'},        rightKey:'intensity', hintLKey:'low',   hintRKey:'high', helper:true },
   { key:'aftertaste', label:{en:'AFTERTASTE', ar:'الأثر', zh:'余韵'},         rightKey:'duration',  hintLKey:'short', hintRKey:'long', helper:true },
-  { key:'freshcrop',  label:{en:'FRESH CROP', ar:'محصول طازج', zh:'新鲜度'},  rightKey:'woody',     hintLKey:'none',  hintRKey:'intense', helper:false }, // helper removed
+  { key:'freshcrop',  label:{en:'FRESH CROP', ar:'محصول طازج', zh:'新鲜度'},  rightKey:'woody',     hintLKey:'none',  hintRKey:'intense', helper:false }
 ];
 
 const RANGE_MIN = 6.0, RANGE_MAX = 10.0, RANGE_STEP = 0.25;
@@ -1476,7 +1478,7 @@ function bottomBlock(sampleIdx, which){
     c.addEventListener("click", ()=>{
       if(which === "defect"){
         s.defect[i] = !s.defect[i];
-        // when defect toggles, mirror uniformity (and vice versa behavior matches your earlier rule)
+        // mirror uniformity selection
         s.uniformity[i] = s.defect[i];
         renderBottomRow(sampleIdx, "defect");
         renderBottomRow(sampleIdx, "uniformity");
@@ -1490,9 +1492,6 @@ function bottomBlock(sampleIdx, which){
     circles.appendChild(c);
   }
 
-  // Per request: NO helper for uniformity, NO helper for freshcrop (done above)
-  // Defect helper removed earlier by your latest request? You asked only remove from fresh crop and uniformity.
-  // So we keep NONE here to match request strictly.
   return item;
 }
 
@@ -1720,13 +1719,7 @@ async function saveCurrentToCloud(){
     (state.tableField ? `Table ${state.tableField}` : "Cupping") +
     (state.nameField ? ` – ${state.nameField}` : "");
 
-  const payload = {
-    title,
-    state,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  };
-
+  const payload = { title, state, createdAt: serverTimestamp(), updatedAt: serverTimestamp() };
   const ref = await addDoc(cuppingsCol, payload);
   return ref.id;
 }
@@ -1891,29 +1884,42 @@ $("btnCloudHistory").addEventListener("click", async ()=>{
 $("btnLogout").addEventListener("click", async ()=>{
   closeMenu();
   await signOut(auth);
-  location.href = "login.html";
+  location.replace("login.html");
 });
 
 /* =======================
-   Auth gate + boot
+   Auth gate + boot (FIXED)
    ======================= */
+let authChecked = false;
+
 onAuthStateChanged(auth, (user)=>{
+  authChecked = true;
+
   if(!user){
-    location.href = "login.html";
+    // Give browser a moment to restore session before redirecting
+    setTimeout(()=>{
+      if(!currentUser) location.replace("login.html");
+    }, 800);
     return;
   }
+
   currentUser = user;
 
   $("userPill").style.display = "inline-flex";
   $("userEmail").textContent = user.email || user.uid;
 
-  // Load local first
+  // Load local state and render
   tryLoadLocal();
   lang = state.lang || "en";
-
   renderAll();
   timerUpdate();
 });
+
+// Fallback if callback doesn't fire
+setTimeout(()=>{
+  if(!authChecked) location.replace("login.html");
+}, 2000);
+
 </script>
 </body>
 </html>
