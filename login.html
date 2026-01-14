@@ -1,90 +1,150 @@
-<script type="module">
-  const firebaseConfig = {
-    apiKey: "AIzaSyCwrhMSBFbmvzQXkzEgtHBZZecrdbCN7ZU",
-    authDomain: "sci-cupping-form.firebaseapp.com",
-    projectId: "sci-cupping-form",
-    storageBucket: "sci-cupping-form.firebasestorage.app",
-    messagingSenderId: "789783909023",
-    appId: "1:789783909023:web:35372ccd47c55f81bd08aa",
-    measurementId: "G-V10NLBLZGQ"
-  };
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SCI Login</title>
+  <style>
+    :root{--ink:#111827;--muted:#6b7280;--line:#e5e7eb;--bg:#f3f4f6}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--ink)}
+    .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+    .card{width:min(440px,96vw);background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 50px rgba(0,0,0,.10);padding:16px}
+    h1{margin:0 0 6px;font-size:18px}
+    p{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.35}
+    label{display:block;font-weight:800;font-size:12px;margin:10px 0 6px}
+    input{width:100%;padding:12px 12px;border:1px solid var(--line);border-radius:12px;font:inherit;outline:none}
+    input:focus{border-color:#9ca3af}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    button{flex:1 1 140px;min-height:44px;border-radius:12px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:900}
+    button.primary{background:#111827;color:#fff;border-color:#111827}
+    button:hover{border-color:#9ca3af}
+    .msg{margin-top:12px;padding:10px;border-radius:12px;border:1px solid #fecaca;background:#fff1f2;color:#7f1d1d;font-weight:800;font-size:12px;white-space:pre-wrap;display:none}
+    .msg.show{display:block}
+    .tiny{margin-top:10px;color:var(--muted);font-size:11px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>SCI Cupping Form</h1>
+      <p>Login to access your cloud cupping history.</p>
 
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import {
-    getAuth,
-    setPersistence,
-    browserLocalPersistence,
-    onAuthStateChanged,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    sendPasswordResetEmail,
-    GoogleAuthProvider,
-    signInWithRedirect,
-    getRedirectResult
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+      <div id="msg" class="msg"></div>
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+      <label for="email">Email</label>
+      <input id="email" type="email" autocomplete="email" placeholder="name@email.com" />
 
-  const $ = (id)=>document.getElementById(id);
-  const msg = (t)=>{ $("msg").textContent = t || ""; };
+      <label for="pass">Password</label>
+      <input id="pass" type="password" autocomplete="current-password" placeholder="••••••••" />
 
-  // ✅ ثبّت الجلسة (يمنع bounce loop)
-  await setPersistence(auth, browserLocalPersistence);
+      <div class="row">
+        <button id="btnLogin" class="primary" type="button">Login</button>
+        <button id="btnSignup" type="button">Create account</button>
+      </div>
 
-  // ✅ التقط نتيجة Google Redirect لو رجعت من جوجل
-  try {
-    await getRedirectResult(auth);
-  } catch (e) {
-    msg(e?.message || String(e));
-  }
+      <div class="row">
+        <button id="btnGoogle" type="button">Continue with Google</button>
+        <button id="btnReset" type="button">Reset password</button>
+      </div>
 
-  // ✅ لو المستخدم مسجل، انقله للتطبيق (استخدم replace عشان ما يرجع back)
-  onAuthStateChanged(auth, (user)=>{
-    if (user) location.replace("app.html");
-  });
+      <div class="tiny">
+        Site: <span class="mono">nawafcs.github.io/SCI</span>
+      </div>
+    </div>
+  </div>
 
-  // ✅ Google login (Redirect بدل Popup)
-  $("btnGoogle").onclick = async ()=>{
-    msg("");
-    try{
-      const provider = new GoogleAuthProvider();
-      await signInWithRedirect(auth, provider);
-    }catch(e){
-      msg(e?.message || String(e));
+  <script type="module">
+    const firebaseConfig = {
+      apiKey: "AIzaSyCwrhMSBFbmvzQXkzEgtHBZZecrdbCN7ZU",
+      authDomain: "sci-cupping-form.firebaseapp.com",
+      projectId: "sci-cupping-form",
+      storageBucket: "sci-cupping-form.firebasestorage.app",
+      messagingSenderId: "789783909023",
+      appId: "1:789783909023:web:35372ccd47c55f81bd08aa",
+      measurementId: "G-V10NLBLZGQ"
+    };
+
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getAuth,
+      setPersistence,
+      browserLocalPersistence,
+      onAuthStateChanged,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      sendPasswordResetEmail,
+      GoogleAuthProvider,
+      signInWithRedirect,
+      getRedirectResult
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const $ = (id)=>document.getElementById(id);
+    const showMsg = (t)=>{
+      const box = $("msg");
+      if(!t){ box.textContent=""; box.classList.remove("show"); return; }
+      box.textContent = t;
+      box.classList.add("show");
+    };
+
+    // Persist session to avoid bouncing
+    await setPersistence(auth, browserLocalPersistence);
+
+    // If returning from Google redirect, resolve it
+    try {
+      await getRedirectResult(auth);
+    } catch (e) {
+      showMsg(e?.message || String(e));
     }
-  };
 
-  // Email login
-  $("btnLogin").onclick = async ()=>{
-    msg("");
-    try{
-      await signInWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value);
-      location.replace("app.html");
-    }catch(e){
-      msg(e?.message || String(e));
-    }
-  };
+    // If already logged-in, go to app
+    onAuthStateChanged(auth, (user)=>{
+      if(user) location.replace("app.html");
+    });
 
-  // Create account
-  $("btnSignup").onclick = async ()=>{
-    msg("");
-    try{
-      await createUserWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value);
-      location.replace("app.html");
-    }catch(e){
-      msg(e?.message || String(e));
-    }
-  };
+    $("btnGoogle").onclick = async ()=>{
+      showMsg("");
+      try{
+        const provider = new GoogleAuthProvider();
+        await signInWithRedirect(auth, provider); // redirect is mobile-safe
+      }catch(e){
+        showMsg(e?.message || String(e));
+      }
+    };
 
-  // Reset password
-  $("btnReset").onclick = async ()=>{
-    msg("");
-    try{
-      await sendPasswordResetEmail(auth, $("email").value.trim());
-      msg("Password reset email sent.");
-    }catch(e){
-      msg(e?.message || String(e));
-    }
-  };
-</script>
+    $("btnLogin").onclick = async ()=>{
+      showMsg("");
+      try{
+        await signInWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value);
+        location.replace("app.html");
+      }catch(e){
+        showMsg(e?.message || String(e));
+      }
+    };
+
+    $("btnSignup").onclick = async ()=>{
+      showMsg("");
+      try{
+        await createUserWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value);
+        location.replace("app.html");
+      }catch(e){
+        showMsg(e?.message || String(e));
+      }
+    };
+
+    $("btnReset").onclick = async ()=>{
+      showMsg("");
+      try{
+        await sendPasswordResetEmail(auth, $("email").value.trim());
+        showMsg("Password reset email sent ✅");
+      }catch(e){
+        showMsg(e?.message || String(e));
+      }
+    };
+  </script>
+</body>
+</html>
