@@ -1,4 +1,4 @@
- <!doctype html>
+<!doctype html>
 <html lang="en" dir="ltr">
 <head>
   <meta charset="utf-8" />
@@ -28,7 +28,7 @@
       border-radius:14px;
     }
 
-    /* Error banner (never blank screen) */
+    /* Error banner */
     .errorBox{
       display:none;
       border:2px solid #b91c1c;
@@ -57,8 +57,22 @@
       top:8px;
       z-index:50;
       backdrop-filter: blur(6px);
+      flex-wrap:wrap; /* ✅ keeps menu visible on mobile */
     }
-    .toolbar-left{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .toolbar-left{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      flex:1 1 auto;
+      min-width:260px;
+    }
+    .menuWrap{
+      position:relative;
+      flex:0 0 auto;        /* ✅ don’t shrink away */
+      margin-left:auto;      /* ✅ push to the edge */
+    }
+    body[dir="rtl"] .menuWrap{ margin-left:0; margin-right:auto; }
 
     .primaryBtn, .ghostBtn{
       font:inherit;
@@ -88,7 +102,6 @@
       padding:0;margin:0;min-width:110px;
     }
 
-    .menuWrap{position:relative}
     .menuBtn{
       width:44px;height:44px;
       border:1px solid #ccc;
@@ -354,6 +367,34 @@
     }
     .bigcircles .circle{width:20px;height:20px}
 
+    /* Modal (Export Star Graph) */
+    .overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,.35);
+      display:none;align-items:center;justify-content:center;
+      z-index:99999;padding:14px;
+    }
+    .overlay.open{display:flex}
+    .modal{
+      width:min(920px, 98vw);
+      background:#fff;border:1px solid #ddd;border-radius:16px;
+      box-shadow:0 18px 60px rgba(0,0,0,.22);
+      overflow:hidden;
+    }
+    .modalHead{
+      display:flex;justify-content:space-between;align-items:center;
+      padding:10px 12px;border-bottom:1px solid #eee;
+      background:#fafafa;
+    }
+    .modalHead .title{font-weight:1100}
+    .modalBody{padding:12px; max-height:78vh; overflow:auto}
+    .modalFoot{
+      padding:10px 12px;border-top:1px solid #eee;background:#fafafa;
+      display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;
+    }
+    .card{
+      border:1px solid #e5e7eb;border-radius:14px;padding:10px;background:#fff;
+    }
+
     /* Mobile swipe cards */
     @media (max-width: 900px){
       .page{padding:10px}
@@ -393,6 +434,17 @@
     body[dir="rtl"] .sample .toprow input{ text-align:right; }
     body[dir="rtl"] .toolbar{direction:rtl}
     body[dir="rtl"] .menuPanel{ right:auto; left:0; }
+
+    /* Print: only print the star graph modal content when printing from export */
+    @media print{
+      body.print-star *{ visibility:hidden !important; }
+      body.print-star #overlayExport,
+      body.print-star #overlayExport *{ visibility:visible !important; }
+      body.print-star #overlayExport{ position:fixed; inset:0; background:#fff !important; }
+      body.print-star .modal{ box-shadow:none !important; border:0 !important; width:100% !important; height:100% !important; border-radius:0 !important; }
+      body.print-star .modalHead, body.print-star .modalFoot{ display:none !important; }
+      body.print-star .modalBody{ max-height:none !important; overflow:visible !important; padding:20px !important; }
+    }
   </style>
 </head>
 
@@ -426,24 +478,29 @@
         <button id="btnSession" type="button" class="ghostBtn"></button>
       </div>
 
+      <!-- ✅ menu stays visible on mobile now -->
       <div class="menuWrap">
         <button id="btnMenu" type="button" class="menuBtn" aria-haspopup="true" aria-expanded="false" title="Menu">⋮</button>
 
         <div id="menuPanel" class="menuPanel" role="menu" aria-hidden="true">
           <div class="menuNote" id="menuHint"></div>
-          <button id="btnShareLink" type="button" role="menuitem"></button>
-          <button id="btnShareWhatsApp" type="button" role="menuitem"></button>
-          <div class="menuSep"></div>
-          <button id="btnCompare" type="button" role="menuitem"></button>
+
+          <!-- ✅ re-enabled -->
           <button id="btnExportReport" type="button" role="menuitem"></button>
           <button id="btnPrint" type="button" role="menuitem"></button>
+
           <div class="menuSep"></div>
+
           <button id="btnAddSample" type="button" role="menuitem"></button>
           <button id="btnRemoveSample" type="button" role="menuitem"></button>
+
           <div class="menuSep"></div>
+
           <button id="btnAddTable" type="button" role="menuitem"></button>
           <button id="btnAddRound" type="button" role="menuitem"></button>
+
           <div class="menuSep"></div>
+
           <button id="btnReset" type="button" role="menuitem"></button>
         </div>
       </div>
@@ -470,6 +527,32 @@
     <div class="grid" id="grid"></div>
   </div>
 
+  <!-- Export Star Graph Modal -->
+  <div class="overlay" id="overlayExport" aria-hidden="true">
+    <div class="modal">
+      <div class="modalHead">
+        <div class="title" id="expTitle">Export Star Graph</div>
+        <button class="ghostBtn" id="expClose" type="button" style="min-height:38px;padding:8px 10px;">✕</button>
+      </div>
+      <div class="modalBody">
+        <div class="card" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <div style="font-weight:1100;" id="expPickLbl">Sample</div>
+          <select id="expPick" style="padding:10px;border:1px solid #ddd;border-radius:12px;font:inherit;min-width:220px;"></select>
+          <div class="mono" id="expMeta" style="color:#374151;font-size:12px;"></div>
+        </div>
+
+        <div class="card" style="margin-top:10px;">
+          <div id="starWrap" style="display:flex;justify-content:center;"></div>
+          <div id="starNotes" style="margin-top:10px;font-size:12px;color:#111;line-height:1.45;"></div>
+        </div>
+      </div>
+      <div class="modalFoot">
+        <button class="ghostBtn" id="expPrintPdf" type="button">Print PDF</button>
+        <button class="primaryBtn" id="expDone" type="button">Done</button>
+      </div>
+    </div>
+  </div>
+
 <script>
 (function(){
   function $(id){ return document.getElementById(id); }
@@ -488,6 +571,14 @@
     if(str.replaceAll) return str.replaceAll(a,b);
     return str.split(a).join(b);
   }
+  function escHtml(s){
+    return String(s ?? "")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#039;");
+  }
 
   document.addEventListener("DOMContentLoaded", function(){
     try{
@@ -500,9 +591,6 @@
         en: {
           print: "Print page",
           export: "Export Star Graph (Printable PDF)",
-          shareLink: "Copy share link (view-only)",
-          shareWA: "Share via WhatsApp",
-          compare: "Compare two samples",
           add: "+ Add sample",
           remove: "− Remove sample",
           addTable: "+ Add table",
@@ -538,17 +626,22 @@
           notScored: "Not scored",
           scored: "Scored",
           clear: "Clear",
-          menuHint: VIEW_ONLY ? "View-only mode is ON (editing disabled)." : "Tip: Share view-only link from here.",
+          menuHint: VIEW_ONLY ? "View-only mode is ON (editing disabled)." : "Export the star graph or print from here.",
           viewOnlyBlocked: "This is view-only mode.",
           copied: "Copied.",
-          shareFail: "Couldn’t copy. Your browser may block clipboard without HTTPS."
+          shareFail: "Couldn’t copy.",
+          expTitle:"Export Star Graph",
+          expPick:"Sample",
+          expPrint:"Print PDF",
+          done:"Done",
+          timer:"Timer",
+          tStart:"Start",
+          tPause:"Pause",
+          tReset:"Reset"
         },
         ar: {
           print: "طباعة الصفحة",
           export: "تصدير الرسم النجمي (PDF قابل للطباعة)",
-          shareLink: "نسخ رابط مشاركة (عرض فقط)",
-          shareWA: "مشاركة عبر واتساب",
-          compare: "مقارنة عينتين",
           add: "+ إضافة عينة",
           remove: "− حذف عينة",
           addTable: "+ إضافة طاولة",
@@ -584,10 +677,18 @@
           notScored: "غير مُسجّل",
           scored: "مُسجّل",
           clear: "مسح",
-          menuHint: VIEW_ONLY ? "وضع العرض فقط مفعّل (التعديل مقفل)." : "تلميح: شارك رابط عرض فقط من هنا.",
+          menuHint: VIEW_ONLY ? "وضع العرض فقط مفعّل (التعديل مقفل)." : "صدّر الرسم النجمي أو اطبع من هنا.",
           viewOnlyBlocked: "هذا وضع عرض فقط.",
           copied: "تم النسخ.",
-          shareFail: "تعذر النسخ. بعض المتصفحات تتطلب HTTPS للنسخ."
+          shareFail: "تعذر النسخ.",
+          expTitle:"تصدير الرسم النجمي",
+          expPick:"العينة",
+          expPrint:"طباعة PDF",
+          done:"تم",
+          timer:"المؤقت",
+          tStart:"ابدأ",
+          tPause:"إيقاف",
+          tReset:"تصفير"
         }
       };
 
@@ -636,16 +737,7 @@
         return "#111827";
       }
 
-      function escHtml(s){
-        return String(s ?? "")
-          .replace(/&/g,"&amp;")
-          .replace(/</g,"&lt;")
-          .replace(/>/g,"&gt;")
-          .replace(/"/g,"&quot;")
-          .replace(/'/g,"&#039;");
-      }
-
-      // ---------- TIMER (beep at 4:00 and 12:00) ----------
+      // ---------- TIMER ----------
       const timerDisplay = $("timerDisplay");
       const timerLabel = $("timerLabel");
       const btnStart = $("btnTimerStart");
@@ -712,7 +804,6 @@
           setTimeout(()=>beep(220, 990), 520);
         }
       }
-
       function timerStart(){
         if(timerRunning) return;
         timerRunning = true;
@@ -738,24 +829,6 @@
         timerTick = null;
         timerUpdate();
       }
-
-      function updateTimerLang(){
-        const isAr = (lang === "ar");
-        if(timerLabel) timerLabel.textContent = isAr ? "المؤقت" : "Timer";
-        if(btnStart) btnStart.textContent = isAr ? "ابدأ" : "Start";
-        if(btnPause) btnPause.textContent = isAr ? "إيقاف" : "Pause";
-        if(btnReset) btnReset.textContent = isAr ? "تصفير" : "Reset";
-      }
-
-      if(btnStart){
-        btnStart.addEventListener("click", async ()=>{
-          await ensureAudio();
-          timerStart();
-        });
-      }
-      if(btnPause) btnPause.addEventListener("click", timerPause);
-      if(btnReset) btnReset.addEventListener("click", timerReset);
-      timerUpdate();
 
       // ---------- State model ----------
       function newSampleState(){
@@ -786,7 +859,7 @@
 
       let state = { lang:"en", tables:[newTable("Table A")], currentTable:0, currentRound:0 };
 
-      const LS_KEY = "sci_cupping_form_v10_timer_history";
+      const LS_KEY = "sci_cupping_form_v11_export_print_menuFix";
 
       function tryLoadFromLocalStorage(){
         try{
@@ -799,6 +872,7 @@
         }catch(e){ return false; }
       }
 
+      // Keep share URL machinery (even if you removed buttons) so old links still open
       function b64urlEncode(str){
         const b64 = btoa(unescape(encodeURIComponent(str)));
         return repAll(repAll(repAll(b64, "+","-"), "/","_"), "=","");
@@ -831,33 +905,6 @@
 
       function getCurrentTable(){ return state.tables[state.currentTable]; }
       function getCurrentRound(){ return getCurrentTable().rounds[state.currentRound]; }
-
-      // ---------- UI language ----------
-      function applyLang(){
-        document.documentElement.lang = (lang==="ar")?"ar":"en";
-        document.documentElement.dir  = (lang==="ar")?"rtl":"ltr";
-        document.body.dir             = (lang==="ar")?"rtl":"ltr";
-
-        const t = UI[lang];
-        safeSetText("btnLang", t.lang);
-        safeSetText("btnPrint", t.print);
-        safeSetText("btnExportReport", t.export);
-        safeSetText("btnShareLink", t.shareLink);
-        safeSetText("btnShareWhatsApp", t.shareWA);
-        safeSetText("btnCompare", t.compare);
-        safeSetText("btnAddSample", t.add);
-        safeSetText("btnRemoveSample", t.remove);
-        safeSetText("btnAddTable", t.addTable);
-        safeSetText("btnAddRound", t.addRound);
-        safeSetText("btnReset", t.reset);
-        safeSetText("lblName", t.name);
-        safeSetText("lblTable", t.table);
-        safeSetText("lblTableSel", t.tableSel + ":");
-        safeSetText("lblRoundSel", t.roundSel + ":");
-        safeSetText("menuHint", t.menuHint);
-
-        updateTimerLang();
-      }
 
       // ---------- Menu ----------
       function openMenu(){ $("menuPanel").classList.add("open"); $("btnMenu").setAttribute("aria-expanded","true"); }
@@ -932,6 +979,43 @@
           wrap.appendChild(makeChip(txt, textarea));
         });
         return wrap;
+      }
+
+      // ---------- UI language ----------
+      function updateTimerLang(){
+        const t = UI[lang];
+        if(timerLabel) timerLabel.textContent = t.timer;
+        if(btnStart) btnStart.textContent = t.tStart;
+        if(btnPause) btnPause.textContent = t.tPause;
+        if(btnReset) btnReset.textContent = t.tReset;
+      }
+
+      function applyLang(){
+        document.documentElement.lang = (lang==="ar")?"ar":"en";
+        document.documentElement.dir  = (lang==="ar")?"rtl":"ltr";
+        document.body.dir             = (lang==="ar")?"rtl":"ltr";
+
+        const t = UI[lang];
+        safeSetText("btnLang", t.lang);
+        safeSetText("btnPrint", t.print);
+        safeSetText("btnExportReport", t.export);
+        safeSetText("btnAddSample", t.add);
+        safeSetText("btnRemoveSample", t.remove);
+        safeSetText("btnAddTable", t.addTable);
+        safeSetText("btnAddRound", t.addRound);
+        safeSetText("btnReset", t.reset);
+        safeSetText("lblName", t.name);
+        safeSetText("lblTable", t.table);
+        safeSetText("lblTableSel", t.tableSel + ":");
+        safeSetText("lblRoundSel", t.roundSel + ":");
+        safeSetText("menuHint", t.menuHint);
+
+        safeSetText("expTitle", t.expTitle);
+        safeSetText("expPickLbl", t.expPick);
+        safeSetText("expPrintPdf", t.expPrint);
+        safeSetText("expDone", t.done);
+
+        updateTimerLang();
       }
 
       function rebuildSelectors(){
@@ -1119,7 +1203,7 @@
 
           if(sObj.history && sObj.history.length){
             const last = sObj.history[sObj.history.length - 1];
-            hist.textContent = `${last.from.toFixed(2)}→${last.to.toFixed(2)}`;
+            hist.textContent = `${last.from.toFixed(2)}→${last.toFixed ? last.toFixed(2) : Number(last.to).toFixed(2)}`;
           }else{
             hist.textContent = "";
           }
@@ -1170,7 +1254,7 @@
 
         if(sObj.history && sObj.history.length){
           const last = sObj.history[sObj.history.length - 1];
-          hist.textContent = `${last.from.toFixed(2)}→${last.to.toFixed(2)}`;
+          hist.textContent = `${Number(last.from).toFixed(2)}→${Number(last.to).toFixed(2)}`;
         } else {
           hist.textContent = "";
         }
@@ -1323,35 +1407,164 @@
         updateTotals();
       }
 
-      // ---------- Share ----------
-      function makeShareUrl(viewOnly=true){
-        const payload = b64urlEncode(JSON.stringify(state));
-        const u = new URL(location.href);
-        u.searchParams.set("data", payload);
-        if(viewOnly) u.searchParams.set("view","1");
-        else u.searchParams.delete("view");
-        return u.toString();
-      }
-      async function copyToClipboard(text){
-        try{
-          await navigator.clipboard.writeText(text);
-          alert(UI[lang].copied);
-        }catch(e){
-          try{
-            const ta = document.createElement("textarea");
-            ta.value = text;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand("copy");
-            ta.remove();
-            alert(UI[lang].copied);
-          }catch(err){
-            alert(UI[lang].shareFail);
-          }
+      // ---------- STAR GRAPH EXPORT (SVG) ----------
+      function buildStarSvg(sampleIdx){
+        const t = UI[lang];
+        const rd = getCurrentRound();
+        const s = rd.samples[sampleIdx];
+        const tot = computeSampleTotals(s);
+
+        const axes = [
+          ...ATTRS.map(a=> ({ key:a.key, label: a.label[lang] })),
+          { key:"uniformityScore", label: t.uniformity },
+          { key:"defectScore", label: t.defect },
+        ];
+
+        function getValue(ax){
+          if(ax.key === "uniformityScore") return tot.uniformityScore;
+          if(ax.key === "defectScore") return tot.defectScore;
+          const obj = s[ax.key];
+          return (obj && obj.scored) ? Number(obj.score||0) : 0; // unscored=0
         }
+
+        const W=520, H=520;
+        const cx=W/2, cy=H/2;
+        const R=200;
+        const n=axes.length;
+
+        const ringVals = [2,4,6,8,10];
+
+        function pt(angle, r){
+          return [cx + Math.cos(angle)*r, cy + Math.sin(angle)*r];
+        }
+
+        const startAngle = -Math.PI/2;
+
+        // polygon points
+        const poly = axes.map((ax,i)=>{
+          const v = Math.max(0, Math.min(10, getValue(ax)));
+          const r = (v/10)*R;
+          const a = startAngle + (i*(2*Math.PI/n));
+          const p = pt(a, r);
+          return p[0].toFixed(1)+","+p[1].toFixed(1);
+        }).join(" ");
+
+        // build svg
+        let svg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+        svg += `<rect x="0" y="0" width="${W}" height="${H}" fill="#fff"/>`;
+
+        // rings
+        ringVals.forEach(rv=>{
+          const rr = (rv/10)*R;
+          const ringPts = axes.map((ax,i)=>{
+            const a = startAngle + (i*(2*Math.PI/n));
+            const p = pt(a, rr);
+            return p[0].toFixed(1)+","+p[1].toFixed(1);
+          }).join(" ");
+          svg += `<polygon points="${ringPts}" fill="none" stroke="#cfcfcf" stroke-width="1"/>`;
+        });
+
+        // spokes + labels
+        axes.forEach((ax,i)=>{
+          const a = startAngle + (i*(2*Math.PI/n));
+          const p0 = pt(a, 0);
+          const p1 = pt(a, R);
+          svg += `<line x1="${p0[0]}" y1="${p0[1]}" x2="${p1[0]}" y2="${p1[1]}" stroke="#d7d7d7" stroke-width="1"/>`;
+
+          const labelPos = pt(a, R+44);
+          const anchor = (Math.cos(a) > 0.25) ? "start" : (Math.cos(a) < -0.25 ? "end" : "middle");
+          const dy = (Math.sin(a) > 0.25) ? 14 : (Math.sin(a) < -0.25 ? -6 : 4);
+          const txt = escHtml(ax.label);
+          svg += `<text x="${labelPos[0].toFixed(1)}" y="${(labelPos[1]+dy).toFixed(1)}" font-size="12" font-weight="700" fill="#111" text-anchor="${anchor}">${txt}</text>`;
+        });
+
+        // polygon (data)
+        svg += `<polygon points="${poly}" fill="rgba(15,118,110,.18)" stroke="#0f766e" stroke-width="2"/>`;
+
+        // dots
+        axes.forEach((ax,i)=>{
+          const v = Math.max(0, Math.min(10, getValue(ax)));
+          const r = (v/10)*R;
+          const a = startAngle + (i*(2*Math.PI/n));
+          const p = pt(a, r);
+          svg += `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.2" fill="#0f766e"/>`;
+        });
+
+        // title block
+        const title = (s.sampleNo && s.sampleNo.trim()) ? s.sampleNo.trim() : `${t.sample} ${sampleIdx+1}`;
+        const meta1 = `${t.tableSel}: ${state.tables[state.currentTable].name}  •  ${t.roundSel}: ${getCurrentRound().name}`;
+        const meta2 = `${t.total}: ${tot.total.toFixed(2)}`;
+
+        svg += `<text x="18" y="28" font-size="16" font-weight="900" fill="#111">${escHtml(title)}</text>`;
+        svg += `<text x="18" y="48" font-size="12" font-weight="700" fill="#374151">${escHtml(meta1)}</text>`;
+        svg += `<text x="18" y="68" font-size="12" font-weight="900" fill="#111">${escHtml(meta2)}</text>`;
+
+        svg += `</svg>`;
+        return { svg, tot, title };
       }
-      function shareWhatsApp(url){
-        window.open("https://wa.me/?text=" + encodeURIComponent(url), "_blank");
+
+      function openExportModal(){
+        const ov = $("overlayExport");
+        if(!ov) return;
+        ov.classList.add("open");
+        ov.setAttribute("aria-hidden","false");
+
+        // populate sample picker
+        const pick = $("expPick");
+        const rd = getCurrentRound();
+        pick.innerHTML = "";
+        rd.samples.forEach((s,i)=>{
+          const opt = document.createElement("option");
+          const label = (s.sampleNo && s.sampleNo.trim()) ? s.sampleNo.trim() : `${UI[lang].sample} ${i+1}`;
+          opt.value = String(i);
+          opt.textContent = label;
+          pick.appendChild(opt);
+        });
+        pick.value = "0";
+        renderExportFor(0);
+
+        pick.onchange = ()=> renderExportFor(Number(pick.value));
+      }
+
+      function closeExportModal(){
+        const ov = $("overlayExport");
+        if(!ov) return;
+        ov.classList.remove("open");
+        ov.setAttribute("aria-hidden","true");
+      }
+
+      function renderExportFor(sampleIdx){
+        const { svg, tot, title } = buildStarSvg(sampleIdx);
+        $("starWrap").innerHTML = svg;
+
+        // notes summary
+        const rd = getCurrentRound();
+        const s = rd.samples[sampleIdx];
+        const lines = [];
+        lines.push(`<b>${escHtml(title)}</b>`);
+        lines.push(`${escHtml(UI[lang].total)}: <b>${tot.total.toFixed(2)}</b>`);
+        lines.push(`${escHtml(UI[lang].uniformity)}: ${tot.uniformityScore.toFixed(2)} • ${escHtml(UI[lang].defect)}: ${tot.defectScore.toFixed(2)}`);
+
+        // include notes per attribute if present
+        ATTRS.forEach(a=>{
+          const obj = s[a.key];
+          const val = (obj && obj.scored) ? Number(obj.score).toFixed(2) : "0.00";
+          const note = (obj && obj.notes && obj.notes.trim()) ? obj.notes.trim() : "";
+          if(note){
+            lines.push(`<div style="margin-top:6px;"><b>${escHtml(a.label[lang])}</b> (${val}): ${escHtml(note)}</div>`);
+          }
+        });
+
+        // uniformity/defect notes
+        if(s.uniformityNotes && s.uniformityNotes.trim()){
+          lines.push(`<div style="margin-top:6px;"><b>${escHtml(UI[lang].uniformity)}</b>: ${escHtml(s.uniformityNotes.trim())}</div>`);
+        }
+        if(s.defectNotes && s.defectNotes.trim()){
+          lines.push(`<div style="margin-top:6px;"><b>${escHtml(UI[lang].defect)}</b>: ${escHtml(s.defectNotes.trim())}</div>`);
+        }
+
+        $("starNotes").innerHTML = lines.join("<br>");
+        $("expMeta").textContent = `${UI[lang].total}: ${tot.total.toFixed(2)}`;
       }
 
       // ---------- Buttons wiring ----------
@@ -1396,23 +1609,23 @@
       }
       $("btnSession").addEventListener("click", ()=> setSession(!sessionMode));
 
+      // ✅ re-activated print page
       $("btnPrint").addEventListener("click", ()=> window.print());
 
-      // Keep these stable (no crash). You can re-enable advanced export/compare later.
+      // ✅ re-activated export star graph (printable as PDF)
       $("btnExportReport").addEventListener("click", ()=>{
-        alert("Export is currently disabled in this stable build. (Timer + history enabled.)");
-      });
-      $("btnCompare").addEventListener("click", ()=>{
-        alert("Compare is currently disabled in this stable build. (Timer + history enabled.)");
+        openExportModal();
+        closeMenu();
       });
 
-      $("btnShareLink").addEventListener("click", async ()=>{
-        const url = makeShareUrl(true);
-        await copyToClipboard(url);
-      });
-      $("btnShareWhatsApp").addEventListener("click", ()=>{
-        const url = makeShareUrl(true);
-        shareWhatsApp(url);
+      $("expClose").addEventListener("click", closeExportModal);
+      $("expDone").addEventListener("click", closeExportModal);
+
+      $("expPrintPdf").addEventListener("click", ()=>{
+        // Print ONLY the modal content as PDF
+        document.body.classList.add("print-star");
+        window.print();
+        setTimeout(()=> document.body.classList.remove("print-star"), 250);
       });
 
       $("btnAddSample").addEventListener("click", ()=>{
@@ -1455,6 +1668,17 @@
         renderAll();
       });
 
+      // Timer buttons
+      if(btnStart){
+        btnStart.addEventListener("click", async ()=>{
+          await ensureAudio();
+          timerStart();
+        });
+      }
+      if(btnPause) btnPause.addEventListener("click", timerPause);
+      if(btnReset) btnReset.addEventListener("click", timerReset);
+      timerUpdate();
+
       // ---------- Boot load order ----------
       const loadedFromUrl = tryLoadFromUrl();
       if(!loadedFromUrl) tryLoadFromLocalStorage();
@@ -1468,9 +1692,14 @@
         $("btnLang").disabled = false;
         $("btnMenu").disabled = false;
         $("btnSession").disabled = false;
+
         $("btnTimerStart").disabled = false;
         $("btnTimerPause").disabled = false;
         $("btnTimerReset").disabled = false;
+
+        // still allow export + print in view-only:
+        $("btnExportReport").disabled = false;
+        $("btnPrint").disabled = false;
       }
 
     }catch(e){
