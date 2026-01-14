@@ -9,20 +9,23 @@
     *{box-sizing:border-box}
     body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:var(--bg);color:var(--ink)}
     .wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
-    .card{width:min(440px,96vw);background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 50px rgba(0,0,0,.10);padding:16px}
+    .card{width:min(460px,96vw);background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 14px 50px rgba(0,0,0,.10);padding:16px}
     h1{margin:0 0 6px;font-size:18px}
     p{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.35}
     label{display:block;font-weight:800;font-size:12px;margin:10px 0 6px}
     input{width:100%;padding:12px 12px;border:1px solid var(--line);border-radius:12px;font:inherit;outline:none}
     input:focus{border-color:#9ca3af}
     .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    button{flex:1 1 140px;min-height:44px;border-radius:12px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:900}
+    button{flex:1 1 150px;min-height:44px;border-radius:12px;border:1px solid var(--line);background:#fff;cursor:pointer;font-weight:900}
     button.primary{background:#111827;color:#fff;border-color:#111827}
     button:hover{border-color:#9ca3af}
     .msg{margin-top:12px;padding:10px;border-radius:12px;border:1px solid #fecaca;background:#fff1f2;color:#7f1d1d;font-weight:800;font-size:12px;white-space:pre-wrap;display:none}
     .msg.show{display:block}
-    .tiny{margin-top:10px;color:var(--muted);font-size:11px}
+    .tiny{margin-top:10px;color:var(--muted);font-size:11px;line-height:1.35}
     .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    details{margin-top:10px}
+    summary{cursor:pointer;font-weight:900;font-size:12px;color:#374151}
+    .ok{color:#065f46}
   </style>
 </head>
 <body>
@@ -50,8 +53,18 @@
       </div>
 
       <div class="tiny">
-        Site: <span class="mono">nawafcs.github.io/SCI</span>
+        Site: <span class="mono">nawafcs.github.io/SCI</span><br/>
+        Tip: If Google returns to this page, Edge may be blocking storage/cookies. See the hint below.
       </div>
+
+      <details>
+        <summary>Edge hint (if Google keeps returning here)</summary>
+        <div class="tiny" style="margin-top:8px;">
+          In Edge: <span class="mono">Settings → Privacy</span><br/>
+          Set Tracking Prevention to <b>Balanced</b> and allow cookies for:<br/>
+          <span class="mono">nawafcs.github.io</span> and <span class="mono">sci-cupping-form.firebaseapp.com</span>
+        </div>
+      </details>
     </div>
   </div>
 
@@ -77,7 +90,8 @@
       sendPasswordResetEmail,
       GoogleAuthProvider,
       signInWithRedirect,
-      getRedirectResult
+      getRedirectResult,
+      signInWithPopup
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
     const app = initializeApp(firebaseConfig);
@@ -91,28 +105,57 @@
       box.classList.add("show");
     };
 
-    // Persist session to avoid bouncing
-    await setPersistence(auth, browserLocalPersistence);
+    // Persist session to avoid bouncing between login/app
+    try{
+      await setPersistence(auth, browserLocalPersistence);
+    }catch(e){
+      showMsg("Storage unavailable (cookies blocked?)\n" + (e?.message || String(e)));
+    }
 
-    // If returning from Google redirect, resolve it
+    // Resolve redirect result (if coming back from Google)
     try {
       await getRedirectResult(auth);
     } catch (e) {
-      showMsg(e?.message || String(e));
+      showMsg(
+        "Google sign-in failed:\n" +
+        (e?.code ? `code: ${e.code}\n` : "") +
+        (e?.message ? `message: ${e.message}\n` : "") +
+        (e?.customData?.email ? `email: ${e.customData.email}\n` : "") +
+        (e ? String(e) : "")
+      );
     }
 
-    // If already logged-in, go to app
+    // If already logged in, go to app
     onAuthStateChanged(auth, (user)=>{
-      if(user) location.replace("app.html");
+      if(user){
+        showMsg("");
+        location.replace("app.html");
+      }
     });
 
+    // Google: try popup first (Edge likes it), fallback to redirect if popup blocked
     $("btnGoogle").onclick = async ()=>{
       showMsg("");
+      const provider = new GoogleAuthProvider();
       try{
-        const provider = new GoogleAuthProvider();
-        await signInWithRedirect(auth, provider); // redirect is mobile-safe
+        await signInWithPopup(auth, provider);
+        location.replace("app.html");
       }catch(e){
-        showMsg(e?.message || String(e));
+        if (e?.code === "auth/popup-blocked" || e?.code === "auth/popup-closed-by-user") {
+          try{
+            await signInWithRedirect(auth, provider);
+            return;
+          }catch(e2){
+            showMsg(`${e2?.code || ""}\n${e2?.message || e2}`);
+            return;
+          }
+        }
+        showMsg(
+          "Google sign-in error:\n" +
+          (e?.code ? `code: ${e.code}\n` : "") +
+          (e?.message ? `message: ${e.message}\n` : "") +
+          (e ? String(e) : "")
+        );
       }
     };
 
@@ -122,7 +165,12 @@
         await signInWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value);
         location.replace("app.html");
       }catch(e){
-        showMsg(e?.message || String(e));
+        showMsg(
+          "Email login failed:\n" +
+          (e?.code ? `code: ${e.code}\n` : "") +
+          (e?.message ? `message: ${e.message}\n` : "") +
+          (e ? String(e) : "")
+        );
       }
     };
 
@@ -132,7 +180,12 @@
         await createUserWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value);
         location.replace("app.html");
       }catch(e){
-        showMsg(e?.message || String(e));
+        showMsg(
+          "Create account failed:\n" +
+          (e?.code ? `code: ${e.code}\n` : "") +
+          (e?.message ? `message: ${e.message}\n` : "") +
+          (e ? String(e) : "")
+        );
       }
     };
 
@@ -141,8 +194,17 @@
       try{
         await sendPasswordResetEmail(auth, $("email").value.trim());
         showMsg("Password reset email sent ✅");
+        $("msg").style.borderColor = "#bbf7d0";
+        $("msg").style.background = "#ecfdf5";
+        $("msg").style.color = "#065f46";
+        $("msg").classList.add("show");
       }catch(e){
-        showMsg(e?.message || String(e));
+        showMsg(
+          "Reset password failed:\n" +
+          (e?.code ? `code: ${e.code}\n` : "") +
+          (e?.message ? `message: ${e.message}\n` : "") +
+          (e ? String(e) : "")
+        );
       }
     };
   </script>
