@@ -1,115 +1,90 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SCI Cupping – Login</title>
-  <style>
-    body{font-family:system-ui;margin:0;background:#f2f2f2}
-    .card{max-width:420px;margin:10vh auto;background:#fff;border:1px solid #ddd;border-radius:14px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.08)}
-    h1{margin:0 0 12px 0;font-size:18px}
-    input,button{width:100%;min-height:44px;border-radius:12px;border:1px solid #ccc;padding:10px;font:inherit;box-sizing:border-box}
-    button{cursor:pointer;font-weight:900;background:#111;color:#fff;border-color:#111;margin-top:10px}
-    .row{display:flex;gap:10px;margin-top:10px}
-    .row button{width:50%;background:#fff;color:#111}
-    .google{background:#fff;color:#111;border-color:#ccc}
-    .msg{margin-top:10px;color:#b91c1c;font-weight:800;white-space:pre-wrap}
-    .small{color:#6b7280;font-size:12px;margin-top:10px;line-height:1.35}
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h1>SCI Cupping – Login</h1>
+<script type="module">
+  const firebaseConfig = {
+    apiKey: "AIzaSyCwrhMSBFbmvzQXkzEgtHBZZecrdbCN7ZU",
+    authDomain: "sci-cupping-form.firebaseapp.com",
+    projectId: "sci-cupping-form",
+    storageBucket: "sci-cupping-form.firebasestorage.app",
+    messagingSenderId: "789783909023",
+    appId: "1:789783909023:web:35372ccd47c55f81bd08aa",
+    measurementId: "G-V10NLBLZGQ"
+  };
 
-    <button id="btnGoogle" class="google" type="button">Continue with Google</button>
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getAuth,
+    setPersistence,
+    browserLocalPersistence,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    sendPasswordResetEmail,
+    GoogleAuthProvider,
+    signInWithRedirect,
+    getRedirectResult
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
-    <div class="small">Or sign in with email:</div>
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
 
-    <input id="email" type="email" placeholder="Email" autocomplete="email" />
-    <input id="pass" type="password" placeholder="Password" autocomplete="current-password" style="margin-top:10px"/>
+  const $ = (id)=>document.getElementById(id);
+  const msg = (t)=>{ $("msg").textContent = t || ""; };
 
-    <button id="btnLogin" type="button">Login</button>
+  // ✅ ثبّت الجلسة (يمنع bounce loop)
+  await setPersistence(auth, browserLocalPersistence);
 
-    <div class="row">
-      <button id="btnSignup" type="button">Create account</button>
-      <button id="btnReset" type="button">Reset password</button>
-    </div>
+  // ✅ التقط نتيجة Google Redirect لو رجعت من جوجل
+  try {
+    await getRedirectResult(auth);
+  } catch (e) {
+    msg(e?.message || String(e));
+  }
 
-    <div id="msg" class="msg"></div>
-  </div>
+  // ✅ لو المستخدم مسجل، انقله للتطبيق (استخدم replace عشان ما يرجع back)
+  onAuthStateChanged(auth, (user)=>{
+    if (user) location.replace("app.html");
+  });
 
-  <script type="module">
-    // ✅ Replace with YOUR Firebase config (from Firebase Console)
-    const firebaseConfig = {
-      apiKey: "AIzaSyCwrhMSBFbmvzQXkzEgtHBZZecrdbCN7ZU",
-      authDomain: "sci-cupping-form.firebaseapp.com",
-      projectId: "sci-cupping-form",
-      appId: "1:789783909023:web:35372ccd47c55f81bd08aa",
-    };
+  // ✅ Google login (Redirect بدل Popup)
+  $("btnGoogle").onclick = async ()=>{
+    msg("");
+    try{
+      const provider = new GoogleAuthProvider();
+      await signInWithRedirect(auth, provider);
+    }catch(e){
+      msg(e?.message || String(e));
+    }
+  };
 
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      sendPasswordResetEmail,
-      onAuthStateChanged,
-      GoogleAuthProvider,
-      signInWithPopup
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  // Email login
+  $("btnLogin").onclick = async ()=>{
+    msg("");
+    try{
+      await signInWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value);
+      location.replace("app.html");
+    }catch(e){
+      msg(e?.message || String(e));
+    }
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+  // Create account
+  $("btnSignup").onclick = async ()=>{
+    msg("");
+    try{
+      await createUserWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value);
+      location.replace("app.html");
+    }catch(e){
+      msg(e?.message || String(e));
+    }
+  };
 
-    const $ = (id)=>document.getElementById(id);
-    const msg = (t)=>{$("msg").textContent=t||""};
-
-    onAuthStateChanged(auth, (user)=>{
-      if(user){
-        location.href = "app.html";
-      }
-    });
-
-    $("btnGoogle").onclick = async ()=>{
-      msg("");
-      try{
-        const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider);
-        location.href = "app.html";
-      }catch(e){
-        msg(e.message);
-      }
-    };
-
-    $("btnLogin").onclick = async ()=>{
-      msg("");
-      try{
-        await signInWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value);
-        location.href = "app.html";
-      }catch(e){
-        msg(e.message);
-      }
-    };
-
-    $("btnSignup").onclick = async ()=>{
-      msg("");
-      try{
-        await createUserWithEmailAndPassword(auth, $("email").value.trim(), $("pass").value);
-        location.href = "app.html";
-      }catch(e){
-        msg(e.message);
-      }
-    };
-
-    $("btnReset").onclick = async ()=>{
-      msg("");
-      try{
-        await sendPasswordResetEmail(auth, $("email").value.trim());
-        msg("Password reset email sent.");
-      }catch(e){
-        msg(e.message);
-      }
-    };
-  </script>
-</body>
-</html>
+  // Reset password
+  $("btnReset").onclick = async ()=>{
+    msg("");
+    try{
+      await sendPasswordResetEmail(auth, $("email").value.trim());
+      msg("Password reset email sent.");
+    }catch(e){
+      msg(e?.message || String(e));
+    }
+  };
+</script>
